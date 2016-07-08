@@ -23,13 +23,6 @@
 
 package RegUtil;
 
-export truncateReg;
-export truncateRegLSB;
-export zeroExtendReg;
-export readOnlyReg;
-export mkReadOnlyReg;
-export addWriteSideEffect;
-
 // RegUtil - Utility functions for registers
 
 function Reg#(Bit#(n)) truncateReg(Reg#(Bit#(m)) r) provisos (Add#(a__,n,m));
