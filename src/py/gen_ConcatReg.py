@@ -23,7 +23,7 @@
 # SOFTWARE.
 
 # Max number of registers to concat
-n = 14
+n = 20
 
 # Top of the generated BSV file
 top_of_file = """// Copyright (c) 2016 Massachusetts Institute of Technology
