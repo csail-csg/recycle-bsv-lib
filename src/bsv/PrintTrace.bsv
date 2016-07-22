@@ -134,9 +134,6 @@ instance HasFPrintTraceHelper#(ActionValue#(t)) provisos (FShow#(t));
     function ActionValue#(t) fprintTraceHelper(File file, Bool printTimestamp, Fmt callName, Maybe#(Fmt) args, ActionValue#(t) av);
         return (actionvalue
                 t x <- av;
-                if (printTimestamp) begin 
-                   $fdisplay(file, $time);
-                end
                 Fmt printFmt = callName;
                 if (args matches tagged Valid .validArgs) begin
                     printFmt = printFmt + $format("(", validArgs, ")");
@@ -146,7 +143,12 @@ instance HasFPrintTraceHelper#(ActionValue#(t)) provisos (FShow#(t));
                 if (typeOf(x) != typeOf(v)) begin
                     printFmt = printFmt + $format(" = ", fshow(x));
                 end
-                $fdisplay(file, printFmt);
+                if (printTimestamp) begin 
+                   $fdisplay(file, "(%0d) ", $time, printFmt);
+                end
+                else begin
+                   $fdisplay(file, printFmt);
+                end
                 $fflush(file);
                 return x;
             endactionvalue);
