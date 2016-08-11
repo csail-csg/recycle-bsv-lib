@@ -11,6 +11,7 @@ List of packages:
 * ConcatReg
 * Ehr
 * FIFOG
+* OneWriteReg
 * PerfMonitor (and PerfMonitorConnectal)
 * PrintTrace
 * RWBram
