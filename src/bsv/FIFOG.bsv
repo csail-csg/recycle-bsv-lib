@@ -28,7 +28,7 @@ import FIFOF::*;
 import SpecialFIFOs::*;
 import RevertingVirtualReg::*;
 
-export FIFOG;
+export FIFOG(..);
 export mkFIFOG;
 export mkSizedFIFOG;
 export mkFIFOG1;
