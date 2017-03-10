@@ -56,13 +56,18 @@ endinstance
 
 ```
 
-## retFunc
+## HasFPrintTraceHelper
 ```bluespec
-function outT retFunc(inT x);
+instance HasFPrintTraceHelper#(function outT f(inT x)) provisos (HasFPrintTraceHelper#(outT), FShow#(inT));
+    function (function outT f(inT x)) fprintTraceHelper(File file, Bool printTimestamp, Fmt callName, Maybe#(Fmt) args, function outT func(inT x));
+        function outT retFunc(inT x);
             Fmt newArgs = args matches tagged Valid .validArgs ? validArgs + $format(", ") + fshow(x) : fshow(x);
             return fprintTraceHelper(file, printTimestamp, callName, tagged Valid newArgs, func(x));
         endfunction
-        
+        return retFunc;
+    endfunction
+endinstance
+
 ```
 
 ## HasFPrintTraceHelper

@@ -1,5 +1,39 @@
 ## TransformReqHelper
 ```bluespec
+typeclass TransformReqHelper#(type clientOrServer, type reqT, type newReqT, type newClientOrServer)
+        dependencies ((clientOrServer, newClientOrServer) determines (reqT, newReqT));
+    function newClientOrServer transformReq(function newReqT f(reqT x),
+                                            clientOrServer ifc);
+endtypeclass
+
+
+```
+
+## TransformRespHelper
+```bluespec
+typeclass TransformRespHelper#(type clientOrServer, type respT, type newRespT, type newClientOrServer)
+        dependencies ((clientOrServer, newClientOrServer) determines (respT, newRespT));
+    function newClientOrServer transformResp(function newRespT f(respT x),
+                                             clientOrServer ifc);
+endtypeclass
+
+
+```
+
+## TransformReqRespHelper
+```bluespec
+typeclass TransformReqRespHelper#(type clientOrServer, type reqT, type respT, type newReqT, type newRespT, type newClientOrServer)
+        dependencies ((clientOrServer, newClientOrServer) determines (reqT, respT, newReqT, newRespT));
+    function newClientOrServer transformReqResp(function newReqT reqF(reqT x),
+                                                function newRespT respF(respT x),
+                                                clientOrServer ifc);
+endtypeclass
+
+
+```
+
+## TransformReqHelper
+```bluespec
 instance TransformReqHelper#(Client#(reqT, respT), reqT, newReqT, Client#(newReqT, respT));
     function Client#(newReqT, respT) transformReq(function newReqT f(reqT x),
                                                   Client#(reqT, respT) ifc);

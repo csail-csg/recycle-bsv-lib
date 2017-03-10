@@ -1,4 +1,4 @@
-## ['Ehr', 'numeric', 'type', 'n', 'type', 't']
+## ['Ehr', ['numeric', 'type', 'n', 'type', 't']]
 ```bluespec
 typedef Vector#(n, Reg#(t)) Ehr#(numeric type n, type t);
 ```

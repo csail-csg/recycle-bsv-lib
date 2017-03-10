@@ -1,8 +1,15 @@
-## _concatReg
+## ConcatReg
 ```bluespec
-function r _concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2);
+typeclass ConcatReg#(type r, numeric type n1, numeric type n2)
+  dependencies ((r,n1) determines n2, (r,n2) determines n1);
+  // dependencies (r determines (n1,n2));
+  function r _concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2);
 endtypeclass
-// Base case
+
+```
+
+## ConcatReg
+```bluespec
 instance ConcatReg#(Reg#(Bit#(n3)), n1, n2) provisos (Add#(n1, n2, n3));
   function Reg#(Bit#(TAdd#(n1,n2))) _concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2);
     return (interface Reg;
@@ -13,6 +20,24 @@ instance ConcatReg#(Reg#(Bit#(n3)), n1, n2) provisos (Add#(n1, n2, n3));
         endmethod
       endinterface);
   endfunction
+endinstance
+
+```
+
+## ConcatReg
+```bluespec
+instance ConcatReg#(function r f(Reg#(Bit#(n3)) r3), n1, n2) provisos (ConcatReg#(r, TAdd#(n1, n2), n3));
+  function function r f(Reg#(Bit#(n3)) r3) _concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2);
+    return _concatReg(interface Reg;
+        method Bit#(TAdd#(n1,n2)) _read = {r1._read, r2._read};
+        method Action _write(Bit#(TAdd#(n1,n2)) x);
+          r1._write(truncateLSB(x));
+          r2._write(truncate(x));
+        endmethod
+      endinterface);
+  endfunction
+endinstance
+
 
 ```
 
