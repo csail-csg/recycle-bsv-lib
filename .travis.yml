@@ -13,7 +13,7 @@ env:
   matrix:
 script:
 - ls Bluespec-2016.07.beta1
-- make all
+- make build
 sudo: no
 dist: trusty
 os:

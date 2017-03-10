@@ -26,16 +26,28 @@
 
 BSV_SRC_DIR ?= src/bsv
 BUILD_DIR ?= build
+DOC_DIR ?= doc
 BSV_FILES = $(wildcard $(BSV_SRC_DIR)/*.bsv)
 BO_FILES = $(patsubst $(BSV_SRC_DIR)/%.bsv, $(BSV_BUILD_DIR)/%.bo, $(BSV_FILES))
 
-all: $(BUILD_DIR) $(BO_FILES)
+DOC_FILES = $(patsubst $(BSV_SRC_DIR)/%.bsv, $(DOC_DIR)/markdown/%.md, $(BSV_FILES))
+
+.PHONY: all build doc
+
+all: build doc
+
+build: $(BO_FILES)
+
+doc: $(DOC_FILES)
 
 $(BSV_BUILD_DIR)/%.bo: $(BSV_SRC_DIR)/%.bsv
+	@mkdir -p $(BUILD_DIR)
 	bsc -u -p $(BSV_SRC_DIR):+ -bdir $(BUILD_DIR) $^
 
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+$(DOC_DIR)/markdown/%.md: $(BSV_SRC_DIR)/%.bsv src/py/bsv_doc_gen.py
+	@mkdir -p $(DOC_DIR)/markdown
+	./src/py/bsv_doc_gen.py $^ > $@
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf $(DOC_DIR)
