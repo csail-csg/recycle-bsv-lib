@@ -1,5 +1,50 @@
 # ClientServerUtil
 
+
+This package contains functions to modify the request and responses of a
+Client or a Server interface. For each type of interface, there are three
+types of functions: one transforms reqeusts, one transforms responses, and
+one transforms both. In addition there are typeclasses to simplify the
+naming of the Client and Server versions of each function by giving them
+the same name.
+
+Client functions:
+  newClient transformClientReq(reqF, client)
+  newClient transformClientResp(respF, client)
+  newClient transformClientReqResp(reqF, respF, client)
+Server functions:
+  newServer transformServerReq(reqF, server)
+  newServer transformServerResp(respF, server)
+  newServer transformServerReqResp(reqF, respF, server)
+Unified typeclass functions:
+  newClientOrServer transformReq(reqF, clientOrServer)
+  newClientOrServer transformResp(respF, clientOrServer)
+  newClientOrServer transformReqResp(reqF, respF, clientOrServer)
+
+
+### [Client](../../src/bsv/ClientServerUtil.bsv#L54)
+```bluespec
+interface Client;
+                interface Get request;
+                    method ActionValue#(newReqT) get;
+                        let x <- client.request.get;
+                        return reqF(x);
+                    endmethod
+                endinterface
+                
+```
+
+### [Server](../../src/bsv/ClientServerUtil.bsv#L72)
+```bluespec
+interface Server;
+                interface Put request;
+                    method Action put(reqT x);
+                        server.request.put(reqF(x));
+                    endmethod
+                endinterface
+                
+```
+
 ### [TransformReqHelper](../../src/bsv/ClientServerUtil.bsv#L110)
 ```bluespec
 typeclass TransformReqHelper#(type clientOrServer, type reqT, type newReqT, type newClientOrServer)

@@ -8,6 +8,32 @@ TODO: explain what makes a PerfMonitor (i.e. PerfCounters and monadic
 computation)
 
 
+### [PerfCounter](../../src/bsv/PerfMonitor.bsv#L46)
+
+PerfCounter interface exposed within modules under performance monitoring
+```bluespec
+interface PerfCounter;
+    method Action increment(PerfData x);
+    method Action set(PerfData x);
+endinterface
+
+
+```
+
+### [PerfMonitor](../../src/bsv/PerfMonitor.bsv#L52)
+
+PerfMonitor interface exposed to the outside
+```bluespec
+interface PerfMonitor;
+    method Action reset;
+    method Action setEnable(Bool en);
+    method Action req(PerfIndex index);
+    method ActionValue#(PerfData) resp;
+endinterface
+
+
+```
+
 ### [['PerfDataSz']](../../src/bsv/PerfMonitor.bsv#L70)
 ```bluespec
 typedef 64 PerfDataSz;

@@ -1,5 +1,20 @@
 # SearchFIFO
 
+### [SearchFIFO](../../src/bsv/SearchFIFO.bsv#L29)
+```bluespec
+interface SearchFIFO#(numeric type size, type dataType, type searchType);
+    method Action enq(dataType x);
+    method Action deq;
+    method dataType first;
+    method Action clear;
+    method Bool notEmpty;
+    method Bool notFull;
+    method Bool search(searchType x);
+endinterface
+
+
+```
+
 ### [mkSearchFIFO](../../src/bsv/SearchFIFO.bsv#L41)
 ```bluespec
 module mkSearchFIFO#(function Bool isMatch(searchType s, dataType d))(SearchFIFO#(size, dataType, searchType)) provisos (Bits#(dataType, dataSize));

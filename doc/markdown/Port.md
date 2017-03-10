@@ -22,6 +22,47 @@ or `OutputPort` interfaces. Since these add buffers, they break the
 atomicity of the action of the inputted interface.
 
 
+### [InputPort](../../src/bsv/Port.bsv#L55)
+```bluespec
+interface InputPort#(type t);
+    method Action enq(t val);
+    method Bool canEnq;
+endinterface
+
+
+```
+
+### [OutputPort](../../src/bsv/Port.bsv#L60)
+```bluespec
+interface OutputPort#(type t);
+    method Bool canDeq;
+    method t first;
+    method Action deq;
+endinterface
+
+
+```
+
+### [ServerPort](../../src/bsv/Port.bsv#L66)
+```bluespec
+interface ServerPort#(type req_t, type resp_t);
+    interface InputPort#(req_t) request;
+    interface OutputPort#(resp_t) response;
+endinterface
+
+
+```
+
+### [ClientPort](../../src/bsv/Port.bsv#L71)
+```bluespec
+interface ClientPort#(type req_t, type resp_t);
+    interface OutputPort#(req_t) request;
+    interface InputPort#(resp_t) response;
+endinterface
+
+
+```
+
 ### [ToInputPort](../../src/bsv/Port.bsv#L76)
 ```bluespec
 typeclass ToInputPort#(type in_t, type port_t);

@@ -208,6 +208,14 @@ instance_bsv = kw_instance + Identifier_bsv('name') + token('#') + token('(') + 
                pp.OneOrMore(~kw_endinstance + pp.Word(pp.printables)) + \
                kw_endinstance + pp.Optional(token(':') + Identifier_bsv)
 
+# interface
+kw_interface = pp.Keyword('interface')
+kw_endinterface = pp.Keyword('endinterface')
+interface_bsv = kw_interface + Identifier_bsv('name') + pp.Optional(type_formals_bsv) + token(';') + \
+                pp.OneOrMore(~kw_endinterface + pp.Word(pp.printables)) + \
+                kw_endinterface + pp.Optional(token(':') + Identifier_bsv)
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print('ERROR: expected a bsv filename or --test')
@@ -232,7 +240,7 @@ if __name__ == '__main__':
                 print('ERROR: type error in save_doc_comment: ' + str(e))
                 print('type(toks) = ' + str(type(toks)))
                 exit(1)
-        scan_result = (comment_bsv | (package_bsv | typedef_bsv | typeclass_bsv | instance_bsv | module_bsv | function_bsv).addParseAction(save_doc_comment)).scanString(file_data)
+        scan_result = (comment_bsv | (package_bsv | typedef_bsv | interface_bsv | typeclass_bsv | instance_bsv | module_bsv | function_bsv).addParseAction(save_doc_comment)).scanString(file_data)
         for (x, y, z) in scan_result:
             if 'name' in x:
                 line = pp.lineno(y, file_data)

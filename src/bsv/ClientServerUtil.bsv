@@ -21,11 +21,6 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package ClientServerUtil;
-
-import ClientServer::*;
-import GetPut::*;
-
 /**
  * This package contains functions to modify the request and responses of a
  * Client or a Server interface. For each type of interface, there are three
@@ -47,6 +42,11 @@ import GetPut::*;
  *   newClientOrServer transformResp(respF, clientOrServer)
  *   newClientOrServer transformReqResp(reqF, respF, clientOrServer)
  */
+
+package ClientServerUtil;
+
+import ClientServer::*;
+import GetPut::*;
 
 function Client#(newReqT, respT) transformClientReqResp(function newReqT reqF(reqT x),
                                                         function newRespT respF(respT x),

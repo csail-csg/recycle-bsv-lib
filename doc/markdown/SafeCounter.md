@@ -1,3 +1,15 @@
+### [SafeCounter](../../src/bsv/SafeCounter.bsv#L29)
+```bluespec
+interface SafeCounter#(type t);
+    method Action incr(t v);
+    method Action decr(t v);
+    method t _read;
+    method Action _write(t v);
+endinterface
+
+
+```
+
 ### [mkSafeCounter](../../src/bsv/SafeCounter.bsv#L37)
 ```bluespec
 module mkSafeCounter#(t initVal)(SafeCounter#(t)) provisos(Alias#(t, Bit#(w)));

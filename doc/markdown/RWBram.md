@@ -1,3 +1,14 @@
+### [RWBram](../../src/bsv/RWBram.bsv#L27)
+```bluespec
+interface RWBram#(type addrT, type dataT);
+    method Action wrReq(addrT a, dataT d);
+    method Action rdReq(addrT a);
+    method ActionValue#(dataT) rdResp;
+endinterface
+
+
+```
+
 ### [mkRWBram](../../src/bsv/RWBram.bsv#L33)
 ```bluespec
 module mkRWBram(RWBram#(addrT, dataT)) provisos(

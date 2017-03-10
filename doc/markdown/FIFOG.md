@@ -37,6 +37,25 @@ endrule
 
 
 
+### [FIFOG](../../src/bsv/FIFOG.bsv#L76)
+
+Like FIFOF, but instead of adding information about the full-ness of the
+FIFO, it adds information about the guard of the FIFO.
+```bluespec
+interface FIFOG#(type t);
+    method Action enq(t x);
+    method Action deq;
+    method t first;
+    method Action clear;
+    method Bool notFull;
+    method Bool notEmpty;
+    method Bool canEnq;
+    method Bool canDeq;
+endinterface
+
+
+```
+
 ### [mkFIFOG](../../src/bsv/FIFOG.bsv#L90)
 
 2-element conflict-free `FIFOG`
