@@ -128,6 +128,8 @@ kw_struct = pp.Keyword('struct')
 kw_numeric = pp.Keyword('numeric')
 kw_deriving = pp.Keyword('deriving')
 kw_provisos = pp.Keyword('provisos')
+kw_dependencies = pp.Keyword('dependencies')
+kw_determines = pp.Keyword('determines')
 
 add_tests(kw_module + ';', ['module;'], [])
 add_tests(kw_module + 's', [], ['modules'])
@@ -135,7 +137,7 @@ add_tests(kw_module + '_', [], ['module_'])
 add_tests(kw_module + '2', [], ['module2'])
 
 # packages, imports, and exports
-package_bsv = kw_package + Identifier_bsv + ';' +\
+package_bsv = kw_package + Identifier_bsv + ';' + \
               pp.OneOrMore(~kw_endpackage + pp.Word(pp.printables)) + \
               kw_endpackage + pp.Optional(':' + Identifier_bsv)
 import_bsv = kw_import + Identifier_bsv + pp.Literal('::') + pp.Literal('*') + pp.Literal(';')
@@ -143,14 +145,18 @@ export_bsv = kw_export + anyIdentifier_bsv + pp.Optional(pp.Literal('(') + pp.Li
 
 # type
 type_bsv = pp.Forward()
-type_bsv << ((pp.Optional(anyIdentifier_bsv('package') + '::') + anyIdentifier_bsv('name') + pp.Optional( pp.Suppress('#') + pp.Suppress('(') + pp.Group(pp.delimitedList(type_bsv, ','))('formal_args') + pp.Suppress(')') )) | (int_literal_bsv('numeric'))).setParseAction(parse_type)
+function_type_bsv = kw_function + type_bsv + identifier_bsv + token('(') + pp.delimitedList(type_bsv + identifier_bsv) + token(')')
+type_bsv <<     (function_type_bsv \
+            |   (pp.Optional(anyIdentifier_bsv('package') + '::') + anyIdentifier_bsv('name') + \
+                pp.Optional( pp.Suppress('#') + pp.Suppress('(') + pp.Group(pp.delimitedList(type_bsv, ','))('formal_args') + pp.Suppress(')') )) \
+            |   (int_literal_bsv('numeric'))).setParseAction(parse_type)
 
-add_tests(type_bsv, ['a', 'WriteReq', 'Bool', 'void', 'Bit#(2)', 'List::List#(t)', 'Vector#(2, Reg#(Bit#(32)))'], ['Vector#(2 Reg#(Bit#(5)))', 'A#(B#(C#(a))'])
+add_tests(type_bsv, ['a', 'WriteReq', 'Bool', 'function Bit#(1) f(Bit#(1) x)', 'void', 'Bit#(2)', 'List::List#(t)', 'Vector#(2, Reg#(Bit#(32)))'], ['Vector#(2 Reg#(Bit#(5)))', 'A#(B#(C#(a))'])
 
 # terms used in typedef definitions
 union_member_bsv = pp.Forward()
 type_formal_bsv = pp.Optional(kw_numeric) + kw_type + identifier_bsv
-type_formals_bsv = token('#') + token('(') + pp.delimitedList(type_formal_bsv, ',') + token(')')
+type_formals_bsv = token('#') + token('(') + pp.Group(pp.delimitedList(type_formal_bsv, ',')) + token(')')
 typedef_type_bsv = Identifier_bsv + pp.Optional(type_formals_bsv)
 deriving_bsv = pp.Optional(kw_deriving + token('(') + pp.Group(pp.delimitedList(Identifier_bsv, ',')) + token(')'), default = [])
 subunion_bsv = kw_union + kw_tagged + token('{') + pp.OneOrMore(union_member_bsv) + token('}')
@@ -187,7 +193,10 @@ function_bsv << (kw_function + pp.Optional(type_bsv) + identifier_bsv('name') + 
                 kw_endfunction + pp.Optional(token(':') + identifier_bsv))
 
 # typeclass
-typeclass_bsv = kw_typeclass + Identifier_bsv('name') + token('#') + token('(') + pp.Group(pp.delimitedList(type_formal_bsv, ','))('formal_args') + token(')') + token(';') + \
+type_list_bsv = identifier_bsv | (token('(') + pp.delimitedList(identifier_bsv, ',') + token(')'))
+type_depend_bsv = type_list_bsv + kw_determines + type_list_bsv
+type_depends_bsv = pp.Optional(kw_dependencies + token('(') + pp.delimitedList(type_depend_bsv, ',') + token(')'))
+typeclass_bsv = kw_typeclass + Identifier_bsv('name') + type_formals_bsv('formal_args') + provisos_bsv + type_depends_bsv + token(';') + \
                 pp.OneOrMore(~kw_endtypeclass + pp.Word(pp.printables)) + \
                 kw_endtypeclass + pp.Optional(token(':') + Identifier_bsv)
 
