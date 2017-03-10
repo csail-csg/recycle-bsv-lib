@@ -138,7 +138,7 @@ add_tests(kw_module + '2', [], ['module2'])
 
 # packages, imports, and exports
 #package_bsv = kw_package + Identifier_bsv + ';' + \
-#              pp.OneOrMore(~kw_endpackage + pp.Word(pp.printables)) + \
+#              pp.ZeroOrMore(~kw_endpackage + pp.Word(pp.printables)) + \
 #              kw_endpackage + pp.Optional(':' + Identifier_bsv)
 package_bsv = kw_package + Identifier_bsv('name') + ';'
 import_bsv = kw_import + Identifier_bsv + pp.Literal('::') + pp.Literal('*') + pp.Literal(';')
@@ -181,7 +181,7 @@ provisos_bsv = pp.Optional(kw_provisos + token('(') + pp.Group(pp.delimitedList(
 
 # module
 module_bsv = kw_module + pp.Optional(token('[') + type_bsv + token(']')) + identifier_bsv('name') + \
-             pp.OneOrMore(~kw_endmodule + pp.Word(pp.printables)) + \
+             pp.ZeroOrMore(~kw_endmodule + pp.Word(pp.printables)) + \
              kw_endmodule + pp.Optional(token(':') + identifier_bsv)
 
 # module tests
@@ -190,7 +190,7 @@ add_tests(module_bsv, ["module[m] mkTest(); endmodule : mkTest"], [])
 # function
 function_bsv = pp.Forward()
 function_bsv << (kw_function + pp.Optional(type_bsv) + identifier_bsv('name') + pp.Optional( token('(') + pp.Group(pp.delimitedList(type_bsv + identifier_bsv, ',')) + token(')'), default=[] )('args') + provisos_bsv + token(';') + \
-                pp.OneOrMore(kw_function | (~kw_endfunction + pp.Word(pp.printables))) + \
+                pp.ZeroOrMore(kw_function | (~kw_endfunction + pp.Word(pp.printables))) + \
                 kw_endfunction + pp.Optional(token(':') + identifier_bsv))
 
 # typeclass
@@ -198,21 +198,21 @@ type_list_bsv = identifier_bsv | (token('(') + pp.delimitedList(identifier_bsv, 
 type_depend_bsv = type_list_bsv + kw_determines + type_list_bsv
 type_depends_bsv = pp.Optional(kw_dependencies + token('(') + pp.delimitedList(type_depend_bsv, ',') + token(')'))
 typeclass_bsv = kw_typeclass + Identifier_bsv('name') + type_formals_bsv('formal_args') + provisos_bsv + type_depends_bsv + token(';') + \
-                pp.OneOrMore(~kw_endtypeclass + pp.Word(pp.printables)) + \
+                pp.ZeroOrMore(~kw_endtypeclass + pp.Word(pp.printables)) + \
                 kw_endtypeclass + pp.Optional(token(':') + Identifier_bsv)
 
 # typeclass tests
 
 # instances
 instance_bsv = kw_instance + Identifier_bsv('name') + token('#') + token('(') + pp.Group(pp.delimitedList(type_bsv, ','))('formal_args') + token(')') + provisos_bsv + token(';') + \
-               pp.OneOrMore(~kw_endinstance + pp.Word(pp.printables)) + \
+               pp.ZeroOrMore(~kw_endinstance + pp.Word(pp.printables)) + \
                kw_endinstance + pp.Optional(token(':') + Identifier_bsv)
 
 # interface
 kw_interface = pp.Keyword('interface')
 kw_endinterface = pp.Keyword('endinterface')
 interface_bsv = kw_interface + Identifier_bsv('name') + pp.Optional(type_formals_bsv) + token(';') + \
-                pp.OneOrMore(~kw_endinterface + pp.Word(pp.printables)) + \
+                pp.ZeroOrMore(~kw_endinterface + pp.Word(pp.printables)) + \
                 kw_endinterface + pp.Optional(token(':') + Identifier_bsv)
 
 

@@ -107,9 +107,24 @@ module type for a module that contains perf counters
 typedef ModuleContext#(PerfContext) PerfModule;
 ```
 
-### [mkPerfCounter](../../src/bsv/PerfMonitor.bsv#L110)
+### [HasPerfCounters](../../src/bsv/PerfMonitor.bsv#L105)
 
 provisos shortcut for IsModule#(m, a__) and Context#(m, PerfContext)
+```bluespec
+typeclass HasPerfCounters#(type m);
+endtypeclass
+
+```
+
+### [HasPerfCounters](../../src/bsv/PerfMonitor.bsv#L107)
+```bluespec
+instance HasPerfCounters#(m) provisos (IsModule#(m, a__), Context#(m, PerfContext));
+endinstance
+
+
+```
+
+### [mkPerfCounter](../../src/bsv/PerfMonitor.bsv#L110)
 ```bluespec
 module [m] mkPerfCounter#(String name)(PerfCounter) provisos(HasPerfCounters#(m));
     Reg#(PerfData) count <- mkConfigReg(0);
