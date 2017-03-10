@@ -1,6 +1,6 @@
 # StringUtils
 
-### splitStringAtComma
+### [splitStringAtComma](../../src/bsv/StringUtils.bsv#L36)
 ```bluespec
 function Tuple2#(String, String) splitStringAtComma(String in);
     List#(Char) charList = stringToCharList(in);
@@ -10,7 +10,7 @@ function Tuple2#(String, String) splitStringAtComma(String in);
     
 ```
 
-### parseCSV
+### [parseCSV](../../src/bsv/StringUtils.bsv#L51)
 ```bluespec
 function List#(String) parseCSV(String inStr);
     String restOfString = inStr;
@@ -26,7 +26,7 @@ endfunction
 
 ```
 
-### decStringToInteger
+### [decStringToInteger](../../src/bsv/StringUtils.bsv#L62)
 ```bluespec
 function Integer decStringToInteger(String inStr);
     List#(Char) inCharList = stringToCharList(inStr);
@@ -45,7 +45,7 @@ function Integer decStringToInteger(String inStr);
     
 ```
 
-### hexStringToInteger
+### [hexStringToInteger](../../src/bsv/StringUtils.bsv#L85)
 ```bluespec
 function Integer hexStringToInteger(String inStr);
     List#(Char) inCharList = stringToCharList(inStr);
@@ -71,7 +71,7 @@ function Integer hexStringToInteger(String inStr);
     
 ```
 
-### doubleQuotedToString
+### [doubleQuotedToString](../../src/bsv/StringUtils.bsv#L115)
 ```bluespec
 function String doubleQuotedToString(String inStr);
     List#(Char) inCharList = stringToCharList(inStr);

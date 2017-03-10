@@ -37,7 +37,7 @@ endrule
 
 
 
-### mkFIFOG
+### [mkFIFOG](../../src/bsv/FIFOG.bsv#L90)
 
 2-element conflict-free `FIFOG`
 ```bluespec
@@ -50,7 +50,7 @@ endmodule
 
 ```
 
-### mkSizedFIFOG
+### [mkSizedFIFOG](../../src/bsv/FIFOG.bsv#L97)
 
 Sized conflict-free `FIFOG`
 ```bluespec
@@ -63,7 +63,7 @@ endmodule
 
 ```
 
-### mkFIFOG1
+### [mkFIFOG1](../../src/bsv/FIFOG.bsv#L104)
 
 1-element conflicting `FIFOG`
 ```bluespec
@@ -76,7 +76,7 @@ endmodule
 
 ```
 
-### mkLFIFOG
+### [mkLFIFOG](../../src/bsv/FIFOG.bsv#L111)
 
 Pipeline `FIFOG`
 ```bluespec
@@ -89,7 +89,7 @@ endmodule
 
 ```
 
-### mkBypassFIFOG
+### [mkBypassFIFOG](../../src/bsv/FIFOG.bsv#L129)
 
 Bypass `FIFOG`
 
@@ -108,7 +108,7 @@ endmodule
 
 ```
 
-### mkPipelineFIFOG
+### [mkPipelineFIFOG](../../src/bsv/FIFOG.bsv#L139)
 
 Pipeline `FIFOG`
 
@@ -125,7 +125,7 @@ endmodule
 
 ```
 
-### mkFIFOGfromFIFOF
+### [mkFIFOGfromFIFOF](../../src/bsv/FIFOG.bsv#L149)
 
 Module to make `FIFOG` from a `FIFOF` module.
 

@@ -1,6 +1,6 @@
 # RegFileUtil
 
-### mkRegFileFullGenWith
+### [mkRegFileFullGenWith](../../src/bsv/RegFileUtil.bsv#L28)
 ```bluespec
 module mkRegFileFullGenWith#(function t initF(a i))(RegFile#(a, t)) provisos (Bounded#(a), Bits#(a, aSz), Bits#(t, tSz));
     (* hide *)
@@ -24,7 +24,7 @@ endmodule
 
 ```
 
-### mkRegFileFullReplicate
+### [mkRegFileFullReplicate](../../src/bsv/RegFileUtil.bsv#L47)
 ```bluespec
 module mkRegFileFullReplicate#(t initVal)(RegFile#(a, t)) provisos (Bounded#(a), Bits#(a, aSz), Bits#(t, tSz));
     function t initF(a x);

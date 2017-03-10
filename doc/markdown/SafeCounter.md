@@ -1,4 +1,4 @@
-### mkSafeCounter
+### [mkSafeCounter](../../src/bsv/SafeCounter.bsv#L37)
 ```bluespec
 module mkSafeCounter#(t initVal)(SafeCounter#(t)) provisos(Alias#(t, Bit#(w)));
     Ehr#(2, t) cnt <- mkEhr(initVal);

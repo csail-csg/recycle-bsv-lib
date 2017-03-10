@@ -1,6 +1,6 @@
 # ClientServerUtil
 
-### TransformReqHelper
+### [TransformReqHelper](../../src/bsv/ClientServerUtil.bsv#L110)
 ```bluespec
 typeclass TransformReqHelper#(type clientOrServer, type reqT, type newReqT, type newClientOrServer)
         dependencies ((clientOrServer, newClientOrServer) determines (reqT, newReqT));
@@ -11,7 +11,7 @@ endtypeclass
 
 ```
 
-### TransformRespHelper
+### [TransformRespHelper](../../src/bsv/ClientServerUtil.bsv#L116)
 ```bluespec
 typeclass TransformRespHelper#(type clientOrServer, type respT, type newRespT, type newClientOrServer)
         dependencies ((clientOrServer, newClientOrServer) determines (respT, newRespT));
@@ -22,7 +22,7 @@ endtypeclass
 
 ```
 
-### TransformReqRespHelper
+### [TransformReqRespHelper](../../src/bsv/ClientServerUtil.bsv#L122)
 ```bluespec
 typeclass TransformReqRespHelper#(type clientOrServer, type reqT, type respT, type newReqT, type newRespT, type newClientOrServer)
         dependencies ((clientOrServer, newClientOrServer) determines (reqT, respT, newReqT, newRespT));
@@ -34,7 +34,7 @@ endtypeclass
 
 ```
 
-### TransformReqHelper
+### [TransformReqHelper](../../src/bsv/ClientServerUtil.bsv#L131)
 ```bluespec
 instance TransformReqHelper#(Client#(reqT, respT), reqT, newReqT, Client#(newReqT, respT));
     function Client#(newReqT, respT) transformReq(function newReqT f(reqT x),
@@ -46,7 +46,7 @@ endinstance
 
 ```
 
-### TransformReqHelper
+### [TransformReqHelper](../../src/bsv/ClientServerUtil.bsv#L138)
 ```bluespec
 instance TransformReqHelper#(Server#(newReqT, respT), reqT, newReqT, Server#(reqT, respT));
     function Server#(reqT, respT) transformReq(function newReqT f(reqT x),
@@ -58,7 +58,7 @@ endinstance
 
 ```
 
-### TransformRespHelper
+### [TransformRespHelper](../../src/bsv/ClientServerUtil.bsv#L145)
 ```bluespec
 instance TransformRespHelper#(Client#(reqT, newRespT), respT, newRespT, Client#(reqT, respT));
     function Client#(reqT, respT) transformResp(function newRespT f(respT x),
@@ -70,7 +70,7 @@ endinstance
 
 ```
 
-### TransformRespHelper
+### [TransformRespHelper](../../src/bsv/ClientServerUtil.bsv#L152)
 ```bluespec
 instance TransformRespHelper#(Server#(reqT, respT), respT, newRespT, Server#(reqT, newRespT));
     function Server#(reqT, newRespT) transformResp(function newRespT f(respT x),
@@ -82,7 +82,7 @@ endinstance
 
 ```
 
-### TransformReqRespHelper
+### [TransformReqRespHelper](../../src/bsv/ClientServerUtil.bsv#L159)
 ```bluespec
 instance TransformReqRespHelper#(Client#(reqT, newRespT), reqT, respT, newReqT, newRespT, Client#(newReqT, respT));
     function Client#(newReqT, respT) transformReqResp(function newReqT reqF(reqT x),
@@ -95,7 +95,7 @@ endinstance
 
 ```
 
-### TransformReqRespHelper
+### [TransformReqRespHelper](../../src/bsv/ClientServerUtil.bsv#L167)
 ```bluespec
 instance TransformReqRespHelper#(Server#(newReqT, respT), reqT, respT, newReqT, newRespT, Server#(reqT, newRespT));
     function Server#(reqT, newRespT) transformReqResp(function newReqT reqF(reqT x),

@@ -235,13 +235,16 @@ if __name__ == '__main__':
         scan_result = (comment_bsv | (package_bsv | typedef_bsv | typeclass_bsv | instance_bsv | module_bsv | function_bsv).addParseAction(save_doc_comment)).scanString(file_data)
         for (x, y, z) in scan_result:
             if 'name' in x:
+                line = pp.lineno(y, file_data)
                 if x[1] == 'package':
                     print('# ' + str(x['name']))
                 elif 'formal_args' in x:
                     # print('## ' + str(x['name']) + '#(' + str(x['formal_args']) + ')')
-                    print('### ' + str(x['name']))
+                    # print('### ' + str(x['name']))
+                    print('### [' + str(x['name']) + '](../../' + sys.argv[1] + '#L' + str(line) + ')')
                 else:
-                    print('### ' + str(x['name']))
+                    # print('### ' + str(x['name']))
+                    print('### [' + str(x['name']) + '](../../' + sys.argv[1] + '#L' + str(line) + ')')
                 if x[0] != '':
                     print(x[0])
                 if x[1] != 'package':

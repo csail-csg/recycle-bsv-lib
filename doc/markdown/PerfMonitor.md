@@ -8,42 +8,42 @@ TODO: explain what makes a PerfMonitor (i.e. PerfCounters and monadic
 computation)
 
 
-### ['PerfDataSz']
+### [['PerfDataSz']](../../src/bsv/PerfMonitor.bsv#L70)
 ```bluespec
 typedef 64 PerfDataSz;
 ```
 
-### ['PerfSubIndexSz']
+### [['PerfSubIndexSz']](../../src/bsv/PerfMonitor.bsv#L71)
 ```bluespec
 typedef 8 PerfSubIndexSz;
 ```
 
-### ['PerfLevels']
+### [['PerfLevels']](../../src/bsv/PerfMonitor.bsv#L72)
 ```bluespec
 typedef 4 PerfLevels;
 ```
 
-### ['PerfIndexSz']
+### [['PerfIndexSz']](../../src/bsv/PerfMonitor.bsv#L73)
 ```bluespec
 typedef TMul#(PerfSubIndexSz, PerfLevels) PerfIndexSz;
 ```
 
-### ['PerfData']
+### [['PerfData']](../../src/bsv/PerfMonitor.bsv#L75)
 ```bluespec
 typedef Bit#(PerfDataSz) PerfData;
 ```
 
-### ['PerfSubIndex']
+### [['PerfSubIndex']](../../src/bsv/PerfMonitor.bsv#L76)
 ```bluespec
 typedef Bit#(PerfSubIndexSz) PerfSubIndex;
 ```
 
-### ['PerfIndex']
+### [['PerfIndex']](../../src/bsv/PerfMonitor.bsv#L77)
 ```bluespec
 typedef Bit#(PerfIndexSz) PerfIndex;
 ```
 
-### ['PerfCounterInfo']
+### [['PerfCounterInfo']](../../src/bsv/PerfMonitor.bsv#L83)
 
 structure for tracking a single counter
 ```bluespec
@@ -53,7 +53,7 @@ typedef struct {
 } PerfCounterInfo;
 ```
 
-### ['PerfSubmoduleInfo']
+### [['PerfSubmoduleInfo']](../../src/bsv/PerfMonitor.bsv#L89)
 
 structure for tracking a submodule
 ```bluespec
@@ -63,7 +63,7 @@ typedef struct {
 } PerfSubmoduleInfo;
 ```
 
-### ['PerfContext']
+### [['PerfContext']](../../src/bsv/PerfMonitor.bsv#L95)
 
 keeps track of perf counters in this module and in submodules
 ```bluespec
@@ -74,14 +74,14 @@ typedef struct {
 } PerfContext;
 ```
 
-### ['PerfModule']
+### [['PerfModule']](../../src/bsv/PerfMonitor.bsv#L102)
 
 module type for a module that contains perf counters
 ```bluespec
 typedef ModuleContext#(PerfContext) PerfModule;
 ```
 
-### mkPerfCounter
+### [mkPerfCounter](../../src/bsv/PerfMonitor.bsv#L110)
 
 provisos shortcut for IsModule#(m, a__) and Context#(m, PerfContext)
 ```bluespec
@@ -109,7 +109,7 @@ endmodule
 
 ```
 
-### mkPerfMonitor
+### [mkPerfMonitor](../../src/bsv/PerfMonitor.bsv#L131)
 ```bluespec
 module [Module] mkPerfMonitor#(PerfContext perfContext, String filename)(PerfMonitor);
     FIFO#(PerfData) respFifo <- mkFIFO;
@@ -235,7 +235,7 @@ endmodule
 
 ```
 
-### mkInitialPerfContext
+### [mkInitialPerfContext](../../src/bsv/PerfMonitor.bsv#L252)
 ```bluespec
 module mkInitialPerfContext(PerfContext);
     Reg#(Bool) enReg <- mkConfigReg(True);
@@ -246,7 +246,7 @@ endmodule
 
 ```
 
-### toSynthBoundary
+### [toSynthBoundary](../../src/bsv/PerfMonitor.bsv#L258)
 ```bluespec
 module [Module] toSynthBoundary#(String name, PerfModule#(ifcType) mkModuleDef)(Tuple2#(PerfMonitor, ifcType));
     let initialContext <- mkInitialPerfContext;
@@ -260,7 +260,7 @@ endmodule
 
 ```
 
-### fromSynthBoundary
+### [fromSynthBoundary](../../src/bsv/PerfMonitor.bsv#L267)
 ```bluespec
 module [m] fromSynthBoundary#(String name, Module#(Tuple2#(PerfMonitor, ifcType)) mkModuleSynth)(ifcType) provisos(IsModule#(m, a__), Context#(m, PerfContext));
     Tuple2#(PerfMonitor, ifcType) combinedIfc <- liftModule(mkModuleSynth);
@@ -276,7 +276,7 @@ endmodule
 
 ```
 
-### mkPerfOutputFSM
+### [mkPerfOutputFSM](../../src/bsv/PerfMonitor.bsv#L289)
 ```bluespec
 module mkPerfOutputFSM#(String topModuleName, PerfMonitor perfMonitor)(FSM);
     // TODO: make this depend on the length of perfCounterList

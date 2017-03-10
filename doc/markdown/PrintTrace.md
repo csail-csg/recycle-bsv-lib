@@ -93,7 +93,7 @@ You can print to stderr by specifying the file as stderr.
 
 
 
-### HasTypeIsVoid
+### [HasTypeIsVoid](../../src/bsv/PrintTrace.bsv#L138)
 ```bluespec
 typeclass HasTypeIsVoid#(type t);
     function Bool typeIsVoid(t x);
@@ -103,7 +103,7 @@ endtypeclass
 
 ```
 
-### HasTypeIsVoid
+### [HasTypeIsVoid](../../src/bsv/PrintTrace.bsv#L143)
 ```bluespec
 instance HasTypeIsVoid#(void);
     function Bool typeIsVoid(void x);
@@ -114,7 +114,7 @@ endinstance
 
 ```
 
-### HasFPrintTraceHelper
+### [HasFPrintTraceHelper](../../src/bsv/PrintTrace.bsv#L150)
 ```bluespec
 typeclass HasFPrintTraceHelper#(type t);
     function t fprintTraceHelper(File file, Bool printTimestamp, Fmt callName, Maybe#(Fmt) args, t x);
@@ -122,7 +122,7 @@ endtypeclass
 
 ```
 
-### HasFPrintTraceHelper
+### [HasFPrintTraceHelper](../../src/bsv/PrintTrace.bsv#L154)
 ```bluespec
 instance HasFPrintTraceHelper#(ActionValue#(t)) provisos (FShow#(t));
     function ActionValue#(t) fprintTraceHelper(File file, Bool printTimestamp, Fmt callName, Maybe#(Fmt) args, ActionValue#(t) av);
@@ -151,7 +151,7 @@ endinstance
 
 ```
 
-### HasFPrintTraceHelper
+### [HasFPrintTraceHelper](../../src/bsv/PrintTrace.bsv#L179)
 ```bluespec
 instance HasFPrintTraceHelper#(function outT f(inT x)) provisos (HasFPrintTraceHelper#(outT), FShow#(inT));
     function (function outT f(inT x)) fprintTraceHelper(File file, Bool printTimestamp, Fmt callName, Maybe#(Fmt) args, function outT func(inT x));
@@ -165,7 +165,7 @@ endinstance
 
 ```
 
-### HasFPrintTraceHelper
+### [HasFPrintTraceHelper](../../src/bsv/PrintTrace.bsv#L189)
 ```bluespec
 instance HasFPrintTraceHelper#(Reg#(t)) provisos (FShow#(t));
     function Reg#(t) fprintTraceHelper(File file, Bool printTimestamp, Fmt callName, Maybe#(Fmt) args, Reg#(t) ifc);
@@ -181,7 +181,7 @@ endinstance
 
 ```
 
-### HasFPrintTraceHelper
+### [HasFPrintTraceHelper](../../src/bsv/PrintTrace.bsv#L200)
 ```bluespec
 instance HasFPrintTraceHelper#(Get#(t)) provisos (FShow#(t));
     function Get#(t) fprintTraceHelper(File file, Bool printTimestamp, Fmt callName, Maybe#(Fmt) args, Get#(t) ifc);
@@ -194,7 +194,7 @@ endinstance
 
 ```
 
-### HasFPrintTraceHelper
+### [HasFPrintTraceHelper](../../src/bsv/PrintTrace.bsv#L208)
 ```bluespec
 instance HasFPrintTraceHelper#(Put#(t)) provisos (FShow#(t));
     function Put#(t) fprintTraceHelper(File file, Bool printTimestamp, Fmt callName, Maybe#(Fmt) args, Put#(t) ifc);
@@ -207,7 +207,7 @@ endinstance
 
 ```
 
-### HasFPrintTraceHelper
+### [HasFPrintTraceHelper](../../src/bsv/PrintTrace.bsv#L216)
 ```bluespec
 instance HasFPrintTraceHelper#(Client#(t1,t2)) provisos (FShow#(t1), FShow#(t2));
     function Client#(t1,t2) fprintTraceHelper(File file, Bool printTimestamp, Fmt callName, Maybe#(Fmt) args, Client#(t1,t2) ifc);
@@ -221,7 +221,7 @@ endinstance
 
 ```
 
-### HasFPrintTraceHelper
+### [HasFPrintTraceHelper](../../src/bsv/PrintTrace.bsv#L225)
 ```bluespec
 instance HasFPrintTraceHelper#(Server#(t1,t2)) provisos (FShow#(t1), FShow#(t2));
     function Server#(t1,t2) fprintTraceHelper(File file, Bool printTimestamp, Fmt callName, Maybe#(Fmt) args, Server#(t1,t2) ifc);
@@ -235,7 +235,7 @@ endinstance
 
 ```
 
-### HasFPrintTraceHelper
+### [HasFPrintTraceHelper](../../src/bsv/PrintTrace.bsv#L234)
 ```bluespec
 instance HasFPrintTraceHelper#(FIFO#(t)) provisos (FShow#(t));
     function FIFO#(t) fprintTraceHelper(File file, Bool printTimestamp, Fmt callName, Maybe#(Fmt) args, FIFO#(t) ifc);
@@ -254,7 +254,7 @@ endinstance
 
 ```
 
-### HasFPrintTraceHelper
+### [HasFPrintTraceHelper](../../src/bsv/PrintTrace.bsv#L248)
 ```bluespec
 instance HasFPrintTraceHelper#(FIFOF#(t)) provisos (FShow#(t));
     function FIFOF#(t) fprintTraceHelper(File file, Bool printTimestamp, Fmt callName, Maybe#(Fmt) args, FIFOF#(t) ifc);
@@ -275,7 +275,7 @@ endinstance
 
 ```
 
-### HasFPrintTraceHelper
+### [HasFPrintTraceHelper](../../src/bsv/PrintTrace.bsv#L264)
 ```bluespec
 instance HasFPrintTraceHelper#(Vector#(n,t)) provisos (HasFPrintTraceHelper#(t));
     function Vector#(n,t) fprintTraceHelper(File file, Bool printTimestamp, Fmt callName, Maybe#(Fmt) args, Vector#(n,t) ifc);
@@ -293,7 +293,7 @@ endinstance
 
 ```
 
-### fprintTrace
+### [fprintTrace](../../src/bsv/PrintTrace.bsv#L292)
 
 
 This function takes in an object `x` of type `t` and returns a version of
@@ -317,7 +317,7 @@ endfunction
 
 ```
 
-### printTrace
+### [printTrace](../../src/bsv/PrintTrace.bsv#L297)
 ```bluespec
 function t printTrace(String msg, t x)
         provisos (HasFPrintTraceHelper#(t));
@@ -327,7 +327,7 @@ endfunction
 
 ```
 
-### fprintTraceM
+### [fprintTraceM](../../src/bsv/PrintTrace.bsv#L302)
 ```bluespec
 module [m] fprintTraceM#(File file, String msg, m#(t) mkM)(t)
         provisos (IsModule#(m, a__), HasFPrintTraceHelper#(t));
@@ -339,7 +339,7 @@ endmodule
 
 ```
 
-### printTraceM
+### [printTraceM](../../src/bsv/PrintTrace.bsv#L309)
 ```bluespec
 module [m] printTraceM#(String msg, m#(t) mkM)(t)
         provisos (IsModule#(m, a__), HasFPrintTraceHelper#(t));
@@ -351,7 +351,7 @@ endmodule
 
 ```
 
-### printTimedTraceM
+### [printTimedTraceM](../../src/bsv/PrintTrace.bsv#L316)
 ```bluespec
 module [m] printTimedTraceM#(String msg, m#(t) mkM)(t)
         provisos (IsModule#(m, a__), HasFPrintTraceHelper#(t));

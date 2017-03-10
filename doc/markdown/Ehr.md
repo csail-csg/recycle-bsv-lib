@@ -1,11 +1,11 @@
 # Ehr
 
-### ['Ehr', ['numeric', 'type', 'n', 'type', 't']]
+### [['Ehr', ['numeric', 'type', 'n', 'type', 't']]](../../src/bsv/Ehr.bsv#L53)
 ```bluespec
 typedef Vector#(n, Reg#(t)) Ehr#(numeric type n, type t);
 ```
 
-### readVEhr
+### [readVEhr](../../src/bsv/Ehr.bsv#L55)
 ```bluespec
 function Vector#(n, t) readVEhr(i ehr_index, Vector#(n, Ehr#(n2, t)) vec_ehr) provisos (PrimIndex#(i, __a));
     function Reg#(t) get_ehr_index(Ehr#(n2, t) e) = e[ehr_index];
@@ -15,7 +15,7 @@ endfunction
 
 ```
 
-### writeVEhr
+### [writeVEhr](../../src/bsv/Ehr.bsv#L60)
 ```bluespec
 function Action writeVEhr(i ehr_index, Vector#(n, Ehr#(n2, t)) vec_ehr, Vector#(n, t) data) provisos (PrimIndex#(i, __a));
     function Reg#(t) get_ehr_index(Ehr#(n2, t) e) = e[ehr_index];
@@ -25,7 +25,7 @@ endfunction
 
 ```
 
-### mkEhr
+### [mkEhr](../../src/bsv/Ehr.bsv#L65)
 ```bluespec
 module mkEhr#(t initVal)(Ehr#(n, t)) provisos (Bits#(t, tSz));
     // mkUnsafeWire allows for combinational paths through the EHR within the
@@ -91,7 +91,7 @@ endmodule
 
 ```
 
-### mkEhrU
+### [mkEhrU](../../src/bsv/Ehr.bsv#L126)
 ```bluespec
 module mkEhrU(Ehr#(n, t)) provisos (Bits#(t, tSz));
     (* hide *)

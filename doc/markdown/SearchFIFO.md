@@ -1,6 +1,6 @@
 # SearchFIFO
 
-### mkSearchFIFO
+### [mkSearchFIFO](../../src/bsv/SearchFIFO.bsv#L41)
 ```bluespec
 module mkSearchFIFO#(function Bool isMatch(searchType s, dataType d))(SearchFIFO#(size, dataType, searchType)) provisos (Bits#(dataType, dataSize));
     // use valid bits to make search logic smaller
@@ -115,7 +115,7 @@ endmodule
 
 ```
 
-### mkPipelineSearchFIFO
+### [mkPipelineSearchFIFO](../../src/bsv/SearchFIFO.bsv#L153)
 ```bluespec
 module mkPipelineSearchFIFO#(function Bool isMatch(searchType s, dataType d))(SearchFIFO#(size, dataType, searchType)) provisos (Bits#(dataType, dataSize));
     // use valid bits to make search logic smaller
