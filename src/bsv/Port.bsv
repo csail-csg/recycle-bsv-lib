@@ -21,6 +21,28 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+/**
+ * This package defines "Port" interfaces intended to replace `Get`, `Put`,
+ * `Client`, and `Server`. The `InputPort` interface improves upon the `Put`
+ * interface by adding a `canEnq` method. The `OutputPort` interface improves
+ * upon the `Get` interfaces by separating `get` into `first` and `deq` methods
+ * and also including a `canDeq` method.
+ *
+ * The `ServerPort` and `ClientPort` interfaces are replacements `Server` and
+ * `Client` interfaces that use `InputPort` and `OutputPort` instead of `Get`
+ * and `Put`.
+ *
+ * This package contains two ways to convert interfaces to `InputPort` and
+ * `OutputPort`. The first way are the functions `toInputPort` and
+ * `toOutputPort`. These functions are only defined for interfaces that can
+ * be directly converted to `InputPort` or `OutputPort` with minimal logic.
+ * The second way are the modules `mkInputPortBuffer`,
+ * `mkInputPortBypassBuffer`, `mkOutputPortBuffer`, `mkOutputPortBypassBuffer`.
+ * These modules add a buffers to the inputted interface to create `InputPort`
+ * or `OutputPort` interfaces. Since these add buffers, they break the
+ * atomicity of the action of the inputted interface.
+ */
+
 package Port;
 
 import ClientServer::*;
@@ -29,21 +51,6 @@ import Ehr::*;
 import FIFOG::*;
 import GetPut::*;
 
-/**
- * This package defines "Port" interfaces intended to replace Get, Put,
- * Client, and Server. The InputPort interface improves upon the Put interface
- * by adding a canEnq method. The OutputPort interface improves upon the Get
- * interfaces by separating get into first and deq methods and also including
- * a canDeq method.
- *
- * The ServerPort and ClientPort are replacement Server and Client interfaces
- * that use InputPort and OutputPort instead of Get and Put.
- *
- * This package contains two ways to convert interfaces to InputPort and
- * OutputPort. The first way are the functions toInputPort and toOutputPort.
- * These functions. Currently there are no concrete implementations of these
- * functions,
- */
 
 interface InputPort#(type t);
     method Action enq(t val);
