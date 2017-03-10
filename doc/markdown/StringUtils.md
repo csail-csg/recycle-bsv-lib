@@ -1,13 +1,20 @@
 # StringUtils
 
-### [splitStringAtComma](../../src/bsv/StringUtils.bsv#L36)
+### [notComma](../../src/bsv/StringUtils.bsv#L36)
 ```bluespec
 function Tuple2#(String, String) splitStringAtComma(String in);
     List#(Char) charList = stringToCharList(in);
     function Bool notComma(Char c);
         return c != ",";
     endfunction
-    
+    // take everything up to the first comma
+    let parsedEntry = charListToString(takeWhile(notComma, charList));
+    // drop everything up to the first comma, then drop that too
+    let restOfString = charListToString(drop(1, dropWhile(notComma, charList)));
+    return tuple2(parsedEntry, restOfString);
+endfunction
+
+
 ```
 
 ### [parseCSV](../../src/bsv/StringUtils.bsv#L51)
@@ -26,7 +33,7 @@ endfunction
 
 ```
 
-### [decStringToInteger](../../src/bsv/StringUtils.bsv#L62)
+### [decStringToIntegerHelper](../../src/bsv/StringUtils.bsv#L62)
 ```bluespec
 function Integer decStringToInteger(String inStr);
     List#(Char) inCharList = stringToCharList(inStr);
@@ -42,10 +49,19 @@ function Integer decStringToInteger(String inStr);
             return decStringToIntegerHelper(10*i + digitToInteger(head(in)), tail(in));
         end
     endfunction
-    
+    // using recursion helper function
+    let {parsedInt, shouldBeNil} = decStringToIntegerHelper(0, inCharList);
+    // sanity check 2
+    if (shouldBeNil != tagged Nil) begin
+        let x = error("in decStringToInteger, shouldBeNil was not Nil");
+    end
+    return parsedInt;
+endfunction
+
+
 ```
 
-### [hexStringToInteger](../../src/bsv/StringUtils.bsv#L85)
+### [hexStringToIntegerHelper](../../src/bsv/StringUtils.bsv#L85)
 ```bluespec
 function Integer hexStringToInteger(String inStr);
     List#(Char) inCharList = stringToCharList(inStr);
@@ -68,7 +84,16 @@ function Integer hexStringToInteger(String inStr);
             return hexStringToIntegerHelper(16*i + hexDigitToInteger(head(in)), tail(in));
         end
     endfunction
-    
+    // using recursion helper function
+    let {parsedInt, shouldBeNil} = hexStringToIntegerHelper(0, inCharList);
+    // sanity check 2
+    if (shouldBeNil != tagged Nil) begin
+        let x = error("in hexStringToInteger, shouldBeNil was not Nil");
+    end
+    return parsedInt;
+endfunction
+
+
 ```
 
 ### [doubleQuotedToString](../../src/bsv/StringUtils.bsv#L115)

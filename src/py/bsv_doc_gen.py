@@ -188,9 +188,10 @@ module_bsv = kw_module + pp.Optional(token('[') + type_bsv + token(']')) + ident
 add_tests(module_bsv, ["module[m] mkTest(); endmodule : mkTest"], [])
 
 # function
+# functions can take function as arguments, and the syntax does not match "type_bsv + identifier_bsv" so I made the identifier optional
 function_bsv = pp.Forward()
-function_bsv << (kw_function + pp.Optional(type_bsv) + identifier_bsv('name') + pp.Optional( token('(') + pp.Group(pp.delimitedList(type_bsv + identifier_bsv, ',')) + token(')'), default=[] )('args') + provisos_bsv + token(';') + \
-                pp.ZeroOrMore(kw_function | (~kw_endfunction + pp.Word(pp.printables))) + \
+function_bsv << (kw_function + pp.Optional(type_bsv) + identifier_bsv('name') + pp.Optional( token('(') + pp.Group(pp.delimitedList(type_bsv + pp.Optional(identifier_bsv), ',')) + token(')'), default=[] )('args') + provisos_bsv + token(';') + \
+                pp.ZeroOrMore(function_bsv | (~kw_endfunction + pp.Word(pp.printables))) + \
                 kw_endfunction + pp.Optional(token(':') + identifier_bsv))
 
 # typeclass

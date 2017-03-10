@@ -22,27 +22,91 @@ Unified typeclass functions:
   newClientOrServer transformReqResp(reqF, respF, clientOrServer)
 
 
-### [Client](../../src/bsv/ClientServerUtil.bsv#L54)
+### [transformClientReqResp](../../src/bsv/ClientServerUtil.bsv#L51)
 ```bluespec
-interface Client;
+function Client#(newReqT, respT) transformClientReqResp(function newReqT reqF(reqT x),
+                                                        function newRespT respF(respT x),
+                                                        Client#(reqT, newRespT) client);
+    return (interface Client;
                 interface Get request;
                     method ActionValue#(newReqT) get;
                         let x <- client.request.get;
                         return reqF(x);
                     endmethod
                 endinterface
-                
+                interface Put response;
+                    method Action put(respT x);
+                        client.response.put(respF(x));
+                    endmethod
+                endinterface
+            endinterface);
+endfunction
+
+
 ```
 
-### [Server](../../src/bsv/ClientServerUtil.bsv#L72)
+### [transformServerReqResp](../../src/bsv/ClientServerUtil.bsv#L69)
 ```bluespec
-interface Server;
+function Server#(reqT, newRespT) transformServerReqResp(function newReqT reqF(reqT x),
+                                                        function newRespT respF(respT x),
+                                                        Server#(newReqT, respT) server );
+    return (interface Server;
                 interface Put request;
                     method Action put(reqT x);
                         server.request.put(reqF(x));
                     endmethod
                 endinterface
-                
+                interface Get response;
+                    method ActionValue#(newRespT) get;
+                        let x <- server.response.get;
+                        return respF(x);
+                    endmethod
+                endinterface
+            endinterface);
+endfunction
+
+
+```
+
+### [transformClientReq](../../src/bsv/ClientServerUtil.bsv#L87)
+```bluespec
+function Client#(newReqT, respT) transformClientReq(function newReqT reqF(reqT x),
+                                                    Client#(reqT, respT) client);
+    return transformClientReqResp(reqF, id, client);
+endfunction
+
+
+```
+
+### [transformClientResp](../../src/bsv/ClientServerUtil.bsv#L92)
+```bluespec
+function Client#(reqT, respT) transformClientResp(function newRespT respF(respT x),
+                                                  Client#(reqT, newRespT) client);
+    return transformClientReqResp(id, respF, client);
+endfunction
+
+
+```
+
+### [transformServerReq](../../src/bsv/ClientServerUtil.bsv#L97)
+```bluespec
+function Server#(reqT, respT) transformServerReq(function newReqT reqF(reqT x),
+                                                 Server#(newReqT, respT) client);
+    return transformServerReqResp(reqF, id, client);
+endfunction
+
+
+```
+
+### [transformServerResp](../../src/bsv/ClientServerUtil.bsv#L102)
+```bluespec
+function Server#(reqT, newRespT) transformServerResp(function newRespT respF(respT x),
+                                                     Server#(reqT, respT) client);
+    return transformServerReqResp(id, respF, client);
+endfunction
+
+
+
 ```
 
 ### [TransformReqHelper](../../src/bsv/ClientServerUtil.bsv#L110)
