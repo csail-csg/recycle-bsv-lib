@@ -21,6 +21,98 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+/**
+ * How to use this package:
+ *
+ * #### printTrace, fprintTrace
+ *
+ * Let's say you have an interface method in your module that is directly
+ * connected to a submodule's interface method, but you want to add a print
+ * statement to it. If you don't want to go through the trouble of writing a
+ * method definition just to print a message and call the submodule, you can
+ * use `printTrace` and/or `fprintTrace` to attach a message to the `Action`
+ * or `ActionValue` interface method every time it is called.
+ *
+ * ```
+ * method Action clear = submodule.clear;
+ * ```
+ *
+ * becomes
+ *
+ * ```
+ * method Action clear = printTrace("clear", submodule.clear);
+ * ```
+ *
+ * This will print "clear" to stdout every time the clear method is called. To
+ * print to a different file, you can use fprintTrace and specify the file.
+ *
+ * If your method takes in arguments, printTrace will print the values of the
+ * arguments when it is callled. For example:
+ *
+ * ```
+ * method Action enq = printTrace("enq", submodule.enq);
+ * ```
+ *
+ * will print messages like this:
+ *
+ * ```
+ * enq(3)
+ * enq(8)
+ * ```
+ *
+ * This only works if there is an appropriate instance of `FShow` for all the
+ * argument types. You can use printTrace on method calls within a rule, but
+ * depending on how you write it, you may or may not see the arguments used in
+ * the method call. For example, if you have the original method call:
+ *
+ * ```
+ * m.foo(2, 9);
+ * ```
+ *
+ * Then writing the following commands will give you the following output:
+ * | Commands                           | Output                |
+ * | ---------------------------------- | --------------------- |
+ * | `printTrace("m.foo", m.foo(2, 9))` | `submodule.foo`       |
+ * | `printTrace("m.foo", m.foo)(2, 9)` | `submodule.foo(2, 9)` |
+ * | `printTrace("m.foo", m.foo, 2, 9)` | `submodule.foo(2, 9)` |
+ *
+ * #### printTraceM, fprintTraceM
+ *
+ * Let's say you have a `FIFO` in your module, and you want to add print
+ * statements to it's interface:
+ *
+ * ```
+ * FIFO#(Bit#(4)) myfifo <- mkFIFO;
+ * ```
+ *
+ * becomes
+ *
+ * ```
+ * FIFO#(Bit#(4)) myfifo <- printTraceM("myfifo", mkFIFO);
+ * ```
+ *
+ * Now everytime any of the action interface methods are called, a message is
+ * printed to stdout like this:
+ *
+ * ```
+ * myfifo.enq(3) =
+ * myfifo.enq(0) = 
+ * myfifo.deq = 3
+ * myfifo.deq = 0
+ * myfifo.enq(1) = 
+ * myfifo.deq = 1
+ * ```
+ *
+ * If you want to output that information to a file, you can use `fprintTraceM`:
+ *
+ * ```
+ * FIFO#(Bit#(4)) myfifo <- fprintTraceM(file, "myfifo", mkFIFO);
+ * ```
+ *
+ * You can print to stderr by specifying the file as stderr.
+ *
+ */
+
 package PrintTrace;
 
 // XXX: For now export everything
@@ -34,78 +126,6 @@ import FIFO::*;
 import FIFOF::*;
 import GetPut::*;
 import Vector::*;
-
-/**
- * How to use this package:
- *
- * # printTrace, fprintTrace
- *
- * Let's say you have an interface method in your module that is directly
- * connected to a submodule's interface method, but you want to add a print
- * statement to it. If you don't want to go through the trouble of writing a
- * method definition just to print a message and call the submodule, you can
- * use printTrace and/or fprintTrace to attach a message to the Action or
- * ActionValue interface method every time it is called.
- *
- * >  method Action clear = submodule.clear;
- *
- * becomes
- *
- * >  method Action clear = printTrace("clear", submodule.clear);
- *
- * This will print "clear" to stdout every time the clear method is called. To
- * print to a different file, you can use fprintTrace and specify the file.
- *
- * If your method takes in arguments, printTrace will print the values of the
- * arguments when it is callled. For example:
- *
- * >  method Action enq = printTrace("enq", submodule.enq);
- * 
- * will print messages like this:
- *
- * >  enq(3)
- * >  enq(8)
- *
- * This only works if there is an appropriate instance of FShow for all the
- * argument types. You can use printTrace on method calls within a rule, but
- * depending on how you write it, you may or may not see the arguments used in
- * the method call. For example, if you have the original method call:
- *
- * >  m.foo(2, 9);
- *
- * Then writing this ........................ will print this
- * >  printTrace("m.foo", m.foo(2, 9))        >  submodule.foo
- * >  printTrace("m.foo", m.foo)(2, 9)        >  submodule.foo(2, 9)
- * >  printTrace("m.foo", m.foo, 2, 9)        >  submodule.foo(2, 9)
- *
- * # printTraceM, fprintTraceM
- *
- * Let's say you have a FIFO in your module, and you want to add print
- * statements to it's interface:
- *
- * >  FIFO#(Bit#(4)) myfifo <- mkFIFO;
- *
- * becomes
- *
- * >  FIFO#(Bit#(4)) myfifo <- printTraceM("myfifo", mkFIFO);
- *
- * Now everytime any of the action interface methods are called, a message is
- * printed to stdout like this:
- *
- * >  myfifo.enq(3) =
- * >  myfifo.enq(0) = 
- * >  myfifo.deq = 3
- * >  myfifo.deq = 0
- * >  myfifo.enq(1) = 
- * >  myfifo.deq = 1
- *
- * If you want to output that information to a file, you can use fprintTraceM:
- *
- * >  FIFO#(Bit#(4)) myfifo <- fprintTraceM(file, "myfifo", mkFIFO);
- *
- * You can print to stderr by specifying the file as stderr.
- *
- */
 
 // TODO:
 // * Figure out how to add an instance of HasFPrintTraceHelper for Action
