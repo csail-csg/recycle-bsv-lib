@@ -1,4 +1,4 @@
-## mkRWBram
+### mkRWBram
 ```bluespec
 module mkRWBram(RWBram#(addrT, dataT)) provisos(
     Bits#(addrT, a__), Bits#(dataT, b__));

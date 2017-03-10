@@ -1,4 +1,6 @@
-## mkReg
+# OneWriteReg
+
+### mkReg
 ```bluespec
 module mkReg#(t initVal)(Reg#(t)) provisos (Bits#(t,tSz));
     (* hide *)
@@ -21,7 +23,7 @@ endmodule
 
 ```
 
-## mkRegU
+### mkRegU
 ```bluespec
 module mkRegU(Reg#(t)) provisos (Bits#(t,tSz));
     (* hide *)
@@ -32,7 +34,7 @@ endmodule
 
 ```
 
-## mkRegA
+### mkRegA
 ```bluespec
 module mkRegA#(t initVal)(Reg#(t)) provisos (Bits#(t,tSz));
     // This is the third variant of Reg's included in Prelude, this has not

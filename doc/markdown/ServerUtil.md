@@ -1,4 +1,6 @@
-## mkFixedPriorityServerSplitter
+# ServerUtil
+
+### mkFixedPriorityServerSplitter
 ```bluespec
 module mkFixedPriorityServerSplitter#(function Bool getsResponse(reqT x), Integer maxPendingReqs, Server#(reqT, respT) server)(Vector#(size,Server#(reqT, respT))) provisos (Bits#(reqT, reqTSz));
     Ehr#(TAdd#(size,1), Maybe#(Tuple2#(UInt#(TLog#(size)),reqT))) inputRequest <- mkEhr(tagged Invalid);
@@ -39,7 +41,7 @@ endmodule
 
 ```
 
-## mkBufferedFixedPriorityServerSplitter
+### mkBufferedFixedPriorityServerSplitter
 ```bluespec
 module mkBufferedFixedPriorityServerSplitter#(function Bool getsResponse(reqT x), Integer maxPendingReqs, Server#(reqT, respT) server)(Vector#(size,Server#(reqT, respT))) provisos (Bits#(reqT, reqTSz));
     Vector#(size, FIFOF#(reqT)) inputRequestFIFOs <- replicateM(mkBypassFIFOF);
@@ -88,7 +90,7 @@ endmodule
 
 ```
 
-## mkServerJoiner
+### mkServerJoiner
 ```bluespec
 module mkServerJoiner#(function Bit#(TLog#(size)) whichServer(reqT x), function Bool getsResponse(reqT x), Integer maxPendingReqs, Vector#(size, Server#(reqT, respT)) servers)(Server#(reqT, respT));
     // bookkeeping for pending requests and arbiter priority

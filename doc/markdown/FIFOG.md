@@ -1,4 +1,45 @@
-## mkFIFOG
+# FIFOG
+
+
+This package contains constructors for a group of FIFOs with a `FIFOG`
+interface. `FIFOG` is like `FIFOF`, but instead of adding information
+about the fullness of the FIFO, it adds information about the guards
+of the FIFO.
+
+In a correct `FIFOF` implementation, `notFull` and `notEmpty` must be
+scheduled before both `enq` and `deq` for correct one-rule-at-a-time
+semantics. In this case, the following two rules conflict and are unable to
+be scheduled in the same cycle.
+
+```
+rule enqIntoFIFOF;
+    if (fifo.notFull) fifo.enq(x);
+endrule
+
+rule deqFromFIFOF;
+    if (fifo.notEmpty) fifo.deq();
+endrule
+```
+
+Semantically, the interface method `canEnq` does not have to come before
+`deq`, and `canDeq` do not have to come before `enq`, so by using `FIFOG`
+you can write the two rules below which will not conflict.
+
+```
+rule enqIntoFIFOG;
+    if (fifo.canEnq) fifo.enq(x);
+endrule
+
+rule deqFromFIFOG;
+    if (fifo.canDeq) fifo.deq();
+endrule
+```
+
+
+
+### mkFIFOG
+
+2-element conflict-free `FIFOG`
 ```bluespec
 module mkFIFOG(FIFOG#(t)) provisos (Bits#(t,tSz));
     (* hide *)
@@ -6,9 +47,12 @@ module mkFIFOG(FIFOG#(t)) provisos (Bits#(t,tSz));
     return _m;
 endmodule
 
+
 ```
 
-## mkSizedFIFOG
+### mkSizedFIFOG
+
+Sized conflict-free `FIFOG`
 ```bluespec
 module mkSizedFIFOG#(Integer n)(FIFOG#(t)) provisos (Bits#(t,tSz));
     (* hide *)
@@ -19,7 +63,9 @@ endmodule
 
 ```
 
-## mkFIFOG1
+### mkFIFOG1
+
+1-element conflicting `FIFOG`
 ```bluespec
 module mkFIFOG1(FIFOG#(t)) provisos (Bits#(t,tSz));
     (* hide *)
@@ -30,7 +76,9 @@ endmodule
 
 ```
 
-## mkLFIFOG
+### mkLFIFOG
+
+Pipeline `FIFOG`
 ```bluespec
 module mkLFIFOG(FIFOG#(t)) provisos (Bits#(t,tSz));
     (* hide *)
@@ -41,7 +89,15 @@ endmodule
 
 ```
 
-## mkBypassFIFOG
+### mkBypassFIFOG
+
+Bypass `FIFOG`
+
+
+Note: `mkSizedBypassFIFOF` isn't correct, so we don't expose a
+`mkSizedBypassFIFOG` (its `notEmpty` and `notFull` methods are CF with
+`enq` and `deq`, but semantically that is not possible with
+one-rule-at-a-time semantics.)
 ```bluespec
 module mkBypassFIFOG(FIFOG#(t)) provisos (Bits#(t,tSz));
     (* hide *)
@@ -52,7 +108,13 @@ endmodule
 
 ```
 
-## mkPipelineFIFOG
+### mkPipelineFIFOG
+
+Pipeline `FIFOG`
+
+
+This FIFO has a scheduling constraint that requires `deq` to come before
+`enq`.
 ```bluespec
 module mkPipelineFIFOG(FIFOG#(t)) provisos (Bits#(t,tSz));
     (* hide *)
@@ -63,7 +125,13 @@ endmodule
 
 ```
 
-## mkFIFOGfromFIFOF
+### mkFIFOGfromFIFOF
+
+Module to make `FIFOG` from a `FIFOF` module.
+
+
+This module construct a `FIFOG` from a `FIFOF` by using wires to delay the
+the `notEmpty` and `notFull` signals so they can be used as `canDeq` and `canEnq`.
 ```bluespec
 module [m] mkFIFOGfromFIFOF#(m#(FIFOF#(t)) mkM)(FIFOG#(t)) provisos (Bits#(t,tSz), IsModule#(m, a__));
     (* hide *)

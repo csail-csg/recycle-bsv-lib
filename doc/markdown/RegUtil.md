@@ -1,4 +1,6 @@
-## truncateReg
+# RegUtil
+
+### truncateReg
 ```bluespec
 function Reg#(Bit#(n)) truncateReg(Reg#(Bit#(m)) r) provisos (Add#(a__,n,m));
     return (interface Reg;
@@ -10,7 +12,7 @@ endfunction
 
 ```
 
-## truncateRegLSB
+### truncateRegLSB
 ```bluespec
 function Reg#(Bit#(n)) truncateRegLSB(Reg#(Bit#(m)) r) provisos (Add#(a__,n,m));
     return (interface Reg;
@@ -22,7 +24,7 @@ endfunction
 
 ```
 
-## zeroExtendReg
+### zeroExtendReg
 ```bluespec
 function Reg#(Bit#(n)) zeroExtendReg(Reg#(Bit#(m)) r) provisos (Add#(a__,m,n));
     return (interface Reg;
@@ -34,7 +36,7 @@ endfunction
 
 ```
 
-## readOnlyReg
+### readOnlyReg
 ```bluespec
 function Reg#(t) readOnlyReg(t r);
     return (interface Reg;
@@ -46,7 +48,7 @@ endfunction
 
 ```
 
-## mkReadOnlyReg
+### mkReadOnlyReg
 ```bluespec
 module mkReadOnlyReg#(t x)(Reg#(t));
     return readOnlyReg(x);
@@ -55,7 +57,7 @@ endmodule
 
 ```
 
-## addWriteSideEffect
+### addWriteSideEffect
 ```bluespec
 function Reg#(t) addWriteSideEffect(Reg#(t) r, Action a);
     return (interface Reg;

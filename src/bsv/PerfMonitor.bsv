@@ -21,14 +21,13 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// PerfMonitor.bsv
-// ---------------
-// This package contains the necessary modules to attach a PerfMonitor
-// (short for Performance Monitor) to a design.
-//
-// TODO: explain what makes a PerfMonitor (i.e. PerfCounters and monadic
-// computation)
-
+/**
+ * This package contains the necessary modules to attach a PerfMonitor
+ * (short for Performance Monitor) to a design.
+ *
+ * TODO: explain what makes a PerfMonitor (i.e. PerfCounters and monadic
+ * computation)
+ */
 package PerfMonitor;
 
 import ConfigReg::*;
@@ -43,13 +42,13 @@ import StringUtils::*;
 // TODO: export connectal interface from PerfMonitorConnectal.bsv and check
 // some type assertions if possible.
 
-// PerfCounter interface exposed within modules under performance monitoring
+/// PerfCounter interface exposed within modules under performance monitoring
 interface PerfCounter;
     method Action increment(PerfData x);
     method Action set(PerfData x);
 endinterface
 
-// PerfMonitor interface exposed to the outside
+/// PerfMonitor interface exposed to the outside
 interface PerfMonitor;
     method Action reset;
     method Action setEnable(Bool en);
@@ -80,29 +79,29 @@ typedef Bit#(PerfIndexSz) PerfIndex;
 // File extension for Performance Monitor configuration files
 String perfMonitorExt = ".perfmon.txt";
 
-// structure for tracking a single counter
+/// structure for tracking a single counter
 typedef struct {
     Reg#(PerfData) counter;
     String         name;
 } PerfCounterInfo;
 
-// structure for tracking a submodule
+/// structure for tracking a submodule
 typedef struct {
     PerfMonitor submodule;
     String      name;
 } PerfSubmoduleInfo;
 
-// keeps track of perf counters in this module and in submodules
+/// keeps track of perf counters in this module and in submodules
 typedef struct {
     Reg#(Bool)               enReg;
     List#(PerfCounterInfo)   counters;
     List#(PerfSubmoduleInfo) submodules;
 } PerfContext;
 
-// module type for a module that contains perf counters
+/// module type for a module that contains perf counters
 typedef ModuleContext#(PerfContext) PerfModule;
 
-// provisos shortcut for IsModule#(m, a__) and Context#(m, PerfContext)
+/// provisos shortcut for IsModule#(m, a__) and Context#(m, PerfContext)
 typeclass HasPerfCounters#(type m);
 endtypeclass
 instance HasPerfCounters#(m) provisos (IsModule#(m, a__), Context#(m, PerfContext));

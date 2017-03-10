@@ -1,4 +1,6 @@
-## splitStringAtComma
+# StringUtils
+
+### splitStringAtComma
 ```bluespec
 function Tuple2#(String, String) splitStringAtComma(String in);
     List#(Char) charList = stringToCharList(in);
@@ -8,7 +10,7 @@ function Tuple2#(String, String) splitStringAtComma(String in);
     
 ```
 
-## parseCSV
+### parseCSV
 ```bluespec
 function List#(String) parseCSV(String inStr);
     String restOfString = inStr;
@@ -24,7 +26,7 @@ endfunction
 
 ```
 
-## decStringToInteger
+### decStringToInteger
 ```bluespec
 function Integer decStringToInteger(String inStr);
     List#(Char) inCharList = stringToCharList(inStr);
@@ -43,7 +45,7 @@ function Integer decStringToInteger(String inStr);
     
 ```
 
-## hexStringToInteger
+### hexStringToInteger
 ```bluespec
 function Integer hexStringToInteger(String inStr);
     List#(Char) inCharList = stringToCharList(inStr);
@@ -69,7 +71,7 @@ function Integer hexStringToInteger(String inStr);
     
 ```
 
-## doubleQuotedToString
+### doubleQuotedToString
 ```bluespec
 function String doubleQuotedToString(String inStr);
     List#(Char) inCharList = stringToCharList(inStr);

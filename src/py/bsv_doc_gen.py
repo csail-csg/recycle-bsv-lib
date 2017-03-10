@@ -137,9 +137,10 @@ add_tests(kw_module + '_', [], ['module_'])
 add_tests(kw_module + '2', [], ['module2'])
 
 # packages, imports, and exports
-package_bsv = kw_package + Identifier_bsv + ';' + \
-              pp.OneOrMore(~kw_endpackage + pp.Word(pp.printables)) + \
-              kw_endpackage + pp.Optional(':' + Identifier_bsv)
+#package_bsv = kw_package + Identifier_bsv + ';' + \
+#              pp.OneOrMore(~kw_endpackage + pp.Word(pp.printables)) + \
+#              kw_endpackage + pp.Optional(':' + Identifier_bsv)
+package_bsv = kw_package + Identifier_bsv('name') + ';'
 import_bsv = kw_import + Identifier_bsv + pp.Literal('::') + pp.Literal('*') + pp.Literal(';')
 export_bsv = kw_export + anyIdentifier_bsv + pp.Optional(pp.Literal('(') + pp.Literal('..') + pp.Literal(')')) + ';'
 
@@ -231,18 +232,21 @@ if __name__ == '__main__':
                 print('ERROR: type error in save_doc_comment: ' + str(e))
                 print('type(toks) = ' + str(type(toks)))
                 exit(1)
-        scan_result = (comment_bsv | (typedef_bsv | typeclass_bsv | instance_bsv | module_bsv | function_bsv).addParseAction(save_doc_comment)).scanString(file_data)
+        scan_result = (comment_bsv | (package_bsv | typedef_bsv | typeclass_bsv | instance_bsv | module_bsv | function_bsv).addParseAction(save_doc_comment)).scanString(file_data)
         for (x, y, z) in scan_result:
             if 'name' in x:
-                if 'formal_args' in x:
+                if x[1] == 'package':
+                    print('# ' + str(x['name']))
+                elif 'formal_args' in x:
                     # print('## ' + str(x['name']) + '#(' + str(x['formal_args']) + ')')
-                    print('## ' + str(x['name']))
+                    print('### ' + str(x['name']))
                 else:
-                    print('## ' + str(x['name']))
+                    print('### ' + str(x['name']))
                 if x[0] != '':
                     print(x[0])
-                print("```bluespec")
-                print(file_data[y:z])
-                print("```")
+                if x[1] != 'package':
+                    print("```bluespec")
+                    print(file_data[y:z])
+                    print("```")
                 print('')
         

@@ -1,4 +1,4 @@
-## ConcatReg
+### ConcatReg
 ```bluespec
 typeclass ConcatReg#(type r, numeric type n1, numeric type n2)
   dependencies ((r,n1) determines n2, (r,n2) determines n1);
@@ -8,7 +8,7 @@ endtypeclass
 
 ```
 
-## ConcatReg
+### ConcatReg
 ```bluespec
 instance ConcatReg#(Reg#(Bit#(n3)), n1, n2) provisos (Add#(n1, n2, n3));
   function Reg#(Bit#(TAdd#(n1,n2))) _concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2);
@@ -24,7 +24,7 @@ endinstance
 
 ```
 
-## ConcatReg
+### ConcatReg
 ```bluespec
 instance ConcatReg#(function r f(Reg#(Bit#(n3)) r3), n1, n2) provisos (ConcatReg#(r, TAdd#(n1, n2), n3));
   function function r f(Reg#(Bit#(n3)) r3) _concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2);
@@ -41,7 +41,7 @@ endinstance
 
 ```
 
-## concatReg
+### concatReg
 ```bluespec
 function r concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2) provisos(ConcatReg#(r, n1, n2));
   return _concatReg(asReg(r1),asReg(r2));
@@ -50,7 +50,7 @@ endfunction
 
 ```
 
-## concatReg2
+### concatReg2
 ```bluespec
 function Reg#(Bit#(n)) concatReg2(
       Reg#(Bit#(n1)) r1,
@@ -64,7 +64,7 @@ endfunction
 
 ```
 
-## concatReg3
+### concatReg3
 ```bluespec
 function Reg#(Bit#(n)) concatReg3(
       Reg#(Bit#(n1)) r1,
@@ -79,7 +79,7 @@ endfunction
 
 ```
 
-## concatReg4
+### concatReg4
 ```bluespec
 function Reg#(Bit#(n)) concatReg4(
       Reg#(Bit#(n1)) r1,
@@ -95,7 +95,7 @@ endfunction
 
 ```
 
-## concatReg5
+### concatReg5
 ```bluespec
 function Reg#(Bit#(n)) concatReg5(
       Reg#(Bit#(n1)) r1,
@@ -112,7 +112,7 @@ endfunction
 
 ```
 
-## concatReg6
+### concatReg6
 ```bluespec
 function Reg#(Bit#(n)) concatReg6(
       Reg#(Bit#(n1)) r1,
@@ -130,7 +130,7 @@ endfunction
 
 ```
 
-## concatReg7
+### concatReg7
 ```bluespec
 function Reg#(Bit#(n)) concatReg7(
       Reg#(Bit#(n1)) r1,
@@ -149,7 +149,7 @@ endfunction
 
 ```
 
-## concatReg8
+### concatReg8
 ```bluespec
 function Reg#(Bit#(n)) concatReg8(
       Reg#(Bit#(n1)) r1,
@@ -169,7 +169,7 @@ endfunction
 
 ```
 
-## concatReg9
+### concatReg9
 ```bluespec
 function Reg#(Bit#(n)) concatReg9(
       Reg#(Bit#(n1)) r1,
@@ -190,7 +190,7 @@ endfunction
 
 ```
 
-## concatReg10
+### concatReg10
 ```bluespec
 function Reg#(Bit#(n)) concatReg10(
       Reg#(Bit#(n1)) r1,
@@ -212,7 +212,7 @@ endfunction
 
 ```
 
-## concatReg11
+### concatReg11
 ```bluespec
 function Reg#(Bit#(n)) concatReg11(
       Reg#(Bit#(n1)) r1,
@@ -235,7 +235,7 @@ endfunction
 
 ```
 
-## concatReg12
+### concatReg12
 ```bluespec
 function Reg#(Bit#(n)) concatReg12(
       Reg#(Bit#(n1)) r1,
@@ -259,7 +259,7 @@ endfunction
 
 ```
 
-## concatReg13
+### concatReg13
 ```bluespec
 function Reg#(Bit#(n)) concatReg13(
       Reg#(Bit#(n1)) r1,
@@ -284,7 +284,7 @@ endfunction
 
 ```
 
-## concatReg14
+### concatReg14
 ```bluespec
 function Reg#(Bit#(n)) concatReg14(
       Reg#(Bit#(n1)) r1,
@@ -310,7 +310,7 @@ endfunction
 
 ```
 
-## concatReg15
+### concatReg15
 ```bluespec
 function Reg#(Bit#(n)) concatReg15(
       Reg#(Bit#(n1)) r1,
@@ -337,7 +337,7 @@ endfunction
 
 ```
 
-## concatReg16
+### concatReg16
 ```bluespec
 function Reg#(Bit#(n)) concatReg16(
       Reg#(Bit#(n1)) r1,
@@ -365,7 +365,7 @@ endfunction
 
 ```
 
-## concatReg17
+### concatReg17
 ```bluespec
 function Reg#(Bit#(n)) concatReg17(
       Reg#(Bit#(n1)) r1,
@@ -394,7 +394,7 @@ endfunction
 
 ```
 
-## concatReg18
+### concatReg18
 ```bluespec
 function Reg#(Bit#(n)) concatReg18(
       Reg#(Bit#(n1)) r1,
@@ -424,7 +424,7 @@ endfunction
 
 ```
 
-## concatReg19
+### concatReg19
 ```bluespec
 function Reg#(Bit#(n)) concatReg19(
       Reg#(Bit#(n1)) r1,
@@ -455,7 +455,7 @@ endfunction
 
 ```
 
-## concatReg20
+### concatReg20
 ```bluespec
 function Reg#(Bit#(n)) concatReg20(
       Reg#(Bit#(n1)) r1,
