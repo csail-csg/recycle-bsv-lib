@@ -70,6 +70,7 @@
  * ```
  *
  * Then writing the following commands will give you the following output:
+ *
  * | Commands                           | Output                |
  * | ---------------------------------- | --------------------- |
  * | `printTrace("m.foo", m.foo(2, 9))` | `submodule.foo`       |
