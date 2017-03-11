@@ -1,6 +1,17 @@
 # RegFileUtil
 
-### [mkRegFileFullGenWith](../../src/bsv/RegFileUtil.bsv#L28)
+
+This package contains some useful variations on `RegFile`.
+
+
+### [mkRegFileFullGenWith](../../src/bsv/RegFileUtil.bsv#L36)
+
+Creates a `RegFile` that is initialized using the generating function `initF`.
+
+
+`initF` takes in an address, and it should return the initial value for
+that address. The interface methods of this module block until the
+initialization is done.
 ```bluespec
 module mkRegFileFullGenWith#(function t initF(a i))(RegFile#(a, t)) provisos (Bounded#(a), Bits#(a, aSz), Bits#(t, tSz));
     (* hide *)
@@ -24,7 +35,13 @@ endmodule
 
 ```
 
-### [mkRegFileFullReplicate](../../src/bsv/RegFileUtil.bsv#L47)
+### [mkRegFileFullReplicate](../../src/bsv/RegFileUtil.bsv#L59)
+
+Creates a `RegFile` that is initialized using the value `initVal`
+
+
+The interface methods of this module block until the initialization is
+done.
 ```bluespec
 module mkRegFileFullReplicate#(t initVal)(RegFile#(a, t)) provisos (Bounded#(a), Bits#(a, aSz), Bits#(t, tSz));
     function t initF(a x);

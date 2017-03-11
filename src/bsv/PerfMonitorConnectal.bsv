@@ -1,5 +1,5 @@
 
-// Copyright (c) 2016 Massachusetts Institute of Technology
+// Copyright (c) 2016, 2017 Massachusetts Institute of Technology
 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -21,10 +21,10 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// PerfMonitorConnectal.bsv
-// ------------------------
-// PerfMonitor interfaces for connectal
 
+/**
+ * PerfMonitor interfaces for connectal
+ */
 package PerfMonitorConnectal;
 
 interface PerfMonitorRequest;

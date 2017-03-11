@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Massachusetts Institute of Technology
+// Copyright (c) 2016, 2017 Massachusetts Institute of Technology
 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -20,20 +20,28 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// This file was created by gen_ConcatReg.py. If you want to modify this file,
-// please modify gen_ConcatReg.py instead. If you need a wider concatReg
-// function, change the value of n in gen_ConcatReg.py and run it again.
+/**
+ * This package contains a class of functions `concatRegN` for concatenating
+ * `N` registers together into a single register. This file has definitions
+ * for `N` = 2 up to `N` = 20
+ *
+ * This package is created by `gen_ConcatReg.py`. If you want to modify this
+ * package, please modify `gen_ConcatReg.py` instead. If you need a wider
+ * `concatReg` function, change the value of n in `gen_ConcatReg.py` and run
+ * it again.
+ *
+ * The Bluespec provided BuildVector.bsv provides another example of
+ * constructing a function that takes a variable number of arguments
+ */
+package ConcatReg;
 
-// The Bluespec provided BuildVector.bsv provides another example of
-// constructing a function that takes a variable number of arguments
-
-// Typeclass for creating _concatReg with a variable number of arguments.
+/// Typeclass for creating _concatReg with a variable number of arguments.
 typeclass ConcatReg#(type r, numeric type n1, numeric type n2)
   dependencies ((r,n1) determines n2, (r,n2) determines n1);
   // dependencies (r determines (n1,n2));
   function r _concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2);
 endtypeclass
-// Base case
+/// Base case instance of ConcatReg.
 instance ConcatReg#(Reg#(Bit#(n3)), n1, n2) provisos (Add#(n1, n2, n3));
   function Reg#(Bit#(TAdd#(n1,n2))) _concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2);
     return (interface Reg;
@@ -45,7 +53,7 @@ instance ConcatReg#(Reg#(Bit#(n3)), n1, n2) provisos (Add#(n1, n2, n3));
       endinterface);
   endfunction
 endinstance
-// Recursion
+/// Recursion case instance of ConcatReg.
 instance ConcatReg#(function r f(Reg#(Bit#(n3)) r3), n1, n2) provisos (ConcatReg#(r, TAdd#(n1, n2), n3));
   function function r f(Reg#(Bit#(n3)) r3) _concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2);
     return _concatReg(interface Reg;
@@ -58,14 +66,18 @@ instance ConcatReg#(function r f(Reg#(Bit#(n3)) r3), n1, n2) provisos (ConcatReg
   endfunction
 endinstance
 
-// Wrapper function for users. This can take a variable number of arguments.
-// You will need to use asReg() for the third argument and beyond.
+/// This function can concatenate a variable number of registers together.
+///
+/// This is a wrapper function of `_concatReg` that is intended for users.
+/// You will need to use `asReg()` for the third argument and beyond in order
+/// for the Bluespec compiler to be able to type check this.
 function r concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2) provisos(ConcatReg#(r, n1, n2));
   return _concatReg(asReg(r1),asReg(r2));
 endfunction
 
 // Automatically generated macros with a set number of registers.
 // These don't require asReg when used.
+/// Concatenate 2 registers together
 function Reg#(Bit#(n)) concatReg2(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2
@@ -75,6 +87,7 @@ function Reg#(Bit#(n)) concatReg2(
   return concatReg(asReg(r1),asReg(r2));
 endfunction
 
+/// Concatenate 3 registers together
 function Reg#(Bit#(n)) concatReg3(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -85,6 +98,7 @@ function Reg#(Bit#(n)) concatReg3(
   return concatReg(asReg(r1),asReg(r2),asReg(r3));
 endfunction
 
+/// Concatenate 4 registers together
 function Reg#(Bit#(n)) concatReg4(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -96,6 +110,7 @@ function Reg#(Bit#(n)) concatReg4(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4));
 endfunction
 
+/// Concatenate 5 registers together
 function Reg#(Bit#(n)) concatReg5(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -108,6 +123,7 @@ function Reg#(Bit#(n)) concatReg5(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5));
 endfunction
 
+/// Concatenate 6 registers together
 function Reg#(Bit#(n)) concatReg6(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -121,6 +137,7 @@ function Reg#(Bit#(n)) concatReg6(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6));
 endfunction
 
+/// Concatenate 7 registers together
 function Reg#(Bit#(n)) concatReg7(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -135,6 +152,7 @@ function Reg#(Bit#(n)) concatReg7(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7));
 endfunction
 
+/// Concatenate 8 registers together
 function Reg#(Bit#(n)) concatReg8(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -150,6 +168,7 @@ function Reg#(Bit#(n)) concatReg8(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7),asReg(r8));
 endfunction
 
+/// Concatenate 9 registers together
 function Reg#(Bit#(n)) concatReg9(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -166,6 +185,7 @@ function Reg#(Bit#(n)) concatReg9(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7),asReg(r8),asReg(r9));
 endfunction
 
+/// Concatenate 10 registers together
 function Reg#(Bit#(n)) concatReg10(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -183,6 +203,7 @@ function Reg#(Bit#(n)) concatReg10(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7),asReg(r8),asReg(r9),asReg(r10));
 endfunction
 
+/// Concatenate 11 registers together
 function Reg#(Bit#(n)) concatReg11(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -201,6 +222,7 @@ function Reg#(Bit#(n)) concatReg11(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7),asReg(r8),asReg(r9),asReg(r10),asReg(r11));
 endfunction
 
+/// Concatenate 12 registers together
 function Reg#(Bit#(n)) concatReg12(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -220,6 +242,7 @@ function Reg#(Bit#(n)) concatReg12(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7),asReg(r8),asReg(r9),asReg(r10),asReg(r11),asReg(r12));
 endfunction
 
+/// Concatenate 13 registers together
 function Reg#(Bit#(n)) concatReg13(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -240,6 +263,7 @@ function Reg#(Bit#(n)) concatReg13(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7),asReg(r8),asReg(r9),asReg(r10),asReg(r11),asReg(r12),asReg(r13));
 endfunction
 
+/// Concatenate 14 registers together
 function Reg#(Bit#(n)) concatReg14(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -261,6 +285,7 @@ function Reg#(Bit#(n)) concatReg14(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7),asReg(r8),asReg(r9),asReg(r10),asReg(r11),asReg(r12),asReg(r13),asReg(r14));
 endfunction
 
+/// Concatenate 15 registers together
 function Reg#(Bit#(n)) concatReg15(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -283,6 +308,7 @@ function Reg#(Bit#(n)) concatReg15(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7),asReg(r8),asReg(r9),asReg(r10),asReg(r11),asReg(r12),asReg(r13),asReg(r14),asReg(r15));
 endfunction
 
+/// Concatenate 16 registers together
 function Reg#(Bit#(n)) concatReg16(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -306,6 +332,7 @@ function Reg#(Bit#(n)) concatReg16(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7),asReg(r8),asReg(r9),asReg(r10),asReg(r11),asReg(r12),asReg(r13),asReg(r14),asReg(r15),asReg(r16));
 endfunction
 
+/// Concatenate 17 registers together
 function Reg#(Bit#(n)) concatReg17(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -330,6 +357,7 @@ function Reg#(Bit#(n)) concatReg17(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7),asReg(r8),asReg(r9),asReg(r10),asReg(r11),asReg(r12),asReg(r13),asReg(r14),asReg(r15),asReg(r16),asReg(r17));
 endfunction
 
+/// Concatenate 18 registers together
 function Reg#(Bit#(n)) concatReg18(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -355,6 +383,7 @@ function Reg#(Bit#(n)) concatReg18(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7),asReg(r8),asReg(r9),asReg(r10),asReg(r11),asReg(r12),asReg(r13),asReg(r14),asReg(r15),asReg(r16),asReg(r17),asReg(r18));
 endfunction
 
+/// Concatenate 19 registers together
 function Reg#(Bit#(n)) concatReg19(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -381,6 +410,7 @@ function Reg#(Bit#(n)) concatReg19(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7),asReg(r8),asReg(r9),asReg(r10),asReg(r11),asReg(r12),asReg(r13),asReg(r14),asReg(r15),asReg(r16),asReg(r17),asReg(r18),asReg(r19));
 endfunction
 
+/// Concatenate 20 registers together
 function Reg#(Bit#(n)) concatReg20(
       Reg#(Bit#(n1)) r1,
       Reg#(Bit#(n2)) r2,
@@ -408,3 +438,4 @@ function Reg#(Bit#(n)) concatReg20(
   return concatReg(asReg(r1),asReg(r2),asReg(r3),asReg(r4),asReg(r5),asReg(r6),asReg(r7),asReg(r8),asReg(r9),asReg(r10),asReg(r11),asReg(r12),asReg(r13),asReg(r14),asReg(r15),asReg(r16),asReg(r17),asReg(r18),asReg(r19),asReg(r20));
 endfunction
 
+endpackage

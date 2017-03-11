@@ -1,4 +1,22 @@
-### [ConcatReg](../../src/bsv/ConcatReg.bsv#L31)
+# ConcatReg
+
+
+This package contains a class of functions `concatRegN` for concatenating
+`N` registers together into a single register. This file has definitions
+for `N` = 2 up to `N` = 20
+
+This package is created by `gen_ConcatReg.py`. If you want to modify this
+package, please modify `gen_ConcatReg.py` instead. If you need a wider
+`concatReg` function, change the value of n in `gen_ConcatReg.py` and run
+it again.
+
+The Bluespec provided BuildVector.bsv provides another example of
+constructing a function that takes a variable number of arguments
+
+
+### [ConcatReg](../../src/bsv/ConcatReg.bsv#L39)
+
+Typeclass for creating _concatReg with a variable number of arguments.
 ```bluespec
 typeclass ConcatReg#(type r, numeric type n1, numeric type n2)
   dependencies ((r,n1) determines n2, (r,n2) determines n1);
@@ -8,7 +26,9 @@ endtypeclass
 
 ```
 
-### [ConcatReg](../../src/bsv/ConcatReg.bsv#L37)
+### [ConcatReg](../../src/bsv/ConcatReg.bsv#L45)
+
+Base case instance of ConcatReg.
 ```bluespec
 instance ConcatReg#(Reg#(Bit#(n3)), n1, n2) provisos (Add#(n1, n2, n3));
   function Reg#(Bit#(TAdd#(n1,n2))) _concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2);
@@ -24,7 +44,9 @@ endinstance
 
 ```
 
-### [ConcatReg](../../src/bsv/ConcatReg.bsv#L49)
+### [ConcatReg](../../src/bsv/ConcatReg.bsv#L57)
+
+Recursion case instance of ConcatReg.
 ```bluespec
 instance ConcatReg#(function r f(Reg#(Bit#(n3)) r3), n1, n2) provisos (ConcatReg#(r, TAdd#(n1, n2), n3));
   function function r f(Reg#(Bit#(n3)) r3) _concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2);
@@ -41,7 +63,14 @@ endinstance
 
 ```
 
-### [concatReg](../../src/bsv/ConcatReg.bsv#L63)
+### [concatReg](../../src/bsv/ConcatReg.bsv#L74)
+
+This function can concatenate a variable number of registers together.
+
+
+This is a wrapper function of `_concatReg` that is intended for users.
+You will need to use `asReg()` for the third argument and beyond in order
+for the Bluespec compiler to be able to type check this.
 ```bluespec
 function r concatReg(Reg#(Bit#(n1)) r1, Reg#(Bit#(n2)) r2) provisos(ConcatReg#(r, n1, n2));
   return _concatReg(asReg(r1),asReg(r2));
@@ -50,7 +79,9 @@ endfunction
 
 ```
 
-### [concatReg2](../../src/bsv/ConcatReg.bsv#L69)
+### [concatReg2](../../src/bsv/ConcatReg.bsv#L81)
+
+Concatenate 2 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg2(
       Reg#(Bit#(n1)) r1,
@@ -64,7 +95,9 @@ endfunction
 
 ```
 
-### [concatReg3](../../src/bsv/ConcatReg.bsv#L78)
+### [concatReg3](../../src/bsv/ConcatReg.bsv#L91)
+
+Concatenate 3 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg3(
       Reg#(Bit#(n1)) r1,
@@ -79,7 +112,9 @@ endfunction
 
 ```
 
-### [concatReg4](../../src/bsv/ConcatReg.bsv#L88)
+### [concatReg4](../../src/bsv/ConcatReg.bsv#L102)
+
+Concatenate 4 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg4(
       Reg#(Bit#(n1)) r1,
@@ -95,7 +130,9 @@ endfunction
 
 ```
 
-### [concatReg5](../../src/bsv/ConcatReg.bsv#L99)
+### [concatReg5](../../src/bsv/ConcatReg.bsv#L114)
+
+Concatenate 5 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg5(
       Reg#(Bit#(n1)) r1,
@@ -112,7 +149,9 @@ endfunction
 
 ```
 
-### [concatReg6](../../src/bsv/ConcatReg.bsv#L111)
+### [concatReg6](../../src/bsv/ConcatReg.bsv#L127)
+
+Concatenate 6 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg6(
       Reg#(Bit#(n1)) r1,
@@ -130,7 +169,9 @@ endfunction
 
 ```
 
-### [concatReg7](../../src/bsv/ConcatReg.bsv#L124)
+### [concatReg7](../../src/bsv/ConcatReg.bsv#L141)
+
+Concatenate 7 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg7(
       Reg#(Bit#(n1)) r1,
@@ -149,7 +190,9 @@ endfunction
 
 ```
 
-### [concatReg8](../../src/bsv/ConcatReg.bsv#L138)
+### [concatReg8](../../src/bsv/ConcatReg.bsv#L156)
+
+Concatenate 8 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg8(
       Reg#(Bit#(n1)) r1,
@@ -169,7 +212,9 @@ endfunction
 
 ```
 
-### [concatReg9](../../src/bsv/ConcatReg.bsv#L153)
+### [concatReg9](../../src/bsv/ConcatReg.bsv#L172)
+
+Concatenate 9 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg9(
       Reg#(Bit#(n1)) r1,
@@ -190,7 +235,9 @@ endfunction
 
 ```
 
-### [concatReg10](../../src/bsv/ConcatReg.bsv#L169)
+### [concatReg10](../../src/bsv/ConcatReg.bsv#L189)
+
+Concatenate 10 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg10(
       Reg#(Bit#(n1)) r1,
@@ -212,7 +259,9 @@ endfunction
 
 ```
 
-### [concatReg11](../../src/bsv/ConcatReg.bsv#L186)
+### [concatReg11](../../src/bsv/ConcatReg.bsv#L207)
+
+Concatenate 11 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg11(
       Reg#(Bit#(n1)) r1,
@@ -235,7 +284,9 @@ endfunction
 
 ```
 
-### [concatReg12](../../src/bsv/ConcatReg.bsv#L204)
+### [concatReg12](../../src/bsv/ConcatReg.bsv#L226)
+
+Concatenate 12 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg12(
       Reg#(Bit#(n1)) r1,
@@ -259,7 +310,9 @@ endfunction
 
 ```
 
-### [concatReg13](../../src/bsv/ConcatReg.bsv#L223)
+### [concatReg13](../../src/bsv/ConcatReg.bsv#L246)
+
+Concatenate 13 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg13(
       Reg#(Bit#(n1)) r1,
@@ -284,7 +337,9 @@ endfunction
 
 ```
 
-### [concatReg14](../../src/bsv/ConcatReg.bsv#L243)
+### [concatReg14](../../src/bsv/ConcatReg.bsv#L267)
+
+Concatenate 14 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg14(
       Reg#(Bit#(n1)) r1,
@@ -310,7 +365,9 @@ endfunction
 
 ```
 
-### [concatReg15](../../src/bsv/ConcatReg.bsv#L264)
+### [concatReg15](../../src/bsv/ConcatReg.bsv#L289)
+
+Concatenate 15 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg15(
       Reg#(Bit#(n1)) r1,
@@ -337,7 +394,9 @@ endfunction
 
 ```
 
-### [concatReg16](../../src/bsv/ConcatReg.bsv#L286)
+### [concatReg16](../../src/bsv/ConcatReg.bsv#L312)
+
+Concatenate 16 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg16(
       Reg#(Bit#(n1)) r1,
@@ -365,7 +424,9 @@ endfunction
 
 ```
 
-### [concatReg17](../../src/bsv/ConcatReg.bsv#L309)
+### [concatReg17](../../src/bsv/ConcatReg.bsv#L336)
+
+Concatenate 17 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg17(
       Reg#(Bit#(n1)) r1,
@@ -394,7 +455,9 @@ endfunction
 
 ```
 
-### [concatReg18](../../src/bsv/ConcatReg.bsv#L333)
+### [concatReg18](../../src/bsv/ConcatReg.bsv#L361)
+
+Concatenate 18 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg18(
       Reg#(Bit#(n1)) r1,
@@ -424,7 +487,9 @@ endfunction
 
 ```
 
-### [concatReg19](../../src/bsv/ConcatReg.bsv#L358)
+### [concatReg19](../../src/bsv/ConcatReg.bsv#L387)
+
+Concatenate 19 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg19(
       Reg#(Bit#(n1)) r1,
@@ -455,7 +520,9 @@ endfunction
 
 ```
 
-### [concatReg20](../../src/bsv/ConcatReg.bsv#L384)
+### [concatReg20](../../src/bsv/ConcatReg.bsv#L414)
+
+Concatenate 20 registers together
 ```bluespec
 function Reg#(Bit#(n)) concatReg20(
       Reg#(Bit#(n1)) r1,

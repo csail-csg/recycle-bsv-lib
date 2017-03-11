@@ -1,5 +1,5 @@
 
-// Copyright (c) 2016 Massachusetts Institute of Technology
+// Copyright (c) 2016, 2017 Massachusetts Institute of Technology
 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -21,18 +21,24 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+/**
+ * This is a package of functions for helping with compile-time string
+ * manipulation.
+ */
 package StringUtils;
-
-// A set of functions for helping with compile-time string manipulation
 
 import List::*;
 
-// splits a string with a comma at the first comma
-// examples:
-//  "testing,,hello,world" -> "testing" ",hello,world"
-//  ",hello,world"         -> ""        "hello,world"
-//  "hello,world"          -> "hello"   "world"
-//  "world"                -> "world"   ""
+/// Splits a string with a comma at the first comma
+///
+/// Examples:
+///
+/// | Input                  | Output                     |
+/// |------------------------|----------------------------|
+/// | "hello,world"          | ("hello","world")          |
+/// | "testing,,hello,world" | ("testing",",hello,world") |
+/// | ",hello,world"         | ("","hello,world")         |
+/// | "world"                | ("world","")               |
 function Tuple2#(String, String) splitStringAtComma(String in);
     List#(Char) charList = stringToCharList(in);
     function Bool notComma(Char c);
@@ -45,9 +51,11 @@ function Tuple2#(String, String) splitStringAtComma(String in);
     return tuple2(parsedEntry, restOfString);
 endfunction
 
-// splits a CSV string into a list of the strings between commas
-// example:
-//  "testing,,hello,world" -> "testing" "" "hello" "world"
+/// Splits a CSV string into a list of the strings between commas
+///
+/// Example:
+///
+///     "testing,,hello,world" -> "testing" "" "hello" "world"
 function List#(String) parseCSV(String inStr);
     String restOfString = inStr;
     List#(String) parsedResult = tagged Nil;

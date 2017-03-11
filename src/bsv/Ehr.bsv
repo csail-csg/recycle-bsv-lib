@@ -1,5 +1,5 @@
 
-// Copyright (c) 2016 Massachusetts Institute of Technology
+// Copyright (c) 2016, 2017 Massachusetts Institute of Technology
 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -41,7 +41,7 @@ export writeVEhr;
 //           +---------+---------++---------+---------+
 //
 // In summary, a single port of an EHR has the same scheduling constraint as
-// ArvindReg::mkReg, but between two ports i < j:
+// OneWriteReg::mkReg, but between two ports i < j:
 //   _read[i]  CF _read[j]
 //   _read[i]  <  _write[j]
 //   _write[i] <  _read[j]

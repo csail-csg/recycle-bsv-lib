@@ -1,5 +1,5 @@
 
-// Copyright (c) 2016 Massachusetts Institute of Technology
+// Copyright (c) 2016, 2017 Massachusetts Institute of Technology
 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -21,10 +21,18 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+/**
+ * This package contains some useful variations on `RegFile`.
+ */
 package RegFileUtil;
 
 import RegFile::*;
 
+/// Creates a `RegFile` that is initialized using the generating function `initF`.
+///
+/// `initF` takes in an address, and it should return the initial value for
+/// that address. The interface methods of this module block until the
+/// initialization is done.
 module mkRegFileFullGenWith#(function t initF(a i))(RegFile#(a, t)) provisos (Bounded#(a), Bits#(a, aSz), Bits#(t, tSz));
     (* hide *)
     RegFile#(a, t) _m <- mkRegFileFull;
@@ -44,6 +52,10 @@ module mkRegFileFullGenWith#(function t initF(a i))(RegFile#(a, t)) provisos (Bo
     endmethod
 endmodule
 
+/// Creates a `RegFile` that is initialized using the value `initVal`
+///
+/// The interface methods of this module block until the initialization is
+/// done.
 module mkRegFileFullReplicate#(t initVal)(RegFile#(a, t)) provisos (Bounded#(a), Bits#(a, aSz), Bits#(t, tSz));
     function t initF(a x);
         return initVal;

@@ -1,5 +1,5 @@
 
-// Copyright (c) 2016 Massachusetts Institute of Technology
+// Copyright (c) 2016, 2017 Massachusetts Institute of Technology
 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -21,8 +21,24 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// CompareProvisos.bsv
-// These are human readable provisos for comparing sizes of numberic types
+/**
+ * This package is a collection of human readable provisos for comparing
+ * values of numeric types. For example, the standard proviso for `a > b`
+ * is the following:
+ *
+ * ```
+ * Add#(_n, TAdd#(b,1), a)
+ * ```
+ *
+ * This package introduces human readable typeclasses that can be used as
+ * provisos. The `GT` typeclass can be used to rewrite the above proviso as
+ * the following:
+ *
+ * ```
+ * GT#(a, b)
+ * ```
+ */
+package CompareProvisos;
 
 // a > b
 typeclass GT#(numeric type a, numeric type b);
@@ -53,3 +69,5 @@ typeclass EQ#(numeric type a, numeric type b);
 endtypeclass
 instance EQ#(a, b) provisos (Add#(0, a, b));
 endinstance
+
+endpackage

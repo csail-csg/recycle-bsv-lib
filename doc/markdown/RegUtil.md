@@ -1,6 +1,10 @@
 # RegUtil
 
-### [truncateReg](../../src/bsv/RegUtil.bsv#L28)
+
+Utility functions for registers
+
+
+### [truncateReg](../../src/bsv/RegUtil.bsv#L29)
 ```bluespec
 function Reg#(Bit#(n)) truncateReg(Reg#(Bit#(m)) r) provisos (Add#(a__,n,m));
     return (interface Reg;
@@ -12,7 +16,7 @@ endfunction
 
 ```
 
-### [truncateRegLSB](../../src/bsv/RegUtil.bsv#L35)
+### [truncateRegLSB](../../src/bsv/RegUtil.bsv#L36)
 ```bluespec
 function Reg#(Bit#(n)) truncateRegLSB(Reg#(Bit#(m)) r) provisos (Add#(a__,n,m));
     return (interface Reg;
@@ -24,7 +28,7 @@ endfunction
 
 ```
 
-### [zeroExtendReg](../../src/bsv/RegUtil.bsv#L42)
+### [zeroExtendReg](../../src/bsv/RegUtil.bsv#L43)
 ```bluespec
 function Reg#(Bit#(n)) zeroExtendReg(Reg#(Bit#(m)) r) provisos (Add#(a__,m,n));
     return (interface Reg;
@@ -36,7 +40,7 @@ endfunction
 
 ```
 
-### [readOnlyReg](../../src/bsv/RegUtil.bsv#L49)
+### [readOnlyReg](../../src/bsv/RegUtil.bsv#L50)
 ```bluespec
 function Reg#(t) readOnlyReg(t r);
     return (interface Reg;
@@ -48,7 +52,7 @@ endfunction
 
 ```
 
-### [mkReadOnlyReg](../../src/bsv/RegUtil.bsv#L56)
+### [mkReadOnlyReg](../../src/bsv/RegUtil.bsv#L57)
 ```bluespec
 module mkReadOnlyReg#(t x)(Reg#(t));
     return readOnlyReg(x);
@@ -57,7 +61,7 @@ endmodule
 
 ```
 
-### [addWriteSideEffect](../../src/bsv/RegUtil.bsv#L60)
+### [addWriteSideEffect](../../src/bsv/RegUtil.bsv#L61)
 ```bluespec
 function Reg#(t) addWriteSideEffect(Reg#(t) r, Action a);
     return (interface Reg;

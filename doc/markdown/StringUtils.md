@@ -1,6 +1,24 @@
 # StringUtils
 
-### [notComma](../../src/bsv/StringUtils.bsv#L36)
+
+This is a package of functions for helping with compile-time string
+manipulation.
+
+
+### [splitStringAtComma](../../src/bsv/StringUtils.bsv#L42)
+
+Splits a string with a comma at the first comma
+
+
+Examples:
+
+
+| Input                  | Output                     |
+|------------------------|----------------------------|
+| "hello,world"          | ("hello","world")          |
+| "testing,,hello,world" | ("testing",",hello,world") |
+| ",hello,world"         | ("","hello,world")         |
+| "world"                | ("world","")               |
 ```bluespec
 function Tuple2#(String, String) splitStringAtComma(String in);
     List#(Char) charList = stringToCharList(in);
@@ -17,7 +35,15 @@ endfunction
 
 ```
 
-### [parseCSV](../../src/bsv/StringUtils.bsv#L51)
+### [parseCSV](../../src/bsv/StringUtils.bsv#L59)
+
+Splits a CSV string into a list of the strings between commas
+
+
+Example:
+
+
+    "testing,,hello,world" -> "testing" "" "hello" "world"
 ```bluespec
 function List#(String) parseCSV(String inStr);
     String restOfString = inStr;
@@ -33,7 +59,7 @@ endfunction
 
 ```
 
-### [decStringToIntegerHelper](../../src/bsv/StringUtils.bsv#L62)
+### [decStringToInteger](../../src/bsv/StringUtils.bsv#L70)
 ```bluespec
 function Integer decStringToInteger(String inStr);
     List#(Char) inCharList = stringToCharList(inStr);
@@ -61,7 +87,7 @@ endfunction
 
 ```
 
-### [hexStringToIntegerHelper](../../src/bsv/StringUtils.bsv#L85)
+### [hexStringToInteger](../../src/bsv/StringUtils.bsv#L93)
 ```bluespec
 function Integer hexStringToInteger(String inStr);
     List#(Char) inCharList = stringToCharList(inStr);
@@ -96,7 +122,7 @@ endfunction
 
 ```
 
-### [doubleQuotedToString](../../src/bsv/StringUtils.bsv#L115)
+### [doubleQuotedToString](../../src/bsv/StringUtils.bsv#L123)
 ```bluespec
 function String doubleQuotedToString(String inStr);
     List#(Char) inCharList = stringToCharList(inStr);

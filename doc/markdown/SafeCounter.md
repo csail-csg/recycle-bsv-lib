@@ -1,4 +1,11 @@
-### [SafeCounter](../../src/bsv/SafeCounter.bsv#L29)
+# SafeCounter
+
+
+This package contains a counter `mkSafeCounter` that blocks instead of
+overflowing or underflowing.
+
+
+### [SafeCounter](../../src/bsv/SafeCounter.bsv#L33)
 ```bluespec
 interface SafeCounter#(type t);
     method Action incr(t v);
@@ -10,7 +17,12 @@ endinterface
 
 ```
 
-### [mkSafeCounter](../../src/bsv/SafeCounter.bsv#L37)
+### [mkSafeCounter](../../src/bsv/SafeCounter.bsv#L43)
+
+Counter that blocks instead of overflowing or underflowing
+
+
+`_read < {incr, decr} < _write < updateCounter`
 ```bluespec
 module mkSafeCounter#(t initVal)(SafeCounter#(t)) provisos(Alias#(t, Bit#(w)));
     Ehr#(2, t) cnt <- mkEhr(initVal);
@@ -56,6 +68,7 @@ module mkSafeCounter#(t initVal)(SafeCounter#(t)) provisos(Alias#(t, Bit#(w)));
         cnt[0] <= v;
     endmethod
 endmodule
+
 
 ```
 

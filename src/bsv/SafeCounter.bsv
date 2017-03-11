@@ -1,5 +1,5 @@
 
-// Copyright (c) 2016 Massachusetts Institute of Technology
+// Copyright (c) 2016, 2017 Massachusetts Institute of Technology
 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -21,10 +21,14 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+/**
+ * This package contains a counter `mkSafeCounter` that blocks instead of
+ * overflowing or underflowing.
+ */
+package SafeCounter;
+
 import Ehr::*;
 import RevertingVirtualReg::*;
-
-// counter that will block when overflow/underflow
 
 interface SafeCounter#(type t);
     method Action incr(t v);
@@ -33,7 +37,9 @@ interface SafeCounter#(type t);
     method Action _write(t v);
 endinterface
 
-// _read < {incr, decr} < _write < updateCounter
+/// Counter that blocks instead of overflowing or underflowing
+///
+/// `_read < {incr, decr} < _write < updateCounter`
 module mkSafeCounter#(t initVal)(SafeCounter#(t)) provisos(Alias#(t, Bit#(w)));
     Ehr#(2, t) cnt <- mkEhr(initVal);
     Ehr#(3, t) incr_req <- mkEhr(0);
@@ -78,3 +84,5 @@ module mkSafeCounter#(t initVal)(SafeCounter#(t)) provisos(Alias#(t, Bit#(w)));
         cnt[0] <= v;
     endmethod
 endmodule
+
+endpackage

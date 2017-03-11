@@ -30,17 +30,17 @@
  * the same name.
  *
  * Client functions:
- *   newClient transformClientReq(reqF, client)
- *   newClient transformClientResp(respF, client)
- *   newClient transformClientReqResp(reqF, respF, client)
+ * - `newClient transformClientReq(reqF, client)`
+ * - `newClient transformClientResp(respF, client)`
+ * - `newClient transformClientReqResp(reqF, respF, client)`
  * Server functions:
- *   newServer transformServerReq(reqF, server)
- *   newServer transformServerResp(respF, server)
- *   newServer transformServerReqResp(reqF, respF, server)
+ * - `newServer transformServerReq(reqF, server)`
+ * - `newServer transformServerResp(respF, server)`
+ * - `newServer transformServerReqResp(reqF, respF, server)`
  * Unified typeclass functions:
- *   newClientOrServer transformReq(reqF, clientOrServer)
- *   newClientOrServer transformResp(respF, clientOrServer)
- *   newClientOrServer transformReqResp(reqF, respF, clientOrServer)
+ * - `newClientOrServer transformReq(reqF, clientOrServer)`
+ * - `newClientOrServer transformResp(respF, clientOrServer)`
+ * - `newClientOrServer transformReqResp(reqF, respF, clientOrServer)`
  */
 
 package ClientServerUtil;
