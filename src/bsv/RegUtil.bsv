@@ -47,6 +47,23 @@ function Reg#(Bit#(n)) zeroExtendReg(Reg#(Bit#(m)) r) provisos (Add#(a__,m,n));
         endinterface);
 endfunction
 
+/**
+ * This function takes a `Reg#(Maybe#(t))` and converts it to a `Reg#(t)`.
+ *
+ * Writes always store a valid value in the register, and reads either return
+ * the valid value, or default_value if the register if invalid.
+ */
+function Reg#(t) fromMaybeReg(t default_value, Reg#(Maybe#(t)) r);
+    return (interface Reg;
+                method t _read;
+                    return fromMaybe(default_value, r);
+                endmethod
+                method Action _write(t x);
+                    r <= tagged Valid x;
+                endmethod
+            endinterface);
+endfunction
+
 function Reg#(t) readOnlyReg(t r);
     return (interface Reg;
             method t _read = r;

@@ -40,7 +40,30 @@ endfunction
 
 ```
 
-### [readOnlyReg](../../src/bsv/RegUtil.bsv#L50)
+### [fromMaybeReg](../../src/bsv/RegUtil.bsv#L56)
+
+
+This function takes a `Reg#(Maybe#(t))` and converts it to a `Reg#(t)`.
+
+Writes always store a valid value in the register, and reads either return
+the valid value, or default_value if the register if invalid.
+
+```bluespec
+function Reg#(t) fromMaybeReg(t default_value, Reg#(Maybe#(t)) r);
+    return (interface Reg;
+                method t _read;
+                    return fromMaybe(default_value, r);
+                endmethod
+                method Action _write(t x);
+                    r <= tagged Valid x;
+                endmethod
+            endinterface);
+endfunction
+
+
+```
+
+### [readOnlyReg](../../src/bsv/RegUtil.bsv#L67)
 ```bluespec
 function Reg#(t) readOnlyReg(t r);
     return (interface Reg;
@@ -52,7 +75,7 @@ endfunction
 
 ```
 
-### [mkReadOnlyReg](../../src/bsv/RegUtil.bsv#L57)
+### [mkReadOnlyReg](../../src/bsv/RegUtil.bsv#L74)
 ```bluespec
 module mkReadOnlyReg#(t x)(Reg#(t));
     return readOnlyReg(x);
@@ -61,7 +84,7 @@ endmodule
 
 ```
 
-### [addWriteSideEffect](../../src/bsv/RegUtil.bsv#L61)
+### [addWriteSideEffect](../../src/bsv/RegUtil.bsv#L78)
 ```bluespec
 function Reg#(t) addWriteSideEffect(Reg#(t) r, Action a);
     return (interface Reg;
