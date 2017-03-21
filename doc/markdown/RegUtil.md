@@ -63,7 +63,53 @@ endfunction
 
 ```
 
-### [readOnlyReg](../../src/bsv/RegUtil.bsv#L67)
+### [packReg](../../src/bsv/RegUtil.bsv#L73)
+
+
+This function takes a `Reg#(t)` and converts it to a `Reg#(Bit#(tsz))`.
+
+This function parallels the standard `pack` function that converts `t` to
+`Bit#(tsz)` provided there is an instance of `Bits#(t, tsz)`.
+
+```bluespec
+function Reg#(Bit#(tsz)) packReg(Reg#(t) r) provisos (Bits#(t, tsz));
+    return (interface Reg;
+                method Bit#(tsz) _read;
+                    return pack(r);
+                endmethod
+                method Action _write(Bit#(tsz) x);
+                    r <= unpack(x);
+                endmethod
+            endinterface);
+endfunction
+
+
+```
+
+### [unpackReg](../../src/bsv/RegUtil.bsv#L90)
+
+
+This function takes a `Reg#(Bit#(tsz))` and converts it to a `Reg#(t)`.
+
+This function parallels the standard `unpack` function that converts
+`Bit#(tsz)` to `t` provided there is an instance of `Bits#(t, tsz)`.
+
+```bluespec
+function Reg#(t) unpackReg(Reg#(Bit#(tsz)) r) provisos (Bits#(t, tsz));
+    return (interface Reg;
+                method t _read;
+                    return unpack(r);
+                endmethod
+                method Action _write(t x);
+                    r <= pack(x);
+                endmethod
+            endinterface);
+endfunction
+
+
+```
+
+### [readOnlyReg](../../src/bsv/RegUtil.bsv#L101)
 ```bluespec
 function Reg#(t) readOnlyReg(t r);
     return (interface Reg;
@@ -75,7 +121,7 @@ endfunction
 
 ```
 
-### [mkReadOnlyReg](../../src/bsv/RegUtil.bsv#L74)
+### [mkReadOnlyReg](../../src/bsv/RegUtil.bsv#L108)
 ```bluespec
 module mkReadOnlyReg#(t x)(Reg#(t));
     return readOnlyReg(x);
@@ -84,7 +130,7 @@ endmodule
 
 ```
 
-### [addWriteSideEffect](../../src/bsv/RegUtil.bsv#L78)
+### [addWriteSideEffect](../../src/bsv/RegUtil.bsv#L112)
 ```bluespec
 function Reg#(t) addWriteSideEffect(Reg#(t) r, Action a);
     return (interface Reg;

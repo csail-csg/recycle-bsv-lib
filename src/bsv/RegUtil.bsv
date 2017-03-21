@@ -64,6 +64,40 @@ function Reg#(t) fromMaybeReg(t default_value, Reg#(Maybe#(t)) r);
             endinterface);
 endfunction
 
+/**
+ * This function takes a `Reg#(t)` and converts it to a `Reg#(Bit#(tsz))`.
+ *
+ * This function parallels the standard `pack` function that converts `t` to
+ * `Bit#(tsz)` provided there is an instance of `Bits#(t, tsz)`.
+ */
+function Reg#(Bit#(tsz)) packReg(Reg#(t) r) provisos (Bits#(t, tsz));
+    return (interface Reg;
+                method Bit#(tsz) _read;
+                    return pack(r);
+                endmethod
+                method Action _write(Bit#(tsz) x);
+                    r <= unpack(x);
+                endmethod
+            endinterface);
+endfunction
+
+/**
+ * This function takes a `Reg#(Bit#(tsz))` and converts it to a `Reg#(t)`.
+ *
+ * This function parallels the standard `unpack` function that converts
+ * `Bit#(tsz)` to `t` provided there is an instance of `Bits#(t, tsz)`.
+ */
+function Reg#(t) unpackReg(Reg#(Bit#(tsz)) r) provisos (Bits#(t, tsz));
+    return (interface Reg;
+                method t _read;
+                    return unpack(r);
+                endmethod
+                method Action _write(t x);
+                    r <= pack(x);
+                endmethod
+            endinterface);
+endfunction
+
 function Reg#(t) readOnlyReg(t r);
     return (interface Reg;
             method t _read = r;
