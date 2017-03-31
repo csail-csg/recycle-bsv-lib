@@ -37,7 +37,7 @@ endrule
 
 
 
-### [FIFOG](../../src/bsv/FIFOG.bsv#L76)
+### [FIFOG](../../src/bsv/FIFOG.bsv#L77)
 
 Like FIFOF, but instead of adding information about the full-ness of the
 FIFO, it adds information about the guard of the FIFO.
@@ -56,7 +56,38 @@ endinterface
 
 ```
 
-### [mkFIFOG](../../src/bsv/FIFOG.bsv#L90)
+### [ToGet](../../src/bsv/FIFOG.bsv#L89)
+```bluespec
+instance ToGet#(FIFOG#(t), t);
+    function Get#(t) toGet(FIFOG#(t) m);
+        return (interface Get;
+                    method ActionValue#(t) get();
+                        m.deq;
+                        return m.first();
+                    endmethod
+                endinterface);
+    endfunction
+endinstance
+
+
+```
+
+### [ToPut](../../src/bsv/FIFOG.bsv#L100)
+```bluespec
+instance ToPut#(FIFOG#(t), t);
+    function Put#(t) toPut(FIFOG#(t) m);
+        return (interface Put;
+                    method Action put(t x);
+                        m.enq(x);
+                    endmethod
+                endinterface);
+    endfunction
+endinstance
+
+
+```
+
+### [mkFIFOG](../../src/bsv/FIFOG.bsv#L113)
 
 2-element conflict-free `FIFOG`
 ```bluespec
@@ -69,7 +100,7 @@ endmodule
 
 ```
 
-### [mkSizedFIFOG](../../src/bsv/FIFOG.bsv#L97)
+### [mkSizedFIFOG](../../src/bsv/FIFOG.bsv#L120)
 
 Sized conflict-free `FIFOG`
 ```bluespec
@@ -82,7 +113,7 @@ endmodule
 
 ```
 
-### [mkFIFOG1](../../src/bsv/FIFOG.bsv#L104)
+### [mkFIFOG1](../../src/bsv/FIFOG.bsv#L127)
 
 1-element conflicting `FIFOG`
 ```bluespec
@@ -95,7 +126,7 @@ endmodule
 
 ```
 
-### [mkLFIFOG](../../src/bsv/FIFOG.bsv#L111)
+### [mkLFIFOG](../../src/bsv/FIFOG.bsv#L134)
 
 Pipeline `FIFOG`
 ```bluespec
@@ -108,7 +139,7 @@ endmodule
 
 ```
 
-### [mkBypassFIFOG](../../src/bsv/FIFOG.bsv#L129)
+### [mkBypassFIFOG](../../src/bsv/FIFOG.bsv#L152)
 
 Bypass `FIFOG`
 
@@ -127,7 +158,7 @@ endmodule
 
 ```
 
-### [mkPipelineFIFOG](../../src/bsv/FIFOG.bsv#L139)
+### [mkPipelineFIFOG](../../src/bsv/FIFOG.bsv#L162)
 
 Pipeline `FIFOG`
 
@@ -144,7 +175,7 @@ endmodule
 
 ```
 
-### [mkFIFOGfromFIFOF](../../src/bsv/FIFOG.bsv#L149)
+### [mkFIFOGfromFIFOF](../../src/bsv/FIFOG.bsv#L172)
 
 Module to make `FIFOG` from a `FIFOF` module.
 
