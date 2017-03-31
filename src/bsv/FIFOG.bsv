@@ -60,6 +60,7 @@
 package FIFOG;
 
 import FIFOF::*;
+import GetPut::*;
 import SpecialFIFOs::*;
 import RevertingVirtualReg::*;
 
@@ -83,6 +84,28 @@ interface FIFOG#(type t);
     method Bool canEnq;
     method Bool canDeq;
 endinterface
+
+// toGet and toPut functions for FIFOG interface
+instance ToGet#(FIFOG#(t), t);
+    function Get#(t) toGet(FIFOG#(t) m);
+        return (interface Get;
+                    method ActionValue#(t) get();
+                        m.deq;
+                        return m.first();
+                    endmethod
+                endinterface);
+    endfunction
+endinstance
+
+instance ToPut#(FIFOG#(t), t);
+    function Put#(t) toPut(FIFOG#(t) m);
+        return (interface Put;
+                    method Action put(t x);
+                        m.enq(x);
+                    endmethod
+                endinterface);
+    endfunction
+endinstance
 
 // FIFOG versions of FIFOF package
 
