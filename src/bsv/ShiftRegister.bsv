@@ -37,6 +37,7 @@ interface ShiftRegister#(numeric type size, numeric type bitWidth);
     interface ServerPort#(Bit#(bitWidth), Bit#(bitWidth)) serial;
     interface ServerPort#(Vector#(size, Bit#(bitWidth)), Vector#(size, Bit#(bitWidth))) parallel;
     method Bool isEmpty;
+    method Bool isLastSerialChunk;
 endinterface
 
 /// This module creates a generic shift register that supports parallel and
@@ -101,6 +102,11 @@ module mkShiftRegister(ShiftRegister#(size, bitWidth));
     endinterface
     method Bool isEmpty;
         return !valid_vector[0] && !valid_vector[valueOf(size)-1];
+    endmethod
+    method Bool isLastSerialChunk;
+        // use this instead of valid_vector[1] in case size==1
+        let valid_vector_1 = shiftInAtN(readVReg(valid_vector), False)[0];
+        return valid_vector[0] && !valid_vector_1;
     endmethod
 endmodule
 
