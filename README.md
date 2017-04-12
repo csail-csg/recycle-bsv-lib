@@ -21,5 +21,6 @@ List of packages and links to their automatically generated documentation:
 * [SafeCounter](doc/markdown/SafeCounter.md)
 * [SearchFIFO](doc/markdown/SearchFIFO.md)
 * [ServerUtil](doc/markdown/ServerUtil.md)
+* [ShiftRegister](doc/markdown/ShiftRegister.md)
 * [StringUtils](doc/markdown/StringUtils.md)
 
