@@ -51,7 +51,6 @@ import Ehr::*;
 import FIFOG::*;
 import GetPut::*;
 
-
 interface InputPort#(type t);
     method Action enq(t val);
     method Bool canEnq;
@@ -63,6 +62,34 @@ interface OutputPort#(type t);
     method Action deq;
 endinterface
 
+/// This is only a function because our documentation system cannot handle
+/// top-level variable definitions. This function and other functions like it
+/// can be used as if it was defined as if it were just a variable.
+function InputPort#(t) nullInputPort;
+    return (interface InputPort;
+            method Action enq(t val) if (False);
+                noAction;
+            endmethod
+            method canEnq;
+                return False;
+            endmethod
+        endinterface);
+endfunction
+
+function OutputPort#(t) nullOutputPort;
+    return (interface OutputPort;
+            method t first if (False);
+                return ?;
+            endmethod
+            method Action deq if (False);
+                noAction;
+            endmethod
+            method Bool canDeq;
+                return False;
+            endmethod
+        endinterface);
+endfunction
+
 interface ServerPort#(type req_t, type resp_t);
     interface InputPort#(req_t) request;
     interface OutputPort#(resp_t) response;
@@ -72,6 +99,20 @@ interface ClientPort#(type req_t, type resp_t);
     interface OutputPort#(req_t) request;
     interface InputPort#(resp_t) response;
 endinterface
+
+function ServerPort#(req_t, resp_t) nullServerPort;
+    return (interface ServerPort;
+            interface InputPort request = nullInputPort;
+            interface OutputPort response = nullOutputPort;
+        endinterface);
+endfunction
+
+function ClientPort#(req_t, resp_t) nullClientPort;
+    return (interface ClientPort;
+            interface OutputPort request = nullOutputPort;
+            interface InputPort response = nullInputPort;
+        endinterface);
+endfunction
 
 typeclass ToInputPort#(type in_t, type port_t);
     function InputPort#(port_t) toInputPort(in_t x);
@@ -313,6 +354,50 @@ instance MkOutputPortBuffer#(Get#(t), t) provisos (Bits#(t, tSz));
             get_buffer[1] <= tagged Invalid;
         endmethod
     endmodule
+endinstance
+
+typeclass ToServerPort#(type req_ifc_t, type resp_ifc_t, type req_t, type resp_t);
+    function ServerPort#(req_t, resp_t) toServerPort(req_ifc_t req_ifc, resp_ifc_t resp_ifc);
+endtypeclass
+
+instance ToServerPort#(InputPort#(req_t), OutputPort#(resp_t), req_t, resp_t);
+    function ServerPort#(req_t, resp_t) toServerPort(InputPort#(req_t) req_ifc, OutputPort#(resp_t) resp_ifc);
+        return (interface ServerPort;
+                    interface InputPort request = req_ifc;
+                    interface OutputPort response = resp_ifc;
+                endinterface);
+    endfunction
+endinstance
+
+instance ToServerPort#(req_ifc_t, resp_ifc_t, req_t, resp_t) provisos (ToInputPort#(req_ifc_t, req_t), ToOutputPort#(resp_ifc_t, resp_t));
+    function ServerPort#(req_t, resp_t) toServerPort(req_ifc_t req_ifc, resp_ifc_t resp_ifc);
+        return (interface ServerPort;
+                    interface InputPort request = toInputPort(req_ifc);
+                    interface OutputPort response = toOutputPort(resp_ifc);
+                endinterface);
+    endfunction
+endinstance
+
+typeclass ToClientPort#(type req_ifc_t, type resp_ifc_t, type req_t, type resp_t);
+    function ClientPort#(req_t, resp_t) toClientPort(req_ifc_t req_ifc, resp_ifc_t resp_ifc);
+endtypeclass
+
+instance ToClientPort#(OutputPort#(req_t), InputPort#(resp_t), req_t, resp_t);
+    function ClientPort#(req_t, resp_t) toClientPort(OutputPort#(req_t) req_ifc, InputPort#(resp_t) resp_ifc);
+        return (interface ClientPort;
+                    interface OutputPort request = req_ifc;
+                    interface InputPort response = resp_ifc;
+                endinterface);
+    endfunction
+endinstance
+
+instance ToClientPort#(req_ifc_t, resp_ifc_t, req_t, resp_t) provisos (ToOutputPort#(req_ifc_t, req_t), ToInputPort#(resp_ifc_t, resp_t));
+    function ClientPort#(req_t, resp_t) toClientPort(req_ifc_t req_ifc, resp_ifc_t resp_ifc);
+        return (interface ClientPort;
+                    interface OutputPort request = toOutputPort(req_ifc);
+                    interface InputPort response = toInputPort(resp_ifc);
+                endinterface);
+    endfunction
 endinstance
 
 endpackage
