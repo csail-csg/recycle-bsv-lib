@@ -74,8 +74,11 @@ module mkEhr#(t initVal)(Ehr#(n, t)) provisos (Bits#(t, tSz));
 
     // Canonicalize rule to write the last written value to the internal
     // register. These attributes are statically checked by the compiler.
+    // The no_implicit_conditions attribute is commented out because clock
+    // gating the surrounding module will cause the check to fail because
+    // the guard of this rule becomes the gate of the clock.
     (* fire_when_enabled *)         // WILL_FIRE == CAN_FIRE
-    (* no_implicit_conditions *)    // CAN_FIRE == guard (True)
+    // (* no_implicit_conditions *)    // CAN_FIRE == guard (True)
     rule canonicalize;
         t nextVal = register;
         for (Integer i = 0 ; i < valueOf(n) ; i = i+1) begin

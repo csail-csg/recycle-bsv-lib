@@ -179,11 +179,11 @@ module [m] mkFIFOGfromFIFOF#(m#(FIFOF#(t)) mkM)(FIFOG#(t)) provisos (Bits#(t,tSz
     Reg#(Bool) virtualEnqReg <- mkRevertingVirtualReg(True);
     Reg#(Bool) virtualDeqReg <- mkRevertingVirtualReg(True);
 
-    (* no_implicit_conditions, fire_when_enabled *)
+    (* fire_when_enabled *)
     rule setCanEnqWire;
         canEnq_wire <= _m.notFull;
     endrule
-    (* no_implicit_conditions, fire_when_enabled *)
+    (* fire_when_enabled *)
     rule setCanDeqWire;
         canDeq_wire <= _m.notEmpty;
     endrule
