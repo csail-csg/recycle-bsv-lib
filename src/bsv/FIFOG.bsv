@@ -188,16 +188,20 @@ module [m] mkFIFOGfromFIFOF#(m#(FIFOF#(t)) mkM)(FIFOG#(t)) provisos (Bits#(t,tSz
         canDeq_wire <= _m.notEmpty;
     endrule
 
-    rule doAssert1;
-        if (canEnq_wire != impCondOf(_m.enq)) begin
-            $fdisplay(stderr, "[ERROR] mkFIFOGfromFIFOF: canEnq_wire != impCondOf(_m.enq)");
-        end
-    endrule
-    rule doAssert2;
-        if (canDeq_wire != impCondOf(_m.deq)) begin
-            $fdisplay(stderr, "[ERROR] mkFIFOGfromFIFOF: canDeq_wire != impCondOf(_m.deq)");
-        end
-    endrule
+    // These rules can help with debugging when using this module on a new
+    // FIFOF module, but they are commented out in normal use because
+    // impCondOf() is not fully supported by the bluespec compiler yet and
+    // causes compilation warnings.
+    // rule doAssert1;
+    //     if (canEnq_wire != impCondOf(_m.enq)) begin
+    //         $fdisplay(stderr, "[ERROR] mkFIFOGfromFIFOF: canEnq_wire != impCondOf(_m.enq)");
+    //     end
+    // endrule
+    // rule doAssert2;
+    //     if (canDeq_wire != impCondOf(_m.deq)) begin
+    //         $fdisplay(stderr, "[ERROR] mkFIFOGfromFIFOF: canDeq_wire != impCondOf(_m.deq)");
+    //     end
+    // endrule
 
     method Action enq(t x);
         _m.enq(x);
