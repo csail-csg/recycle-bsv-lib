@@ -15,6 +15,7 @@ List of packages and links to their automatically generated documentation:
 * [OneWriteReg](doc/markdown/OneWriteReg.md)
 * [PerfMonitor](doc/markdown/PerfMonitor.md) (and [PerfMonitorConnectal](doc/markdown/PerfMonitorConnectal.md))
 * [Port](doc/markdown/Port.md)
+* [PortUtil](doc/markdown/PortUtil.md)
 * [PrintTrace](doc/markdown/PrintTrace.md)
 * [RWBram](doc/markdown/RWBram.md)
 * [RegFileUtil](doc/markdown/RegFileUtil.md)
