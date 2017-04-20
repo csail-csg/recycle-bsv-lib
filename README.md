@@ -7,6 +7,7 @@ This repository is a collection of BSV packages and C++ code.
 
 List of packages and links to their automatically generated documentation:
 * [ClientServerUtil](doc/markdown/ClientServerUtil.md)
+* [ClockGate](doc/markdown/ClockGate.md)
 * [CompareProvisos](doc/markdown/CompareProvisos.md)
 * [ConcatReg](doc/markdown/ConcatReg.md)
 * [Ehr](doc/markdown/Ehr.md)
