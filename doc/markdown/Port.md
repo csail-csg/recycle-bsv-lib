@@ -128,7 +128,7 @@ endfunction
 
 ### [ToInputPort](../../src/bsv/Port.bsv#L117)
 ```bluespec
-typeclass ToInputPort#(type in_t, type port_t);
+typeclass ToInputPort#(type in_t, type port_t) dependencies (in_t determines port_t);
     function InputPort#(port_t) toInputPort(in_t x);
 endtypeclass
 
@@ -137,7 +137,7 @@ endtypeclass
 
 ### [ToOutputPort](../../src/bsv/Port.bsv#L121)
 ```bluespec
-typeclass ToOutputPort#(type in_t, type port_t);
+typeclass ToOutputPort#(type in_t, type port_t) dependencies (in_t determines port_t);
     function OutputPort#(port_t) toOutputPort(in_t x);
 endtypeclass
 
@@ -146,7 +146,7 @@ endtypeclass
 
 ### [MkInputPortBuffer](../../src/bsv/Port.bsv#L125)
 ```bluespec
-typeclass MkInputPortBuffer#(type in_t, type port_t);
+typeclass MkInputPortBuffer#(type in_t, type port_t) dependencies (in_t determines port_t);
     module mkInputPortBuffer#(in_t x)(InputPort#(port_t));
     module mkInputPortBypassBuffer#(in_t x)(InputPort#(port_t));
 endtypeclass
@@ -156,7 +156,7 @@ endtypeclass
 
 ### [MkOutputPortBuffer](../../src/bsv/Port.bsv#L130)
 ```bluespec
-typeclass MkOutputPortBuffer#(type in_t, type port_t);
+typeclass MkOutputPortBuffer#(type in_t, type port_t) dependencies (in_t determines port_t);
     module mkOutputPortBuffer#(in_t x)(OutputPort#(port_t));
     module mkOutputPortBypassBuffer#(in_t x)(OutputPort#(port_t));
 endtypeclass
@@ -473,7 +473,7 @@ endinstance
 
 ### [ToServerPort](../../src/bsv/Port.bsv#L359)
 ```bluespec
-typeclass ToServerPort#(type req_ifc_t, type resp_ifc_t, type req_t, type resp_t);
+typeclass ToServerPort#(type req_ifc_t, type resp_ifc_t, type req_t, type resp_t) dependencies ((req_ifc_t, resp_ifc_t) determines (req_t, resp_t));
     function ServerPort#(req_t, resp_t) toServerPort(req_ifc_t req_ifc, resp_ifc_t resp_ifc);
 endtypeclass
 
@@ -510,7 +510,7 @@ endinstance
 
 ### [ToClientPort](../../src/bsv/Port.bsv#L381)
 ```bluespec
-typeclass ToClientPort#(type req_ifc_t, type resp_ifc_t, type req_t, type resp_t);
+typeclass ToClientPort#(type req_ifc_t, type resp_ifc_t, type req_t, type resp_t) dependencies ((req_ifc_t, resp_ifc_t) determines (req_t, resp_t));
     function ClientPort#(req_t, resp_t) toClientPort(req_ifc_t req_ifc, resp_ifc_t resp_ifc);
 endtypeclass
 
