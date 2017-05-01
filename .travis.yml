@@ -5,6 +5,7 @@ before_script:
 - if [ -d Bluespec-2016.07.beta1 ] ; then echo bluespec cached; else curl http://www.bluespec.com/downloads/Bluespec-2016.07.beta1.tar.gz | tar -zxf - ; fi
 - mkdir -p lib
 - ln -s /usr/lib/x86_64-linux-gnu/libgmp.so.10 lib/libgmp.so.3
+- if [ -d tests/bluecheck ] ; then echo bluecheck cached; else git clone https://github.com/acw1251/bluecheck.git tests/bluecheck ; fi
 env:
   global:
     - BLUESPECDIR=$PWD/Bluespec-2016.07.beta1/lib
@@ -14,6 +15,7 @@ env:
 script:
 - ls Bluespec-2016.07.beta1
 - make build
+- cd tests/MemUtil ; make all ; make test
 sudo: no
 dist: trusty
 os:
