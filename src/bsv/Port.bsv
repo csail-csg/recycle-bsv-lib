@@ -114,20 +114,20 @@ function ClientPort#(req_t, resp_t) nullClientPort;
         endinterface);
 endfunction
 
-typeclass ToInputPort#(type in_t, type port_t);
+typeclass ToInputPort#(type in_t, type port_t) dependencies (in_t determines port_t);
     function InputPort#(port_t) toInputPort(in_t x);
 endtypeclass
 
-typeclass ToOutputPort#(type in_t, type port_t);
+typeclass ToOutputPort#(type in_t, type port_t) dependencies (in_t determines port_t);
     function OutputPort#(port_t) toOutputPort(in_t x);
 endtypeclass
 
-typeclass MkInputPortBuffer#(type in_t, type port_t);
+typeclass MkInputPortBuffer#(type in_t, type port_t) dependencies (in_t determines port_t);
     module mkInputPortBuffer#(in_t x)(InputPort#(port_t));
     module mkInputPortBypassBuffer#(in_t x)(InputPort#(port_t));
 endtypeclass
 
-typeclass MkOutputPortBuffer#(type in_t, type port_t);
+typeclass MkOutputPortBuffer#(type in_t, type port_t) dependencies (in_t determines port_t);
     module mkOutputPortBuffer#(in_t x)(OutputPort#(port_t));
     module mkOutputPortBypassBuffer#(in_t x)(OutputPort#(port_t));
 endtypeclass
@@ -356,7 +356,7 @@ instance MkOutputPortBuffer#(Get#(t), t) provisos (Bits#(t, tSz));
     endmodule
 endinstance
 
-typeclass ToServerPort#(type req_ifc_t, type resp_ifc_t, type req_t, type resp_t);
+typeclass ToServerPort#(type req_ifc_t, type resp_ifc_t, type req_t, type resp_t) dependencies ((req_ifc_t, resp_ifc_t) determines (req_t, resp_t));
     function ServerPort#(req_t, resp_t) toServerPort(req_ifc_t req_ifc, resp_ifc_t resp_ifc);
 endtypeclass
 
@@ -378,7 +378,7 @@ instance ToServerPort#(req_ifc_t, resp_ifc_t, req_t, resp_t) provisos (ToInputPo
     endfunction
 endinstance
 
-typeclass ToClientPort#(type req_ifc_t, type resp_ifc_t, type req_t, type resp_t);
+typeclass ToClientPort#(type req_ifc_t, type resp_ifc_t, type req_t, type resp_t) dependencies ((req_ifc_t, resp_ifc_t) determines (req_t, resp_t));
     function ClientPort#(req_t, resp_t) toClientPort(req_ifc_t req_ifc, resp_ifc_t resp_ifc);
 endtypeclass
 
