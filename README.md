@@ -12,6 +12,7 @@ List of packages and links to their automatically generated documentation:
 * [ConcatReg](doc/markdown/ConcatReg.md)
 * [Ehr](doc/markdown/Ehr.md)
 * [FIFOG](doc/markdown/FIFOG.md)
+* [MemUtil](doc/markdown/MemUtil.md)
 * [OneWriteReg](doc/markdown/OneWriteReg.md)
 * [PerfMonitor](doc/markdown/PerfMonitor.md) (and [PerfMonitorConnectal](doc/markdown/PerfMonitorConnectal.md))
 * [Port](doc/markdown/Port.md)

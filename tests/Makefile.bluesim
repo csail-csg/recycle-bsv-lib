@@ -1,0 +1,63 @@
+
+# Copyright (c) 2017 Massachusetts Institute of Technology
+
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation
+# files (the "Software"), to deal in the Software without
+# restriction, including without limitation the rights to use, copy,
+# modify, merge, publish, distribute, sublicense, and/or sell copies
+# of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# This makefile relies on a standard naming convention.
+# Each test named "MyTestName" comes from a module "mkMyTestName" in the file
+# "MyTestName.bsv".
+
+BLUECHECK_DIR=../bluecheck
+
+LIB_BSV_FILES=$(wildcard ../../src/bsv/*.bsv)
+
+RUN_FILES=$(patsubst %, run/%.log, $(TEST_NAME) $(CHECK_NAME))
+
+BSC_FLAGS=
+
+.PHONY: all test clean
+
+all: $(TEST_NAME) $(CHECK_NAME)
+
+test: $(RUN_FILES)
+	! grep -e ERROR -e "Property does not hold" $^
+
+$(TEST_NAME): %: %.bsv $(LIB_BSV_FILES)
+	mkdir -p build
+	bsc $(BSC_FLAGS) -p ../../src/bsv:+ -bdir build -simdir build -sim -g mk$@ -u $<
+	bsc $(BSC_FLAGS) -p ../../src/bsv:+ -bdir build -simdir build -sim -e mk$@ -o $@
+
+$(CHECK_NAME): %: %.bsv $(LIB_BSV_FILES)
+	mkdir -p build
+	bsc $(BSC_FLAGS) -p ../../src/bsv:$(BLUECHECK_DIR):+ -bdir build -simdir build -sim -g mk$@ -u $<
+	bsc $(BSC_FLAGS) -p ../../src/bsv:$(BLUECHECK_DIR):+ -bdir build -simdir build -sim -e mk$@ -o $@
+
+$(RUN_FILES): run/%.log: %
+	mkdir -p run
+	-timeout 60s ./$< &> $@ ; ERROR_CODE=$$? ; if [ $$ERROR_CODE -eq 124 ] ; then echo "ERROR: test timed out" >> $@ ; \
+		elif [ $$ERROR_CODE -ne 0 ] ; then echo "ERROR: exit code $$ERROR_CODE" >> $@ ; fi
+
+clean:
+	rm -rf build
+	rm -rf run
+	rm -f $(TEST_NAME)
+	rm -f $(CHECK_NAME)
+	rm -f *.so
