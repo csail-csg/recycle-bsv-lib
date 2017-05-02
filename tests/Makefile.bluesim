@@ -38,7 +38,8 @@ BSC_FLAGS=
 all: $(TEST_NAME) $(CHECK_NAME)
 
 test: $(RUN_FILES)
-	! grep -e ERROR -e "Property does not hold" $^
+	@! grep -e ERROR -e "Property does not hold" $^
+	@echo "All tests passed"
 
 $(TEST_NAME): %: %.bsv $(LIB_BSV_FILES)
 	mkdir -p build
@@ -51,8 +52,9 @@ $(CHECK_NAME): %: %.bsv $(LIB_BSV_FILES)
 	bsc $(BSC_FLAGS) -p ../../src/bsv:$(BLUECHECK_DIR):+ -bdir build -simdir build -sim -e mk$@ -o $@
 
 $(RUN_FILES): run/%.log: %
-	mkdir -p run
-	-timeout 60s ./$< &> $@ ; ERROR_CODE=$$? ; if [ $$ERROR_CODE -eq 124 ] ; then echo "ERROR: test timed out" >> $@ ; \
+	@mkdir -p run
+	@echo "./$< &> $@"
+	@-timeout 60s ./$< &> $@ ; ERROR_CODE=$$? ; if [ $$ERROR_CODE -eq 124 ] ; then echo "ERROR: test timed out" >> $@ ; \
 		elif [ $$ERROR_CODE -ne 0 ] ; then echo "ERROR: exit code $$ERROR_CODE" >> $@ ; fi
 
 clean:

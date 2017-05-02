@@ -74,7 +74,7 @@ module [BlueCheck] checkAtomicBRAM(Empty);
                     endaction
                 endseq
             endpar
-            //init <= True;
+            init <= True;
         endseq);
 
     let fsm <- mkFSM(writeZeros);

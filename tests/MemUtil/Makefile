@@ -27,6 +27,7 @@ TEST_NAME=\
 CHECK_NAME=\
 	AtomicBRAMCheck \
 	MemBusCheck \
+	MixedAtomicMemBusCheck \
 	AtomicMemEmulationBridgeCheck \
 	NarrowAtomicMemBridgeCheck \
 

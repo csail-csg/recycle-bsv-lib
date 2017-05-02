@@ -52,6 +52,18 @@ import Ehr::*;
 import FIFOG::*;
 import Port::*;
 
+// ReadOnlyMem - Only supports reads
+
+// logNumBytes is not necessary for this type, but it is necessary if we want
+// a custom Bits implementation.
+typedef struct {
+    Bit#(addrSz) addr;
+} ReadOnlyMemReq#(numeric type addrSz, numeric type logNumBytes) deriving (Bits, Eq, FShow);
+
+typedef struct {
+    Bit#(TMul#(8,TExp#(logNumBytes))) data;
+} ReadOnlyMemResp#(numeric type logNumBytes) deriving (Bits, Eq, FShow);
+
 // CoarseMem - Only supports reads and writes on full words
 
 typedef struct {
@@ -104,6 +116,9 @@ typedef CoarseMemResp#(logNumBytes) AtomicMemResp#(numeric type logNumBytes);
 
 // Port interfaces
 
+typedef ServerPort#(ReadOnlyMemReq#(addrSz, logNumBytes), ReadOnlyMemResp#(logNumBytes)) ReadOnlyMemServerPort#(numeric type addrSz, numeric type logNumBytes);
+typedef ClientPort#(ReadOnlyMemReq#(addrSz, logNumBytes), ReadOnlyMemResp#(logNumBytes)) ReadOnlyMemClientPort#(numeric type addrSz, numeric type logNumBytes);
+
 typedef ServerPort#(CoarseMemReq#(addrSz, logNumBytes), CoarseMemResp#(logNumBytes)) CoarseMemServerPort#(numeric type addrSz, numeric type logNumBytes);
 typedef ClientPort#(CoarseMemReq#(addrSz, logNumBytes), CoarseMemResp#(logNumBytes)) CoarseMemClientPort#(numeric type addrSz, numeric type logNumBytes);
 
@@ -116,6 +131,11 @@ typedef ClientPort#(AtomicMemReq#(addrSz, logNumBytes), AtomicMemResp#(logNumByt
 ////////////////////////////////////////////////////////////////////////////////
 
 // 32-bit memory interfaces
+
+typedef ReadOnlyMemReq#(addrSz, 2)        ReadOnlyMem32Req#(numeric type addrSz);
+typedef ReadOnlyMemResp#(2)               ReadOnlyMem32Resp;
+typedef ReadOnlyMemServerPort#(addrSz, 2) ReadOnlyMem32ServerPort#(numeric type addrSz);
+typedef ReadOnlyMemClientPort#(addrSz, 2) ReadOnlyMem32ClientPort#(numeric type addrSz);
 
 typedef CoarseMemReq#(addrSz, 2)        CoarseMem32Req#(numeric type addrSz);
 typedef CoarseMemResp#(2)               CoarseMem32Resp;
@@ -134,6 +154,11 @@ typedef AtomicMemClientPort#(addrSz, 2) AtomicMem32ClientPort#(numeric type addr
 
 // 64-bit memory interfaces
 
+typedef ReadOnlyMemReq#(addrSz, 3)        ReadOnlyMem64Req#(numeric type addrSz);
+typedef ReadOnlyMemResp#(3)               ReadOnlyMem64Resp;
+typedef ReadOnlyMemServerPort#(addrSz, 3) ReadOnlyMem64ServerPort#(numeric type addrSz);
+typedef ReadOnlyMemClientPort#(addrSz, 3) ReadOnlyMem64ClientPort#(numeric type addrSz);
+
 typedef CoarseMemReq#(addrSz, 3)        CoarseMem64Req#(numeric type addrSz);
 typedef CoarseMemResp#(3)               CoarseMem64Resp;
 typedef CoarseMemServerPort#(addrSz, 3) CoarseMem64ServerPort#(numeric type addrSz);
@@ -151,16 +176,42 @@ typedef AtomicMemClientPort#(addrSz, 3) AtomicMem64ClientPort#(numeric type addr
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Unifying Memory Types and Typeclasses
+
+typedef enum {
+    ReadOnly,
+    Coarse,
+    ByteEn,
+    Atomic
+} MemType deriving (Bits, Eq, FShow, Bounded);
+
+typedef union tagged {
+    ReadOnlyMemServerPort#(addrSz, logNumBytes) ReadOnly;
+    CoarseMemServerPort#(addrSz, logNumBytes)   Coarse;
+    ByteEnMemServerPort#(addrSz, logNumBytes)   ByteEn;
+    AtomicMemServerPort#(addrSz, logNumBytes)   Atomic;
+} TaggedMemServerPort#(numeric type addrSz, numeric type logNumBytes);
+
 typeclass IsMemReq#(type memReqT, type memRespT, type addrSz, type logNumBytes)
             dependencies (memReqT determines (addrSz, logNumBytes, memRespT));
-    function Bit#(addrSz) getAddr(memReqT req);
+    function Bit#(addrSz)                      getAddr(memReqT req);
     function Bit#(TMul#(8,TExp#(logNumBytes))) getData(memReqT req);
-    function Bool isWrite(memReqT req);
-    function Bit#(TExp#(logNumBytes)) getWriteEn(memReqT req);
-    function AtomicMemOp getAtomicOp(memReqT req);
-    function Bool isAtomicOp(memReqT req);
-    function memRespT getDefaultResp(memReqT req);
+    function Bool                              isWrite(memReqT req);
+    function Bit#(TExp#(logNumBytes))          getWriteEn(memReqT req);
+    function AtomicMemOp                       getAtomicOp(memReqT req);
+    function Bool                              isAtomicOp(memReqT req);
+    function memRespT                          getDefaultResp(memReqT req);
 endtypeclass
+
+instance IsMemReq#(ReadOnlyMemReq#(addrSz, logNumBytes), ReadOnlyMemResp#(logNumBytes), addrSz, logNumBytes);
+    function Bit#(addrSz) getAddr(ReadOnlyMemReq#(addrSz, logNumBytes) req) = req.addr;
+    function Bit#(TMul#(8,TExp#(logNumBytes))) getData(ReadOnlyMemReq#(addrSz, logNumBytes) req) = 0;
+    function Bool isWrite(ReadOnlyMemReq#(addrSz, logNumBytes) req) = False;
+    function Bit#(TExp#(logNumBytes)) getWriteEn(ReadOnlyMemReq#(addrSz, logNumBytes) req) = 0;
+    function AtomicMemOp getAtomicOp(ReadOnlyMemReq#(addrSz, logNumBytes) req) = None;
+    function Bool isAtomicOp(ReadOnlyMemReq#(addrSz, logNumBytes) req) = False;
+    function ReadOnlyMemResp#(logNumBytes) getDefaultResp(ReadOnlyMemReq#(addrSz, logNumBytes) req) = ReadOnlyMemResp{ data: 0 };
+endinstance
 
 instance IsMemReq#(CoarseMemReq#(addrSz, logNumBytes), CoarseMemResp#(logNumBytes), addrSz, logNumBytes);
     function Bit#(addrSz) getAddr(CoarseMemReq#(addrSz, logNumBytes) req) = req.addr;
@@ -190,6 +241,77 @@ instance IsMemReq#(AtomicMemReq#(addrSz, logNumBytes), AtomicMemResp#(logNumByte
     function AtomicMemOp getAtomicOp(AtomicMemReq#(addrSz, logNumBytes) req) = req.atomic_op;
     function Bool isAtomicOp(AtomicMemReq#(addrSz, logNumBytes) req) = req.atomic_op != None;
     function AtomicMemResp#(logNumBytes) getDefaultResp(AtomicMemReq#(addrSz, logNumBytes) req) = AtomicMemResp{ write: req.write_en != 0, data: 0 };
+endinstance
+
+function ReadOnlyMemReq#(addrSz, logNumBytes) toReadOnlyMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
+    return ReadOnlyMemReq { addr: getAddr(req) };
+endfunction
+function Bool isReadOnlyMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
+    return !isWrite(req);
+endfunction
+
+function CoarseMemReq#(addrSz, logNumBytes) toCoarseMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
+    return CoarseMemReq { write: isWrite(req), addr: getAddr(req), data: getData(req) };
+endfunction
+function Bool isCoarseMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
+    return !isWrite(req) || ((getWriteEn(req) == '1) && (getAtomicOp(req) == None));
+endfunction
+
+function ByteEnMemReq#(addrSz, logNumBytes) toByteEnMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
+    return ByteEnMemReq { write_en: getWriteEn(req), addr: getAddr(req), data: getData(req) };
+endfunction
+function Bool isByteEnMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
+    return !isWrite(req) || (getAtomicOp(req) == None);
+endfunction
+
+function AtomicMemReq#(addrSz, logNumBytes) toAtomicMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
+    return AtomicMemReq { write_en: getWriteEn(req), atomic_op: getAtomicOp(req), addr: getAddr(req), data: getData(req) };
+endfunction
+function Bool isAtomicMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
+    return True;
+endfunction
+
+//
+
+typeclass IsMemResp#(type memRespT, numeric type logNumBytes) dependencies (memRespT determines logNumBytes);
+    function memRespT fromReadOnlyMemResp(ReadOnlyMemResp#(logNumBytes) resp);
+    function memRespT fromCoarseMemResp(CoarseMemResp#(logNumBytes) resp);
+    function memRespT fromByteEnMemResp(CoarseMemResp#(logNumBytes) resp) = fromCoarseMemResp(resp);
+    function memRespT fromAtomicMemResp(CoarseMemResp#(logNumBytes) resp) = fromCoarseMemResp(resp);
+    function ReadOnlyMemResp#(logNumBytes) toReadOnlyMemResp(memRespT resp);
+    function CoarseMemResp#(logNumBytes) toCoarseMemResp(memRespT resp);
+    function ByteEnMemResp#(logNumBytes) toByteEnMemResp(memRespT resp) = toCoarseMemResp(resp);
+    function AtomicMemResp#(logNumBytes) toAtomicMemResp(memRespT resp) = toCoarseMemResp(resp);
+endtypeclass
+
+instance IsMemResp#(ReadOnlyMemResp#(logNumBytes), logNumBytes);
+    function ReadOnlyMemResp#(logNumBytes) fromReadOnlyMemResp(ReadOnlyMemResp#(logNumBytes) resp);
+        return resp;
+    endfunction
+    function ReadOnlyMemResp#(logNumBytes) fromCoarseMemResp(CoarseMemResp#(logNumBytes) resp);
+        return ReadOnlyMemResp{ data: resp.data };
+    endfunction
+    function ReadOnlyMemResp#(logNumBytes) toReadOnlyMemResp(ReadOnlyMemResp#(logNumBytes) resp);
+        return resp;
+    endfunction
+    function CoarseMemResp#(logNumBytes) toCoarseMemResp(ReadOnlyMemResp#(logNumBytes) resp);
+        return CoarseMemResp { write: False, data: resp.data };
+    endfunction
+endinstance
+
+instance IsMemResp#(CoarseMemResp#(logNumBytes), logNumBytes);
+    function CoarseMemResp#(logNumBytes) fromReadOnlyMemResp(ReadOnlyMemResp#(logNumBytes) resp);
+        return CoarseMemResp{ write: False, data: resp.data };
+    endfunction
+    function CoarseMemResp#(logNumBytes) fromCoarseMemResp(CoarseMemResp#(logNumBytes) resp);
+        return resp;
+    endfunction
+    function ReadOnlyMemResp#(logNumBytes) toReadOnlyMemResp(CoarseMemResp#(logNumBytes) resp);
+        return ReadOnlyMemResp { data: resp.data };
+    endfunction
+    function CoarseMemResp#(logNumBytes) toCoarseMemResp(CoarseMemResp#(logNumBytes) resp);
+        return resp;
+    endfunction
 endinstance
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -789,6 +911,220 @@ module mkMemBus#(Vector#(nServers, MemBusItem#(memReqT, memRespT, addrSz)) bus_i
     end
 
     Vector#(nClients, ServerPort#(memReqT, memRespT)) ifc = zipWith( toServerPort, clientMemReq, clientMemResp );
+
+    return ifc;
+endmodule
+
+// Memory bus -- Works with CoarseMem, ByteEnMem, and AtomicMem interfaces
+
+typedef struct {
+    Bit#(addrSz) addr_mask;
+    Bit#(addrSz) addr_match;
+    TaggedMemServerPort#(addrSz, logNumBytes) ifc;
+} MixedMemBusItem#(numeric type addrSz, numeric type logNumBytes);
+
+/**
+ * This function produces a `MixedMemBusItem` from an address range.
+ *
+ * This function will return an error at compile time if the address range
+ * cannot be exptessed with an address mask and a match value.
+ */
+function MixedMemBusItem#(addrSz, logNumBytes) mixedMemBusItemFromAddrRange( Bit#(addrSz) low, Bit#(addrSz) high, TaggedMemServerPort#(addrSz, logNumBytes) ifc );
+    let addr_mask = ~(low ^ high);
+    let addr_match = low & addr_mask;
+    // mask should be a contiguous region of upper bits,
+    // low should be the lowest valid address for mask/match combination,
+    // and high should be the highest valid address for mask/match combination,
+    Bool valid = ((addr_mask & ((~addr_mask) >> 1)) == 0)
+                    && ((low & ~addr_mask) == 0)
+                    && ((high & ~addr_mask) == ~addr_mask);
+    if (valid) begin
+        return MixedMemBusItem {
+            addr_mask: addr_mask,
+            addr_match: addr_match,
+            ifc: ifc
+        };
+    end else begin
+        return error("mixedMemBusItemFromAddrRange compilation error: Address range cannot be expressed as match/mask", ?);
+    end
+endfunction
+
+interface MixedAtomicMemBus#(numeric type nClients, numeric type addrSz, numeric type logNumBytes);
+    interface Vector#(nClients, AtomicMemServerPort#(addrSz, logNumBytes)) clients;
+    method Maybe#(MemType) getMemType(Bit#(addrSz) addr);
+endinterface
+
+/**
+ * This module makes a memory bus from a provided address map.
+ *
+ * This module takes in an address map as a vector of `MemBusItem`. Each item
+ * consists of a `ServerPort` interface and an address mask and match. This
+ * module produces a vector of `ServerPort` memory interfaces for clients to
+ * attach to to.
+ *
+ * The internal implementation consists of many bypass FIFOs for decoupling
+ * to avoid adding unnecessary scheduling constraints between the independent
+ * memory servers. This implementation also consists of many internal rules to
+ * easily support concurrent access between independent clients and servers.
+ * There are better ways to get this concurrency, but they require more
+ * implementation effort and are harder to verify.
+ */
+module mkMixedAtomicMemBus#(Vector#(nServers, MixedMemBusItem#(addrSz, logNumBytes)) bus_items)(MixedAtomicMemBus#(nClients, addrSz, logNumBytes));
+    // check for consistency of addr_mask and addr_match in bus_items
+    for (Integer i = 0 ; i < valueOf(nServers) ; i = i+1) begin
+        if ((bus_items[i].addr_mask & bus_items[i].addr_match) != bus_items[i].addr_match) begin
+            errorM("mkMixedAtomicMemBus compilation error: Illegal addr_mask addr_match combination");
+        end
+        for (Integer j = 0 ; j < valueOf(nServers) ; j = j+1) begin
+            if (i != j) begin
+                Bit#(addrSz) shared_mask = bus_items[i].addr_mask & bus_items[j].addr_mask;
+                Bit#(addrSz) different_match = bus_items[i].addr_match ^ bus_items[j].addr_match;
+                if ((shared_mask & different_match) == 0) begin
+                    errorM("mkMixedAtomicMemBus compilation error: Overlapping address regions in bus_items");
+                end
+            end
+        end
+    end
+
+    // Bypass FIFOs to buffer all the inputs and outputs. Without these
+    // buffers, this module would add additional scheduling constraints
+    // between client items and server items.
+    Vector#(nClients, FIFOG#(AtomicMemReq#(addrSz, logNumBytes))) clientMemReq <- replicateM(mkBypassFIFOG);
+    Vector#(nClients, FIFOG#(AtomicMemResp#(logNumBytes))) clientMemResp <- replicateM(mkBypassFIFOG);
+    Vector#(nServers, FIFOG#(AtomicMemReq#(addrSz, logNumBytes))) serverMemReq <- replicateM(mkBypassFIFOG);
+    Vector#(nServers, FIFOG#(AtomicMemResp#(logNumBytes))) serverMemResp <- replicateM(mkBypassFIFOG);
+    // Bookkeeping FIFOs to keep track of request routing
+    // clientBookkeeping can hold valueOf(nServers) to corresponds to an
+    // out-of-bounds address.
+    Vector#(nClients, FIFOG#(Bit#(TLog#(TAdd#(nServers,1))))) clientBookkeeping <- replicateM(mkPipelineFIFOG);
+    Vector#(nServers, FIFOG#(Bit#(TLog#(nClients)))) serverBookkeeping <- replicateM(mkPipelineFIFOG);
+    // out-of-bounds responses, acts like another client.
+    FIFOG#(AtomicMemResp#(logNumBytes)) oobResp <- mkPipelineFIFOG;
+
+    function Bit#(TLog#(TAdd#(nServers,1))) getServer(AtomicMemReq#(addrSz, logNumBytes) req);
+        Bit#(addrSz) addr = getAddr(req);
+        // This value corresponds to an out-of-bounds address
+        Bit#(TLog#(TAdd#(nServers,1))) server = fromInteger(valueOf(nServers));
+        for (Integer i = 0 ; i < valueOf(nServers) ; i = i+1) begin
+            if ((addr & bus_items[i].addr_mask) == bus_items[i].addr_match) begin
+                server = fromInteger(i);
+            end
+        end
+        return server;
+    endfunction
+
+    // make a ton of rules
+    for (Integer c = 0 ; c < valueOf(nClients) ; c = c+1) begin
+        for (Integer s = 0 ; s < valueOf(nServers) ; s = s+1) begin
+            rule connectReq( getServer(clientMemReq[c].first) == fromInteger(s) );
+                // $display("connectReq: c = %0d to s = %0d", c, s);
+                serverMemReq[s].enq( clientMemReq[c].first );
+                clientMemReq[c].deq;
+                clientBookkeeping[c].enq( fromInteger(s) );
+                serverBookkeeping[s].enq( fromInteger(c) );
+            endrule
+
+            rule connectResp( (clientBookkeeping[c].first == fromInteger(s)) && (serverBookkeeping[s].first == fromInteger(c)) );
+                // $display("connectResp: c = %0d to s = %0d", c, s);
+                clientBookkeeping[c].deq;
+                serverBookkeeping[s].deq;
+                clientMemResp[c].enq( serverMemResp[s].first );
+                serverMemResp[s].deq;
+            endrule
+        end
+
+        // out-of-bounds requests
+        rule connectOobReq( getServer(clientMemReq[c].first) == fromInteger(valueOf(nServers)) );
+            // $display("connectOobReq: c = %0d", c);
+            oobResp.enq( getDefaultResp(clientMemReq[c].first) );
+            clientMemReq[c].deq;
+            clientBookkeeping[c].enq( fromInteger(valueOf(nServers)) );
+        endrule
+
+        rule connectOobResp( clientBookkeeping[c].first == fromInteger(valueOf(nServers)) );
+            // $display("connectOobResp: c = %0d", c);
+            clientBookkeeping[c].deq;
+            clientMemResp[c].enq( oobResp.first );
+            oobResp.deq;
+        endrule
+    end
+    for (Integer s = 0 ; s < valueOf(nServers) ; s = s+1) begin
+        rule connectServerReq;
+            // $display("connectServerReq: s = %0d", s);
+            case (bus_items[s].ifc) matches
+                tagged ReadOnly .ifc: begin
+                    if(!isReadOnlyMemReq(serverMemReq[s].first)) begin
+                        $display(stderr, "[WARNING] mkMixedAtomicMemBus: non-ReadOnly reqeust sent to ReadOnly server %0d", s);
+                    end
+                    ifc.request.enq( toReadOnlyMemReq(serverMemReq[s].first) );
+                end
+                tagged Coarse   .ifc: begin
+                    if(!isCoarseMemReq(serverMemReq[s].first)) begin
+                        $display(stderr, "[WARNING] mkMixedAtomicMemBus: non-Coarse reqeust sent to Coarse server %0d", s);
+                    end
+                    ifc.request.enq( toCoarseMemReq(serverMemReq[s].first) );
+                end
+                tagged ByteEn   .ifc: begin
+                    if(!isByteEnMemReq(serverMemReq[s].first)) begin
+                        $display(stderr, "[WARNING] mkMixedAtomicMemBus: non-ByteEn reqeust sent to ByteEn server %0d", s);
+                    end
+                    ifc.request.enq( toByteEnMemReq(serverMemReq[s].first) );
+                end
+                tagged Atomic   .ifc: begin
+                    if(!isAtomicMemReq(serverMemReq[s].first)) begin
+                        $display(stderr, "[WARNING] mkMixedAtomicMemBus: non-Atomic reqeust sent to Atomic server %0d", s);
+                    end
+                    ifc.request.enq( toAtomicMemReq(serverMemReq[s].first) );
+                end
+            endcase
+            serverMemReq[s].deq;
+        endrule
+        rule connectServerResp;
+            // $display("connectServerResp: s = %0d", s);
+            case (bus_items[s].ifc) matches
+                tagged ReadOnly .ifc: begin
+                    serverMemResp[s].enq( fromReadOnlyMemResp(ifc.response.first) );
+                    ifc.response.deq;
+                end
+                tagged Coarse   .ifc: begin
+                    serverMemResp[s].enq( fromCoarseMemResp(ifc.response.first) );
+                    ifc.response.deq;
+                end
+                tagged ByteEn   .ifc: begin
+                    serverMemResp[s].enq( fromByteEnMemResp(ifc.response.first) );
+                    ifc.response.deq;
+                end
+                tagged Atomic   .ifc: begin
+                    serverMemResp[s].enq( fromAtomicMemResp(ifc.response.first) );
+                    ifc.response.deq;
+                end
+            endcase
+        endrule
+    end
+
+    MixedAtomicMemBus#(nClients, addrSz, logNumBytes) ifc = (interface MixedAtomicMemBus;
+            interface Vector clients = zipWith( toServerPort, clientMemReq, clientMemResp );
+            method Maybe#(MemType) getMemType(Bit#(addrSz) addr);
+                // This value corresponds to an out-of-bounds address
+                Maybe#(Bit#(TLog#(nServers))) server = tagged Invalid;
+                for (Integer i = 0 ; i < valueOf(nServers) ; i = i+1) begin
+                    if ((addr & bus_items[i].addr_mask) == bus_items[i].addr_match) begin
+                        server = tagged Valid fromInteger(i);
+                    end
+                end
+                if (server matches tagged Valid .serverIndex) begin
+                    return (case (bus_items[serverIndex].ifc) matches
+                                tagged ReadOnly .*: tagged Valid ReadOnly;
+                                tagged Coarse .*: tagged Valid Coarse;
+                                tagged ByteEn .*: tagged Valid ByteEn;
+                                tagged Atomic .*: tagged Valid Atomic;
+                                default: tagged Invalid;
+                            endcase);
+                end else begin
+                    return tagged Invalid;
+                end
+            endmethod
+        endinterface);
 
     return ifc;
 endmodule
