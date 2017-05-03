@@ -46,6 +46,7 @@ package MemUtil;
 
 import BRAMCore::*;
 import Connectable::*;
+import RegFile::*;
 import Vector::*;
 
 import Ehr::*;
@@ -760,6 +761,137 @@ module mkAtomicBRAM( AtomicBRAM#(addrSz, logNumBytes, numWords) )
             endmethod
         endinterface
     endinterface
+endmodule
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Memory Mapped Registers
+
+function ActionValue#(memRespT) performMemReqOnRegs(Vector#(numRegs, Reg#(Bit#(TMul#(8,TExp#(logNumBytes))))) regs, memReqT req)
+        provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes),
+                  IsMemResp#(memRespT, logNumBytes),
+                  Add#(a__, TLog#(numRegs), addrSz));
+    return (actionvalue
+            // Basically perform this operation as if it were an atomic memory
+            // operation. Constant propagation should allow for unused hardware to be
+            // optimized away.
+            Bit#(addrSz) addr = getAddr(req);
+            Bit#(TMul#(8,TExp#(logNumBytes))) data = getData(req);
+            Bit#(TExp#(logNumBytes)) write_en = getWriteEn(req);
+            Vector#(TExp#(logNumBytes), Bit#(1)) write_en_vec = unpack(write_en);
+            Bit#(TMul#(8,TExp#(logNumBytes))) write_bit_en = pack(map(signExtend, write_en_vec));
+            AtomicMemOp atomic_op = getAtomicOp(req);
+            memRespT resp = getDefaultResp(req);
+
+            Bit#(TLog#(numRegs)) index = truncate(addr >> valueOf(logNumBytes));
+            if (index <= fromInteger(valueOf(numRegs)-1)) begin
+                // valid register
+                if (write_en == 0) begin
+                    // read only
+                    resp = fromAtomicMemResp( AtomicMemResp { write: False, data: regs[index] } );
+                end else if ((write_en == '1) && (atomic_op == None)) begin
+                    // coarse write
+                    regs[index] <= data;
+                    resp = fromAtomicMemResp( AtomicMemResp { write: True, data: 0 } );
+                end else if (atomic_op == None) begin
+                    // byteen write
+                    regs[index] <= (data & write_bit_en) | (regs[index] & ~write_bit_en);
+                    resp = fromAtomicMemResp( AtomicMemResp { write: True, data: 0 } );
+                end else begin
+                    // atomic
+                    let write_data = atomicMemOpAlu(atomic_op, regs[index], data, write_en);
+                    regs[index] <= (write_data & write_bit_en) | (regs[index] & ~write_bit_en);
+                    resp = fromAtomicMemResp( AtomicMemResp { write: True, data: regs[index] } );
+                end
+            end
+            return resp;
+        endactionvalue);
+endfunction
+
+/// This module can create a `ServerPort` of various memory types given a
+/// vector of registers.
+module mkMemServerPortFromRegs#( Vector#(numRegs, Reg#(Bit#(TMul#(8,TExp#(logNumBytes))))) regs )( ServerPort#(memReqT, memRespT) )
+        provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes),
+                  IsMemResp#(memRespT, logNumBytes),
+                  Bits#(memReqT, memReqSz),
+                  Bits#(memRespT, memRespSz),
+                  Add#(a__, TLog#(numRegs), addrSz));
+
+    FIFOG#(memReqT) memReqFIFO <- mkLFIFOG;
+    FIFOG#(memRespT) memRespFIFO <- mkLFIFOG;
+
+    rule performMemReq;
+        let req = memReqFIFO.first;
+        memReqFIFO.deq;
+        let resp <- performMemReqOnRegs( regs, req );
+        memRespFIFO.enq(resp);
+    endrule
+
+    interface InputPort request = toInputPort(memReqFIFO);
+    interface OutputPort response = toOutputPort(memRespFIFO);
+endmodule
+
+function ActionValue#(memRespT) performMemReqOnRegFile(RegFile#(Bit#(rfAddrSz), Bit#(TMul#(8,TExp#(logNumBytes)))) rf, memReqT req)
+        provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes),
+                  IsMemResp#(memRespT, logNumBytes),
+                  Add#(a__, rfAddrSz, addrSz));
+    return (actionvalue
+            // Basically perform this operation as if it were an atomic memory
+            // operation. Constant propagation should allow for unused hardware to be
+            // optimized away.
+            Bit#(addrSz) addr = getAddr(req);
+            Bit#(TMul#(8, TExp#(logNumBytes))) data = getData(req);
+            Bit#(TExp#(logNumBytes)) write_en = getWriteEn(req);
+            Vector#(TExp#(logNumBytes), Bit#(1)) write_en_vec = unpack(write_en);
+            Bit#(TMul#(8, TExp#(logNumBytes))) write_bit_en = pack(map(signExtend, write_en_vec));
+            AtomicMemOp atomic_op = getAtomicOp(req);
+            memRespT resp = getDefaultResp(req);
+
+            Bit#(rfAddrSz) index = truncate(addr >> valueOf(logNumBytes));
+            if (write_en == 0) begin
+                // read only
+                resp = fromAtomicMemResp( AtomicMemResp { write: False, data: rf.sub(index) } );
+            end else if ((write_en == '1) && (atomic_op == None)) begin
+                // coarse write
+                rf.upd(index, data);
+                resp = fromAtomicMemResp( AtomicMemResp { write: True, data: 0 } );
+            end else if (atomic_op == None) begin
+                // byteen write
+                let new_data = (data & write_bit_en) | (rf.sub(index) & ~write_bit_en);
+                rf.upd(index, new_data);
+                resp = fromAtomicMemResp( AtomicMemResp { write: True, data: 0 } );
+            end else begin
+                // atomic
+                let old_data = rf.sub(index);
+                let new_data = (atomicMemOpAlu(atomic_op, old_data, data, write_en) & write_bit_en) | (old_data & ~write_bit_en);
+                rf.upd(index, new_data);
+                resp = fromAtomicMemResp( AtomicMemResp { write: True, data: old_data } );
+            end
+            return resp;
+        endactionvalue);
+endfunction
+
+/// This module can create a `ServerPort` of various memory types given a
+/// `RegFile`.
+module mkMemServerPortFromRegFile#( RegFile#(Bit#(rfAddrSz), Bit#(TMul#(8,TExp#(logNumBytes)))) rf )( ServerPort#(memReqT, memRespT) )
+        provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes),
+                  IsMemResp#(memRespT, logNumBytes),
+                  Bits#(memReqT, memReqSz),
+                  Bits#(memRespT, memRespSz),
+                  Add#(a__, rfAddrSz, addrSz));
+
+    FIFOG#(memReqT) memReqFIFO <- mkLFIFOG;
+    FIFOG#(memRespT) memRespFIFO <- mkLFIFOG;
+
+    rule performMemReq;
+        let req = memReqFIFO.first;
+        memReqFIFO.deq;
+        let resp <- performMemReqOnRegFile( rf, req );
+        memRespFIFO.enq(resp);
+    endrule
+
+    interface InputPort request = toInputPort(memReqFIFO);
+    interface OutputPort response = toOutputPort(memRespFIFO);
 endmodule
 
 ////////////////////////////////////////////////////////////////////////////////

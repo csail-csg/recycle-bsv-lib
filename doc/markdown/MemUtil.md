@@ -22,26 +22,26 @@ As a result of these two design choices, we have adopted some conventions:
   `logNumBytes` of a memory request's address.
 
 
-### [['ReadOnlyMemReq', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L59)
+### [['ReadOnlyMemReq', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L60)
 ```bluespec
 typedef struct {
     Bit#(addrSz) addr;
 } ReadOnlyMemReq#(numeric type addrSz, numeric type logNumBytes) deriving (Bits, Eq, FShow);
 ```
 
-### [['ReadOnlyMemResp', ['numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L63)
+### [['ReadOnlyMemResp', ['numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L64)
 ```bluespec
 typedef struct {
     Bit#(TMul#(8,TExp#(logNumBytes))) data;
 } ReadOnlyMemResp#(numeric type logNumBytes) deriving (Bits, Eq, FShow);
 ```
 
-### [['ByteEnMemResp', ['numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L88)
+### [['ByteEnMemResp', ['numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L89)
 ```bluespec
 typedef CoarseMemResp#(logNumBytes) ByteEnMemResp#(numeric type logNumBytes);
 ```
 
-### [['AtomicMemOp']](../../src/bsv/MemUtil.bsv#L93)
+### [['AtomicMemOp']](../../src/bsv/MemUtil.bsv#L94)
 ```bluespec
 typedef enum {
     None,
@@ -57,212 +57,212 @@ typedef enum {
 } AtomicMemOp deriving (Bits, Eq, FShow, Bounded);
 ```
 
-### [['AtomicMemResp', ['numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L113)
+### [['AtomicMemResp', ['numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L114)
 ```bluespec
 typedef CoarseMemResp#(logNumBytes) AtomicMemResp#(numeric type logNumBytes);
 ```
 
-### [['ReadOnlyMemServerPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L119)
+### [['ReadOnlyMemServerPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L120)
 ```bluespec
 typedef ServerPort#(ReadOnlyMemReq#(addrSz, logNumBytes), ReadOnlyMemResp#(logNumBytes)) ReadOnlyMemServerPort#(numeric type addrSz, numeric type logNumBytes);
 ```
 
-### [['ReadOnlyMemClientPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L120)
+### [['ReadOnlyMemClientPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L121)
 ```bluespec
 typedef ClientPort#(ReadOnlyMemReq#(addrSz, logNumBytes), ReadOnlyMemResp#(logNumBytes)) ReadOnlyMemClientPort#(numeric type addrSz, numeric type logNumBytes);
 ```
 
-### [['CoarseMemServerPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L122)
+### [['CoarseMemServerPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L123)
 ```bluespec
 typedef ServerPort#(CoarseMemReq#(addrSz, logNumBytes), CoarseMemResp#(logNumBytes)) CoarseMemServerPort#(numeric type addrSz, numeric type logNumBytes);
 ```
 
-### [['CoarseMemClientPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L123)
+### [['CoarseMemClientPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L124)
 ```bluespec
 typedef ClientPort#(CoarseMemReq#(addrSz, logNumBytes), CoarseMemResp#(logNumBytes)) CoarseMemClientPort#(numeric type addrSz, numeric type logNumBytes);
 ```
 
-### [['ByteEnMemServerPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L125)
+### [['ByteEnMemServerPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L126)
 ```bluespec
 typedef ServerPort#(ByteEnMemReq#(addrSz, logNumBytes), ByteEnMemResp#(logNumBytes)) ByteEnMemServerPort#(numeric type addrSz, numeric type logNumBytes);
 ```
 
-### [['ByteEnMemClientPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L126)
+### [['ByteEnMemClientPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L127)
 ```bluespec
 typedef ClientPort#(ByteEnMemReq#(addrSz, logNumBytes), ByteEnMemResp#(logNumBytes)) ByteEnMemClientPort#(numeric type addrSz, numeric type logNumBytes);
 ```
 
-### [['AtomicMemServerPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L128)
+### [['AtomicMemServerPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L129)
 ```bluespec
 typedef ServerPort#(AtomicMemReq#(addrSz, logNumBytes), AtomicMemResp#(logNumBytes)) AtomicMemServerPort#(numeric type addrSz, numeric type logNumBytes);
 ```
 
-### [['AtomicMemClientPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L129)
+### [['AtomicMemClientPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L130)
 ```bluespec
 typedef ClientPort#(AtomicMemReq#(addrSz, logNumBytes), AtomicMemResp#(logNumBytes)) AtomicMemClientPort#(numeric type addrSz, numeric type logNumBytes);
 ```
 
-### [['ReadOnlyMem32Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L135)
+### [['ReadOnlyMem32Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L136)
 ```bluespec
 typedef ReadOnlyMemReq#(addrSz, 2)        ReadOnlyMem32Req#(numeric type addrSz);
 ```
 
-### [['ReadOnlyMem32Resp']](../../src/bsv/MemUtil.bsv#L136)
+### [['ReadOnlyMem32Resp']](../../src/bsv/MemUtil.bsv#L137)
 ```bluespec
 typedef ReadOnlyMemResp#(2)               ReadOnlyMem32Resp;
 ```
 
-### [['ReadOnlyMem32ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L137)
+### [['ReadOnlyMem32ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L138)
 ```bluespec
 typedef ReadOnlyMemServerPort#(addrSz, 2) ReadOnlyMem32ServerPort#(numeric type addrSz);
 ```
 
-### [['ReadOnlyMem32ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L138)
+### [['ReadOnlyMem32ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L139)
 ```bluespec
 typedef ReadOnlyMemClientPort#(addrSz, 2) ReadOnlyMem32ClientPort#(numeric type addrSz);
 ```
 
-### [['CoarseMem32Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L140)
+### [['CoarseMem32Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L141)
 ```bluespec
 typedef CoarseMemReq#(addrSz, 2)        CoarseMem32Req#(numeric type addrSz);
 ```
 
-### [['CoarseMem32Resp']](../../src/bsv/MemUtil.bsv#L141)
+### [['CoarseMem32Resp']](../../src/bsv/MemUtil.bsv#L142)
 ```bluespec
 typedef CoarseMemResp#(2)               CoarseMem32Resp;
 ```
 
-### [['CoarseMem32ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L142)
+### [['CoarseMem32ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L143)
 ```bluespec
 typedef CoarseMemServerPort#(addrSz, 2) CoarseMem32ServerPort#(numeric type addrSz);
 ```
 
-### [['CoarseMem32ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L143)
+### [['CoarseMem32ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L144)
 ```bluespec
 typedef CoarseMemClientPort#(addrSz, 2) CoarseMem32ClientPort#(numeric type addrSz);
 ```
 
-### [['ByteEnMem32Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L145)
+### [['ByteEnMem32Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L146)
 ```bluespec
 typedef ByteEnMemReq#(addrSz, 2)        ByteEnMem32Req#(numeric type addrSz);
 ```
 
-### [['ByteEnMem32Resp']](../../src/bsv/MemUtil.bsv#L146)
+### [['ByteEnMem32Resp']](../../src/bsv/MemUtil.bsv#L147)
 ```bluespec
 typedef ByteEnMemResp#(2)               ByteEnMem32Resp;
 ```
 
-### [['ByteEnMem32ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L147)
+### [['ByteEnMem32ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L148)
 ```bluespec
 typedef ByteEnMemServerPort#(addrSz, 2) ByteEnMem32ServerPort#(numeric type addrSz);
 ```
 
-### [['ByteEnMem32ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L148)
+### [['ByteEnMem32ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L149)
 ```bluespec
 typedef ByteEnMemClientPort#(addrSz, 2) ByteEnMem32ClientPort#(numeric type addrSz);
 ```
 
-### [['AtomicMem32Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L150)
+### [['AtomicMem32Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L151)
 ```bluespec
 typedef AtomicMemReq#(addrSz, 2)        AtomicMem32Req#(numeric type addrSz);
 ```
 
-### [['AtomicMem32Resp']](../../src/bsv/MemUtil.bsv#L151)
+### [['AtomicMem32Resp']](../../src/bsv/MemUtil.bsv#L152)
 ```bluespec
 typedef AtomicMemResp#(2)               AtomicMem32Resp;
 ```
 
-### [['AtomicMem32ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L152)
+### [['AtomicMem32ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L153)
 ```bluespec
 typedef AtomicMemServerPort#(addrSz, 2) AtomicMem32ServerPort#(numeric type addrSz);
 ```
 
-### [['AtomicMem32ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L153)
+### [['AtomicMem32ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L154)
 ```bluespec
 typedef AtomicMemClientPort#(addrSz, 2) AtomicMem32ClientPort#(numeric type addrSz);
 ```
 
-### [['ReadOnlyMem64Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L157)
+### [['ReadOnlyMem64Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L158)
 ```bluespec
 typedef ReadOnlyMemReq#(addrSz, 3)        ReadOnlyMem64Req#(numeric type addrSz);
 ```
 
-### [['ReadOnlyMem64Resp']](../../src/bsv/MemUtil.bsv#L158)
+### [['ReadOnlyMem64Resp']](../../src/bsv/MemUtil.bsv#L159)
 ```bluespec
 typedef ReadOnlyMemResp#(3)               ReadOnlyMem64Resp;
 ```
 
-### [['ReadOnlyMem64ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L159)
+### [['ReadOnlyMem64ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L160)
 ```bluespec
 typedef ReadOnlyMemServerPort#(addrSz, 3) ReadOnlyMem64ServerPort#(numeric type addrSz);
 ```
 
-### [['ReadOnlyMem64ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L160)
+### [['ReadOnlyMem64ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L161)
 ```bluespec
 typedef ReadOnlyMemClientPort#(addrSz, 3) ReadOnlyMem64ClientPort#(numeric type addrSz);
 ```
 
-### [['CoarseMem64Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L162)
+### [['CoarseMem64Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L163)
 ```bluespec
 typedef CoarseMemReq#(addrSz, 3)        CoarseMem64Req#(numeric type addrSz);
 ```
 
-### [['CoarseMem64Resp']](../../src/bsv/MemUtil.bsv#L163)
+### [['CoarseMem64Resp']](../../src/bsv/MemUtil.bsv#L164)
 ```bluespec
 typedef CoarseMemResp#(3)               CoarseMem64Resp;
 ```
 
-### [['CoarseMem64ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L164)
+### [['CoarseMem64ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L165)
 ```bluespec
 typedef CoarseMemServerPort#(addrSz, 3) CoarseMem64ServerPort#(numeric type addrSz);
 ```
 
-### [['CoarseMem64ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L165)
+### [['CoarseMem64ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L166)
 ```bluespec
 typedef CoarseMemClientPort#(addrSz, 3) CoarseMem64ClientPort#(numeric type addrSz);
 ```
 
-### [['ByteEnMem64Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L167)
+### [['ByteEnMem64Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L168)
 ```bluespec
 typedef ByteEnMemReq#(addrSz, 3)        ByteEnMem64Req#(numeric type addrSz);
 ```
 
-### [['ByteEnMem64Resp']](../../src/bsv/MemUtil.bsv#L168)
+### [['ByteEnMem64Resp']](../../src/bsv/MemUtil.bsv#L169)
 ```bluespec
 typedef ByteEnMemResp#(3)               ByteEnMem64Resp;
 ```
 
-### [['ByteEnMem64ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L169)
+### [['ByteEnMem64ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L170)
 ```bluespec
 typedef ByteEnMemServerPort#(addrSz, 3) ByteEnMem64ServerPort#(numeric type addrSz);
 ```
 
-### [['ByteEnMem64ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L170)
+### [['ByteEnMem64ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L171)
 ```bluespec
 typedef ByteEnMemClientPort#(addrSz, 3) ByteEnMem64ClientPort#(numeric type addrSz);
 ```
 
-### [['AtomicMem64Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L172)
+### [['AtomicMem64Req', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L173)
 ```bluespec
 typedef AtomicMemReq#(addrSz, 3)        AtomicMem64Req#(numeric type addrSz);
 ```
 
-### [['AtomicMem64Resp']](../../src/bsv/MemUtil.bsv#L173)
+### [['AtomicMem64Resp']](../../src/bsv/MemUtil.bsv#L174)
 ```bluespec
 typedef AtomicMemResp#(3)               AtomicMem64Resp;
 ```
 
-### [['AtomicMem64ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L174)
+### [['AtomicMem64ServerPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L175)
 ```bluespec
 typedef AtomicMemServerPort#(addrSz, 3) AtomicMem64ServerPort#(numeric type addrSz);
 ```
 
-### [['AtomicMem64ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L175)
+### [['AtomicMem64ClientPort', ['numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L176)
 ```bluespec
 typedef AtomicMemClientPort#(addrSz, 3) AtomicMem64ClientPort#(numeric type addrSz);
 ```
 
-### [['MemType']](../../src/bsv/MemUtil.bsv#L181)
+### [['MemType']](../../src/bsv/MemUtil.bsv#L182)
 ```bluespec
 typedef enum {
     ReadOnly,
@@ -272,7 +272,7 @@ typedef enum {
 } MemType deriving (Bits, Eq, FShow, Bounded);
 ```
 
-### [['TaggedMemServerPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L188)
+### [['TaggedMemServerPort', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L189)
 ```bluespec
 typedef union tagged {
     ReadOnlyMemServerPort#(addrSz, logNumBytes) ReadOnly;
@@ -282,7 +282,7 @@ typedef union tagged {
 } TaggedMemServerPort#(numeric type addrSz, numeric type logNumBytes);
 ```
 
-### [IsMemReq](../../src/bsv/MemUtil.bsv#L195)
+### [IsMemReq](../../src/bsv/MemUtil.bsv#L196)
 ```bluespec
 typeclass IsMemReq#(type memReqT, type memRespT, type addrSz, type logNumBytes)
             dependencies (memReqT determines (addrSz, logNumBytes, memRespT));
@@ -298,7 +298,7 @@ endtypeclass
 
 ```
 
-### [IsMemReq](../../src/bsv/MemUtil.bsv#L206)
+### [IsMemReq](../../src/bsv/MemUtil.bsv#L207)
 ```bluespec
 instance IsMemReq#(ReadOnlyMemReq#(addrSz, logNumBytes), ReadOnlyMemResp#(logNumBytes), addrSz, logNumBytes);
     function Bit#(addrSz) getAddr(ReadOnlyMemReq#(addrSz, logNumBytes) req) = req.addr;
@@ -313,7 +313,7 @@ endinstance
 
 ```
 
-### [IsMemReq](../../src/bsv/MemUtil.bsv#L216)
+### [IsMemReq](../../src/bsv/MemUtil.bsv#L217)
 ```bluespec
 instance IsMemReq#(CoarseMemReq#(addrSz, logNumBytes), CoarseMemResp#(logNumBytes), addrSz, logNumBytes);
     function Bit#(addrSz) getAddr(CoarseMemReq#(addrSz, logNumBytes) req) = req.addr;
@@ -328,7 +328,7 @@ endinstance
 
 ```
 
-### [IsMemReq](../../src/bsv/MemUtil.bsv#L226)
+### [IsMemReq](../../src/bsv/MemUtil.bsv#L227)
 ```bluespec
 instance IsMemReq#(ByteEnMemReq#(addrSz, logNumBytes), ByteEnMemResp#(logNumBytes), addrSz, logNumBytes);
     function Bit#(addrSz) getAddr(ByteEnMemReq#(addrSz, logNumBytes) req) = req.addr;
@@ -343,7 +343,7 @@ endinstance
 
 ```
 
-### [IsMemReq](../../src/bsv/MemUtil.bsv#L236)
+### [IsMemReq](../../src/bsv/MemUtil.bsv#L237)
 ```bluespec
 instance IsMemReq#(AtomicMemReq#(addrSz, logNumBytes), AtomicMemResp#(logNumBytes), addrSz, logNumBytes);
     function Bit#(addrSz) getAddr(AtomicMemReq#(addrSz, logNumBytes) req) = req.addr;
@@ -358,7 +358,7 @@ endinstance
 
 ```
 
-### [toReadOnlyMemReq](../../src/bsv/MemUtil.bsv#L246)
+### [toReadOnlyMemReq](../../src/bsv/MemUtil.bsv#L247)
 ```bluespec
 function ReadOnlyMemReq#(addrSz, logNumBytes) toReadOnlyMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
     return ReadOnlyMemReq { addr: getAddr(req) };
@@ -366,7 +366,7 @@ endfunction
 
 ```
 
-### [isReadOnlyMemReq](../../src/bsv/MemUtil.bsv#L249)
+### [isReadOnlyMemReq](../../src/bsv/MemUtil.bsv#L250)
 ```bluespec
 function Bool isReadOnlyMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
     return !isWrite(req);
@@ -375,7 +375,7 @@ endfunction
 
 ```
 
-### [toCoarseMemReq](../../src/bsv/MemUtil.bsv#L253)
+### [toCoarseMemReq](../../src/bsv/MemUtil.bsv#L254)
 ```bluespec
 function CoarseMemReq#(addrSz, logNumBytes) toCoarseMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
     return CoarseMemReq { write: isWrite(req), addr: getAddr(req), data: getData(req) };
@@ -383,7 +383,7 @@ endfunction
 
 ```
 
-### [isCoarseMemReq](../../src/bsv/MemUtil.bsv#L256)
+### [isCoarseMemReq](../../src/bsv/MemUtil.bsv#L257)
 ```bluespec
 function Bool isCoarseMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
     return !isWrite(req) || ((getWriteEn(req) == '1) && (getAtomicOp(req) == None));
@@ -392,7 +392,7 @@ endfunction
 
 ```
 
-### [toByteEnMemReq](../../src/bsv/MemUtil.bsv#L260)
+### [toByteEnMemReq](../../src/bsv/MemUtil.bsv#L261)
 ```bluespec
 function ByteEnMemReq#(addrSz, logNumBytes) toByteEnMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
     return ByteEnMemReq { write_en: getWriteEn(req), addr: getAddr(req), data: getData(req) };
@@ -400,7 +400,7 @@ endfunction
 
 ```
 
-### [isByteEnMemReq](../../src/bsv/MemUtil.bsv#L263)
+### [isByteEnMemReq](../../src/bsv/MemUtil.bsv#L264)
 ```bluespec
 function Bool isByteEnMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
     return !isWrite(req) || (getAtomicOp(req) == None);
@@ -409,7 +409,7 @@ endfunction
 
 ```
 
-### [toAtomicMemReq](../../src/bsv/MemUtil.bsv#L267)
+### [toAtomicMemReq](../../src/bsv/MemUtil.bsv#L268)
 ```bluespec
 function AtomicMemReq#(addrSz, logNumBytes) toAtomicMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
     return AtomicMemReq { write_en: getWriteEn(req), atomic_op: getAtomicOp(req), addr: getAddr(req), data: getData(req) };
@@ -417,7 +417,7 @@ endfunction
 
 ```
 
-### [isAtomicMemReq](../../src/bsv/MemUtil.bsv#L270)
+### [isAtomicMemReq](../../src/bsv/MemUtil.bsv#L271)
 ```bluespec
 function Bool isAtomicMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
     return True;
@@ -426,7 +426,7 @@ endfunction
 
 ```
 
-### [IsMemResp](../../src/bsv/MemUtil.bsv#L276)
+### [IsMemResp](../../src/bsv/MemUtil.bsv#L277)
 ```bluespec
 typeclass IsMemResp#(type memRespT, numeric type logNumBytes) dependencies (memRespT determines logNumBytes);
     function memRespT fromReadOnlyMemResp(ReadOnlyMemResp#(logNumBytes) resp);
@@ -442,7 +442,7 @@ endtypeclass
 
 ```
 
-### [IsMemResp](../../src/bsv/MemUtil.bsv#L287)
+### [IsMemResp](../../src/bsv/MemUtil.bsv#L288)
 ```bluespec
 instance IsMemResp#(ReadOnlyMemResp#(logNumBytes), logNumBytes);
     function ReadOnlyMemResp#(logNumBytes) fromReadOnlyMemResp(ReadOnlyMemResp#(logNumBytes) resp);
@@ -462,7 +462,7 @@ endinstance
 
 ```
 
-### [IsMemResp](../../src/bsv/MemUtil.bsv#L302)
+### [IsMemResp](../../src/bsv/MemUtil.bsv#L303)
 ```bluespec
 instance IsMemResp#(CoarseMemResp#(logNumBytes), logNumBytes);
     function CoarseMemResp#(logNumBytes) fromReadOnlyMemResp(ReadOnlyMemResp#(logNumBytes) resp);
@@ -482,7 +482,7 @@ endinstance
 
 ```
 
-### [atomicMemOpAlu](../../src/bsv/MemUtil.bsv#L327)
+### [atomicMemOpAlu](../../src/bsv/MemUtil.bsv#L328)
 
 
 This function performs the specified atomic memory operation on the
@@ -565,7 +565,7 @@ endfunction
 
 ```
 
-### [atomicMemOpAlu32](../../src/bsv/MemUtil.bsv#L399)
+### [atomicMemOpAlu32](../../src/bsv/MemUtil.bsv#L400)
 ```bluespec
 function Bit#(32) atomicMemOpAlu32(AtomicMemOp op, Bit#(32) memData, Bit#(32) operandData, Bit#(4) byteEn);
     return atomicMemOpAlu(op, memData, operandData, byteEn);
@@ -573,7 +573,7 @@ endfunction
 
 ```
 
-### [atomicMemOpAlu64](../../src/bsv/MemUtil.bsv#L403)
+### [atomicMemOpAlu64](../../src/bsv/MemUtil.bsv#L404)
 ```bluespec
 function Bit#(64) atomicMemOpAlu64(AtomicMemOp op, Bit#(64) memData, Bit#(64) operandData, Bit#(8) byteEn);
     return atomicMemOpAlu(op, memData, operandData, byteEn);
@@ -582,7 +582,7 @@ endfunction
 
 ```
 
-### [MkAtomicMemEmulationBridge](../../src/bsv/MemUtil.bsv#L411)
+### [MkAtomicMemEmulationBridge](../../src/bsv/MemUtil.bsv#L412)
 
 This bridge attempts to emulate atomic memory operations across a memory
 interface that does not support atomic memory operations.
@@ -595,7 +595,7 @@ endtypeclass
 
 ```
 
-### [MkAtomicMemEmulationBridge](../../src/bsv/MemUtil.bsv#L423)
+### [MkAtomicMemEmulationBridge](../../src/bsv/MemUtil.bsv#L424)
 ```bluespec
 instance MkAtomicMemEmulationBridge#(CoarseMemServerPort#(addrSz, logNumBytes), addrSz, logNumBytes) provisos (Div#(TMul#(8,TExp#(logNumBytes)), 8, TExp#(logNumBytes)));
     module mkAtomicMemEmulationBridge#(CoarseMemServerPort#(addrSz, logNumBytes) mem)(AtomicMemServerPort#(addrSz, logNumBytes))
@@ -676,7 +676,7 @@ endinstance
 
 ```
 
-### [mkNarrowAtomicMemBridge](../../src/bsv/MemUtil.bsv#L501)
+### [mkNarrowAtomicMemBridge](../../src/bsv/MemUtil.bsv#L502)
 ```bluespec
 module mkNarrowAtomicMemBridge#(AtomicMemServerPort#(addrSz, TAdd#(logNumBytes, logNumWords)) wideMem)(AtomicMemServerPort#(addrSz, logNumBytes))
         provisos(Add#(a__, logNumWords, addrSz));
@@ -719,7 +719,7 @@ endmodule
 
 ```
 
-### [CoarseBRAM](../../src/bsv/MemUtil.bsv#L549)
+### [CoarseBRAM](../../src/bsv/MemUtil.bsv#L550)
 ```bluespec
 interface CoarseBRAM#(numeric type addrSz, numeric type logNumBytes, numeric type numBytes);
     interface CoarseMemServerPort#(addrSz, logNumBytes) portA;
@@ -728,7 +728,7 @@ endinterface
 
 ```
 
-### [mkPipelineCoarseBRAM](../../src/bsv/MemUtil.bsv#L554)
+### [mkPipelineCoarseBRAM](../../src/bsv/MemUtil.bsv#L555)
 ```bluespec
 module mkPipelineCoarseBRAM( CoarseBRAM#(addrSz, logNumBytes, numWords) )
         provisos (NumAlias#(TMul#(8,TExp#(logNumBytes)), dataSz));
@@ -765,7 +765,7 @@ endmodule
 
 ```
 
-### [mkCoarseBRAM](../../src/bsv/MemUtil.bsv#L587)
+### [mkCoarseBRAM](../../src/bsv/MemUtil.bsv#L588)
 ```bluespec
 module mkCoarseBRAM( CoarseBRAM#(addrSz, logNumBytes, numWords) )
         provisos (NumAlias#(TMul#(8, TExp#(logNumBytes)), dataSz),
@@ -813,7 +813,7 @@ endmodule
 
 ```
 
-### [ByteEnBRAM](../../src/bsv/MemUtil.bsv#L630)
+### [ByteEnBRAM](../../src/bsv/MemUtil.bsv#L631)
 ```bluespec
 interface ByteEnBRAM#(numeric type addrSz, numeric type logNumBytes, numeric type numBytes);
     interface ByteEnMemServerPort#(addrSz, logNumBytes) portA;
@@ -822,7 +822,7 @@ endinterface
 
 ```
 
-### [mkByteEnBRAM](../../src/bsv/MemUtil.bsv#L635)
+### [mkByteEnBRAM](../../src/bsv/MemUtil.bsv#L636)
 ```bluespec
 module mkByteEnBRAM( ByteEnBRAM#(addrSz, logNumBytes, numWords) )
         provisos (NumAlias#(TMul#(8, TExp#(logNumBytes)), dataSz),
@@ -871,7 +871,7 @@ endmodule
 
 ```
 
-### [AtomicBRAM](../../src/bsv/MemUtil.bsv#L679)
+### [AtomicBRAM](../../src/bsv/MemUtil.bsv#L680)
 ```bluespec
 interface AtomicBRAM#(numeric type addrSz, numeric type logNumBytes, numeric type numBytes);
     interface AtomicMemServerPort#(addrSz, logNumBytes) portA;
@@ -880,7 +880,7 @@ endinterface
 
 ```
 
-### [mkAtomicBRAM](../../src/bsv/MemUtil.bsv#L699)
+### [mkAtomicBRAM](../../src/bsv/MemUtil.bsv#L700)
 
 
 This module creates an AtomicMemServerPort from a BRAMCore.
@@ -962,7 +962,156 @@ endmodule
 
 ```
 
-### [['MemBusItem', ['type', 'memReqT', 'type', 'memRespT', 'numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L769)
+### [performMemReqOnRegs](../../src/bsv/MemUtil.bsv#L770)
+```bluespec
+function ActionValue#(memRespT) performMemReqOnRegs(Vector#(numRegs, Reg#(Bit#(TMul#(8,TExp#(logNumBytes))))) regs, memReqT req)
+        provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes),
+                  IsMemResp#(memRespT, logNumBytes),
+                  Add#(a__, TLog#(numRegs), addrSz));
+    return (actionvalue
+            // Basically perform this operation as if it were an atomic memory
+            // operation. Constant propagation should allow for unused hardware to be
+            // optimized away.
+            Bit#(addrSz) addr = getAddr(req);
+            Bit#(TMul#(8,TExp#(logNumBytes))) data = getData(req);
+            Bit#(TExp#(logNumBytes)) write_en = getWriteEn(req);
+            Vector#(TExp#(logNumBytes), Bit#(1)) write_en_vec = unpack(write_en);
+            Bit#(TMul#(8,TExp#(logNumBytes))) write_bit_en = pack(map(signExtend, write_en_vec));
+            AtomicMemOp atomic_op = getAtomicOp(req);
+            memRespT resp = getDefaultResp(req);
+
+            Bit#(TLog#(numRegs)) index = truncate(addr >> valueOf(logNumBytes));
+            if (index <= fromInteger(valueOf(numRegs)-1)) begin
+                // valid register
+                if (write_en == 0) begin
+                    // read only
+                    resp = fromAtomicMemResp( AtomicMemResp { write: False, data: regs[index] } );
+                end else if ((write_en == '1) && (atomic_op == None)) begin
+                    // coarse write
+                    regs[index] <= data;
+                    resp = fromAtomicMemResp( AtomicMemResp { write: True, data: 0 } );
+                end else if (atomic_op == None) begin
+                    // byteen write
+                    regs[index] <= (data & write_bit_en) | (regs[index] & ~write_bit_en);
+                    resp = fromAtomicMemResp( AtomicMemResp { write: True, data: 0 } );
+                end else begin
+                    // atomic
+                    let write_data = atomicMemOpAlu(atomic_op, regs[index], data, write_en);
+                    regs[index] <= (write_data & write_bit_en) | (regs[index] & ~write_bit_en);
+                    resp = fromAtomicMemResp( AtomicMemResp { write: True, data: regs[index] } );
+                end
+            end
+            return resp;
+        endactionvalue);
+endfunction
+
+
+```
+
+### [mkMemServerPortFromRegs](../../src/bsv/MemUtil.bsv#L813)
+
+This module can create a `ServerPort` of various memory types given a
+vector of registers.
+```bluespec
+module mkMemServerPortFromRegs#( Vector#(numRegs, Reg#(Bit#(TMul#(8,TExp#(logNumBytes))))) regs )( ServerPort#(memReqT, memRespT) )
+        provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes),
+                  IsMemResp#(memRespT, logNumBytes),
+                  Bits#(memReqT, memReqSz),
+                  Bits#(memRespT, memRespSz),
+                  Add#(a__, TLog#(numRegs), addrSz));
+
+    FIFOG#(memReqT) memReqFIFO <- mkLFIFOG;
+    FIFOG#(memRespT) memRespFIFO <- mkLFIFOG;
+
+    rule performMemReq;
+        let req = memReqFIFO.first;
+        memReqFIFO.deq;
+        let resp <- performMemReqOnRegs( regs, req );
+        memRespFIFO.enq(resp);
+    endrule
+
+    interface InputPort request = toInputPort(memReqFIFO);
+    interface OutputPort response = toOutputPort(memRespFIFO);
+endmodule
+
+
+```
+
+### [performMemReqOnRegFile](../../src/bsv/MemUtil.bsv#L834)
+```bluespec
+function ActionValue#(memRespT) performMemReqOnRegFile(RegFile#(Bit#(rfAddrSz), Bit#(TMul#(8,TExp#(logNumBytes)))) rf, memReqT req)
+        provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes),
+                  IsMemResp#(memRespT, logNumBytes),
+                  Add#(a__, rfAddrSz, addrSz));
+    return (actionvalue
+            // Basically perform this operation as if it were an atomic memory
+            // operation. Constant propagation should allow for unused hardware to be
+            // optimized away.
+            Bit#(addrSz) addr = getAddr(req);
+            Bit#(TMul#(8, TExp#(logNumBytes))) data = getData(req);
+            Bit#(TExp#(logNumBytes)) write_en = getWriteEn(req);
+            Vector#(TExp#(logNumBytes), Bit#(1)) write_en_vec = unpack(write_en);
+            Bit#(TMul#(8, TExp#(logNumBytes))) write_bit_en = pack(map(signExtend, write_en_vec));
+            AtomicMemOp atomic_op = getAtomicOp(req);
+            memRespT resp = getDefaultResp(req);
+
+            Bit#(rfAddrSz) index = truncate(addr >> valueOf(logNumBytes));
+            if (write_en == 0) begin
+                // read only
+                resp = fromAtomicMemResp( AtomicMemResp { write: False, data: rf.sub(index) } );
+            end else if ((write_en == '1) && (atomic_op == None)) begin
+                // coarse write
+                rf.upd(index, data);
+                resp = fromAtomicMemResp( AtomicMemResp { write: True, data: 0 } );
+            end else if (atomic_op == None) begin
+                // byteen write
+                let new_data = (data & write_bit_en) | (rf.sub(index) & ~write_bit_en);
+                rf.upd(index, new_data);
+                resp = fromAtomicMemResp( AtomicMemResp { write: True, data: 0 } );
+            end else begin
+                // atomic
+                let old_data = rf.sub(index);
+                let new_data = (atomicMemOpAlu(atomic_op, old_data, data, write_en) & write_bit_en) | (old_data & ~write_bit_en);
+                rf.upd(index, new_data);
+                resp = fromAtomicMemResp( AtomicMemResp { write: True, data: old_data } );
+            end
+            return resp;
+        endactionvalue);
+endfunction
+
+
+```
+
+### [mkMemServerPortFromRegFile](../../src/bsv/MemUtil.bsv#L876)
+
+This module can create a `ServerPort` of various memory types given a
+`RegFile`.
+```bluespec
+module mkMemServerPortFromRegFile#( RegFile#(Bit#(rfAddrSz), Bit#(TMul#(8,TExp#(logNumBytes)))) rf )( ServerPort#(memReqT, memRespT) )
+        provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes),
+                  IsMemResp#(memRespT, logNumBytes),
+                  Bits#(memReqT, memReqSz),
+                  Bits#(memRespT, memRespSz),
+                  Add#(a__, rfAddrSz, addrSz));
+
+    FIFOG#(memReqT) memReqFIFO <- mkLFIFOG;
+    FIFOG#(memRespT) memRespFIFO <- mkLFIFOG;
+
+    rule performMemReq;
+        let req = memReqFIFO.first;
+        memReqFIFO.deq;
+        let resp <- performMemReqOnRegFile( rf, req );
+        memRespFIFO.enq(resp);
+    endrule
+
+    interface InputPort request = toInputPort(memReqFIFO);
+    interface OutputPort response = toOutputPort(memRespFIFO);
+endmodule
+
+
+```
+
+### [['MemBusItem', ['type', 'memReqT', 'type', 'memRespT', 'numeric', 'type', 'addrSz']]](../../src/bsv/MemUtil.bsv#L901)
 ```bluespec
 typedef struct {
     Bit#(addrSz) addr_mask;
@@ -971,7 +1120,7 @@ typedef struct {
 } MemBusItem#(type memReqT, type memRespT, numeric type addrSz);
 ```
 
-### [busItemFromAddrRange](../../src/bsv/MemUtil.bsv#L781)
+### [busItemFromAddrRange](../../src/bsv/MemUtil.bsv#L913)
 
 
 This function produces a `MemBusItem` from an address range.
@@ -1003,7 +1152,7 @@ endfunction
 
 ```
 
-### [mkMemBus](../../src/bsv/MemUtil.bsv#L816)
+### [mkMemBus](../../src/bsv/MemUtil.bsv#L948)
 
 
 This module makes a memory bus from a provided address map.
@@ -1126,7 +1275,7 @@ endmodule
 
 ```
 
-### [['MixedMemBusItem', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L920)
+### [['MixedMemBusItem', ['numeric', 'type', 'addrSz', 'numeric', 'type', 'logNumBytes']]](../../src/bsv/MemUtil.bsv#L1052)
 ```bluespec
 typedef struct {
     Bit#(addrSz) addr_mask;
@@ -1135,7 +1284,7 @@ typedef struct {
 } MixedMemBusItem#(numeric type addrSz, numeric type logNumBytes);
 ```
 
-### [mixedMemBusItemFromAddrRange](../../src/bsv/MemUtil.bsv#L932)
+### [mixedMemBusItemFromAddrRange](../../src/bsv/MemUtil.bsv#L1064)
 
 
 This function produces a `MixedMemBusItem` from an address range.
@@ -1167,7 +1316,7 @@ endfunction
 
 ```
 
-### [MixedAtomicMemBus](../../src/bsv/MemUtil.bsv#L952)
+### [MixedAtomicMemBus](../../src/bsv/MemUtil.bsv#L1084)
 ```bluespec
 interface MixedAtomicMemBus#(numeric type nClients, numeric type addrSz, numeric type logNumBytes);
     interface Vector#(nClients, AtomicMemServerPort#(addrSz, logNumBytes)) clients;
@@ -1177,7 +1326,7 @@ endinterface
 
 ```
 
-### [mkMixedAtomicMemBus](../../src/bsv/MemUtil.bsv#L972)
+### [mkMixedAtomicMemBus](../../src/bsv/MemUtil.bsv#L1104)
 
 
 This module makes a memory bus from a provided address map.
