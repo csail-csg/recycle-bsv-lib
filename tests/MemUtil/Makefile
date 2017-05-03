@@ -30,5 +30,7 @@ CHECK_NAME=\
 	MixedAtomicMemBusCheck \
 	AtomicMemEmulationBridgeCheck \
 	NarrowAtomicMemBridgeCheck \
+	MemServerPortFromRegsCheck \
+	MemServerPortFromRegFileCheck \
 
 include ../Makefile.bluesim
