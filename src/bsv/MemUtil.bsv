@@ -51,6 +51,8 @@ import Vector::*;
 
 import Ehr::*;
 import FIFOG::*;
+import GenericAtomicMem::*;
+import PolymorphicMem::*;
 import Port::*;
 
 // ReadOnlyMem - Only supports reads
@@ -460,7 +462,7 @@ instance MkAtomicMemEmulationBridge#(CoarseMemServerPort#(addrSz, logNumBytes), 
         interface InputPort request;
             method Action enq(AtomicMemReq#(addrSz, logNumBytes) req) if (!isValid(pendingReq[1]));
                 // Clean the atomic_op passed in
-                let atomic_op = req.atomic_op;
+                AtomicMemOp atomic_op = req.atomic_op;
                 if (req.write_en == 0) begin
                     atomic_op = None;
                 end else if ((req.atomic_op == None) && (req.write_en != '1)) begin
@@ -1261,4 +1263,109 @@ module mkMixedAtomicMemBus#(Vector#(nServers, MixedMemBusItem#(addrSz, logNumByt
     return ifc;
 endmodule
 
+////////////////////////////////////////////////////////////////////////////////
+
+// instances for PolymorphicMem
+
+instance ToGenericAtomicMemReq#(ReadOnlyMemReq#(addrSz, logNumBytes), 1, void, TSub#(addrSz, logNumBytes), TMul#(8,TExp#(logNumBytes)));
+    function GenericAtomicMemReq#(1, void, TSub#(addrSz, logNumBytes), TMul#(8,TExp#(logNumBytes))) toGenericAtomicMemReq(ReadOnlyMemReq#(addrSz, logNumBytes) req);
+        return GenericAtomicMemReq {
+                write_en: 0,
+                atomic_op: ?,
+                word_addr: truncate(req.addr >> valueOf(logNumBytes)),
+                data: 0
+            };
+    endfunction
+endinstance
+instance ToGenericAtomicMemPendingReq#(ReadOnlyMemReq#(addrSz, logNumBytes), void);
+    function void toGenericAtomicMemPendingReq(ReadOnlyMemReq#(addrSz, logNumBytes) req) = ?;
+endinstance
+instance FromGenericAtomicMemResp#(ReadOnlyMemResp#(logNumBytes), void, TMul#(8,TExp#(logNumBytes)));
+    function ReadOnlyMemResp#(logNumBytes) fromGenericAtomicMemResp(GenericAtomicMemResp#(TMul#(8,TExp#(logNumBytes))) resp, void pending);
+        return ReadOnlyMemResp {
+                data: resp.data
+            };
+    endfunction
+endinstance
+
+instance ToGenericAtomicMemReq#(CoarseMemReq#(addrSz, logNumBytes), 1, void, TSub#(addrSz, logNumBytes), TMul#(8,TExp#(logNumBytes)));
+    function GenericAtomicMemReq#(1, void, TSub#(addrSz, logNumBytes), TMul#(8,TExp#(logNumBytes))) toGenericAtomicMemReq(CoarseMemReq#(addrSz, logNumBytes) req);
+        return GenericAtomicMemReq {
+                write_en: pack(req.write),
+                atomic_op: ?,
+                word_addr: truncate(req.addr >> valueOf(logNumBytes)),
+                data: req.data
+            };
+    endfunction
+endinstance
+instance ToGenericAtomicMemPendingReq#(CoarseMemReq#(addrSz, logNumBytes), void);
+    function void toGenericAtomicMemPendingReq(CoarseMemReq#(addrSz, logNumBytes) req) = ?;
+endinstance
+instance FromGenericAtomicMemResp#(CoarseMemResp#(logNumBytes), void, TMul#(8,TExp#(logNumBytes)));
+    function CoarseMemResp#(logNumBytes) fromGenericAtomicMemResp(GenericAtomicMemResp#(TMul#(8,TExp#(logNumBytes))) resp, void pending);
+        return CoarseMemResp {
+                write: resp.write,
+                data: resp.data
+            };
+    endfunction
+endinstance
+
+instance ToGenericAtomicMemReq#(ByteEnMemReq#(addrSz, logNumBytes), TExp#(logNumBytes), void, TSub#(addrSz, logNumBytes), TMul#(8,TExp#(logNumBytes)));
+    function GenericAtomicMemReq#(TExp#(logNumBytes), void, TSub#(addrSz, logNumBytes), TMul#(8,TExp#(logNumBytes))) toGenericAtomicMemReq(ByteEnMemReq#(addrSz, logNumBytes) req);
+        return GenericAtomicMemReq {
+                write_en: req.write_en,
+                atomic_op: ?,
+                word_addr: truncate(req.addr >> valueOf(logNumBytes)),
+                data: req.data
+            };
+    endfunction
+endinstance
+instance ToGenericAtomicMemPendingReq#(ByteEnMemReq#(addrSz, logNumBytes), void);
+    function void toGenericAtomicMemPendingReq(ByteEnMemReq#(addrSz, logNumBytes) req) = ?;
+endinstance
+// // ByteEnMemResp is an alias of CoarseMemResp, so this instance is not needed
+// instance FromGenericAtomicMemResp#(ByteEnMemResp#(logNumBytes), void, TMul#(8,TExp#(logNumBytes)));
+//     function ByteEnMemResp#(logNumBytes) fromGenericAtomicMemResp(GenericAtomicMemResp#(TMul#(8,TExp#(logNumBytes))) resp, void pending);
+//         return ByteEnMemResp {
+//                 write: resp.write,
+//                 data: resp.data
+//             };
+//     endfunction
+// endinstance
+
+instance ToGenericAtomicMemReq#(AtomicMemReq#(addrSz, logNumBytes), TExp#(logNumBytes), AtomicMemOp, TSub#(addrSz, logNumBytes), TMul#(8,TExp#(logNumBytes)));
+    function GenericAtomicMemReq#(TExp#(logNumBytes), AtomicMemOp, TSub#(addrSz, logNumBytes), TMul#(8,TExp#(logNumBytes))) toGenericAtomicMemReq(AtomicMemReq#(addrSz, logNumBytes) req);
+        return GenericAtomicMemReq {
+                write_en: req.write_en,
+                atomic_op: req.atomic_op,
+                word_addr: truncate(req.addr >> valueOf(logNumBytes)),
+                data: req.data
+            };
+    endfunction
+endinstance
+instance ToGenericAtomicMemPendingReq#(AtomicMemReq#(addrSz, logNumBytes), void);
+    function void toGenericAtomicMemPendingReq(AtomicMemReq#(addrSz, logNumBytes) req) = ?;
+endinstance
+// // AtomicMemResp is an alias of CoarseMemResp, so this instance is not needed
+// instance FromGenericAtomicMemResp#(AtomicMemResp#(logNumBytes), void, TMul#(8,TExp#(logNumBytes)));
+//     function AtomicMemResp#(logNumBytes) fromGenericAtomicMemResp(GenericAtomicMemResp#(TMul#(8,TExp#(logNumBytes))) resp, void pending);
+//         return AtomicMemResp {
+//                 write: resp.write,
+//                 data: resp.data
+//             };
+//     endfunction
+// endinstance
+
+instance IsAtomicMemOp#(AtomicMemOp);
+    function AtomicMemOp nonAtomicMemOp = None;
+    function Bool isAtomicMemOp(AtomicMemOp op);
+        return op != None;
+    endfunction
+endinstance
+instance HasAtomicMemOpFunc#(AtomicMemOp, dataSz, writeEnSz)
+        provisos (Mul#(writeEnSz, 8, dataSz));
+    function Bit#(dataSz) atomicMemOpFunc(AtomicMemOp op, Bit#(dataSz) memData, Bit#(dataSz) operandData, Bit#(writeEnSz) writeEn);
+        return atomicMemOpAlu(op, memData, operandData, writeEn);
+    endfunction
+endinstance
 endpackage

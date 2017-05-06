@@ -32,5 +32,6 @@ CHECK_NAME=\
 	NarrowAtomicMemBridgeCheck \
 	MemServerPortFromRegsCheck \
 	MemServerPortFromRegFileCheck \
+	PolyMemCheck \
 
 include ../Makefile.bluesim
