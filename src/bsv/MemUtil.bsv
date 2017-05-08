@@ -1188,25 +1188,25 @@ module mkMixedAtomicMemBus#(Vector#(nServers, MixedMemBusItem#(addrSz, logNumByt
             case (bus_items[s].ifc) matches
                 tagged ReadOnly .ifc: begin
                     if(!isReadOnlyMemReq(serverMemReq[s].first)) begin
-                        $display(stderr, "[WARNING] mkMixedAtomicMemBus: non-ReadOnly reqeust sent to ReadOnly server %0d", s);
+                        $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-ReadOnly reqeust sent to ReadOnly server %0d", s);
                     end
                     ifc.request.enq( toReadOnlyMemReq(serverMemReq[s].first) );
                 end
                 tagged Coarse   .ifc: begin
                     if(!isCoarseMemReq(serverMemReq[s].first)) begin
-                        $display(stderr, "[WARNING] mkMixedAtomicMemBus: non-Coarse reqeust sent to Coarse server %0d", s);
+                        $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-Coarse reqeust sent to Coarse server %0d", s);
                     end
                     ifc.request.enq( toCoarseMemReq(serverMemReq[s].first) );
                 end
                 tagged ByteEn   .ifc: begin
                     if(!isByteEnMemReq(serverMemReq[s].first)) begin
-                        $display(stderr, "[WARNING] mkMixedAtomicMemBus: non-ByteEn reqeust sent to ByteEn server %0d", s);
+                        $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-ByteEn reqeust sent to ByteEn server %0d", s);
                     end
                     ifc.request.enq( toByteEnMemReq(serverMemReq[s].first) );
                 end
                 tagged Atomic   .ifc: begin
                     if(!isAtomicMemReq(serverMemReq[s].first)) begin
-                        $display(stderr, "[WARNING] mkMixedAtomicMemBus: non-Atomic reqeust sent to Atomic server %0d", s);
+                        $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-Atomic reqeust sent to Atomic server %0d", s);
                     end
                     ifc.request.enq( toAtomicMemReq(serverMemReq[s].first) );
                 end

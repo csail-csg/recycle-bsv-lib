@@ -111,13 +111,9 @@ endinstance
 
 // Polymorphic memory types
 
-interface PolymorphicBRAM#(type memIfc, numeric type numWords);
-    interface memIfc mem;
-endinterface
-
-typeclass MkPolymorphicBRAM#(type reqT, type respT, numeric type numWords)
-        dependencies ((reqT, numWords) determines respT);
-    module mkPolymorphicBRAM(PolymorphicBRAM#(ServerPort#(reqT, respT), numWords));
+typeclass MkPolymorphicBRAM#(type reqT, type respT)
+        dependencies (reqT determines respT);
+    module mkPolymorphicBRAMLoad#(Integer numWords, LoadFormat loadfile)(ServerPort#(reqT, respT));
 endtypeclass
 
 typeclass MkPolymorphicMemFromRegs#(type reqT, type respT, numeric type numRegs, numeric type dataSz)
@@ -130,7 +126,13 @@ typeclass MkPolymorphicMemFromRegFile#(type reqT, type respT, numeric type rfAdd
     module mkPolymorphicMemFromRegFile#(RegFile#(Bit#(rfAddrSz), Bit#(dataSz)) rf)(ServerPort#(reqT, respT));
 endtypeclass
 
-instance MkPolymorphicBRAM#(reqT, respT, numWords)
+module mkPolymorphicBRAM#(Integer numWords)(ServerPort#(reqT, respT))
+        provisos (MkPolymorphicBRAM#(reqT, respT));
+    let _m <- mkPolymorphicBRAMLoad(numWords, tagged None);
+    return _m;
+endmodule
+
+instance MkPolymorphicBRAM#(reqT, respT)
         provisos(ToGenericAtomicMemReq#(reqT, writeEnSz, atomicMemOpT, wordAddrSz, dataSz),
                  ToGenericAtomicMemPendingReq#(reqT, pendingReqT),
                  FromGenericAtomicMemResp#(respT, pendingReqT, dataSz),
@@ -139,32 +141,29 @@ instance MkPolymorphicBRAM#(reqT, respT, numWords)
                  Mul#(TDiv#(dataSz, writeEnSz), writeEnSz, dataSz),
                  Bits#(atomicMemOpT, a__),
                  Bits#(pendingReqT, b__));
-
-    module mkPolymorphicBRAM(PolymorphicBRAM#(ServerPort#(reqT, respT), numWords));
-        GenericAtomicBRAM#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz, numWords) gam <- mkGenericAtomicBRAM;
+    module mkPolymorphicBRAMLoad#(Integer numWords, LoadFormat loadFile)(ServerPort#(reqT, respT));
+        GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) mem <- mkGenericAtomicBRAMLoad(numWords, loadFile);
         FIFOG#(pendingReqT) pendingReq <- mkMaybeFIFOG;
-        interface ServerPort mem;
-            interface InputPort request;
-                method Action enq(reqT req);
-                    gam.mem.request.enq(toGenericAtomicMemReq(req));
-                    pendingReq.enq(toGenericAtomicMemPendingReq(req));
-                endmethod
-                method Bool canEnq;
-                    return gam.mem.request.canEnq && pendingReq.canEnq;
-                endmethod
-            endinterface
-            interface OutputPort response;
-                method respT first;
-                    return fromGenericAtomicMemResp(gam.mem.response.first, pendingReq.first);
-                endmethod
-                method Action deq;
-                    gam.mem.response.deq;
-                    pendingReq.deq;
-                endmethod
-                method Bool canDeq;
-                    return gam.mem.response.canDeq && pendingReq.canDeq;
-                endmethod
-            endinterface
+        interface InputPort request;
+            method Action enq(reqT req);
+                mem.request.enq(toGenericAtomicMemReq(req));
+                pendingReq.enq(toGenericAtomicMemPendingReq(req));
+            endmethod
+            method Bool canEnq;
+                return mem.request.canEnq && pendingReq.canEnq;
+            endmethod
+        endinterface
+        interface OutputPort response;
+            method respT first;
+                return fromGenericAtomicMemResp(mem.response.first, pendingReq.first);
+            endmethod
+            method Action deq;
+                mem.response.deq;
+                pendingReq.deq;
+            endmethod
+            method Bool canDeq;
+                return mem.response.canDeq && pendingReq.canDeq;
+            endmethod
         endinterface
     endmodule
 endinstance

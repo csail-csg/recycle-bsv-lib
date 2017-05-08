@@ -36,12 +36,12 @@ import Port::*;
 import BlueCheck::*;
 
 module [BlueCheck] checkPolyMem#(ServerPort#(reqT, respT) referenceMem)(Empty)
-        provisos (MkPolymorphicBRAM#(reqT, respT, 1024),
+        provisos (MkPolymorphicBRAM#(reqT, respT),
                   BlueCheck::Equiv#(function Action f(reqT x1)),
                   // BlueCheck::Equiv#(respT),
                   BlueCheck::Equiv#(ActionValue#(respT)),
                   Eq#(respT));
-    PolymorphicBRAM#(ServerPort#(reqT, respT), 1024) dut <- mkPolymorphicBRAM;
+    ServerPort#(reqT, respT) dut <- mkPolymorphicBRAM(1024);
 
     function ActionValue#(t) checkAndDeq( OutputPort#(t) x );
         return (actionvalue
@@ -50,8 +50,8 @@ module [BlueCheck] checkPolyMem#(ServerPort#(reqT, respT) referenceMem)(Empty)
             endactionvalue);
     endfunction
 
-    equiv( "request.enq", referenceMem.request.enq, dut.mem.request.enq );
-    equiv( "checkAndDeq(response)", checkAndDeq(referenceMem.response), checkAndDeq(dut.mem.response) );
+    equiv( "request.enq", referenceMem.request.enq, dut.request.enq );
+    equiv( "checkAndDeq(response)", checkAndDeq(referenceMem.response), checkAndDeq(dut.response) );
 endmodule
 
 (* synthesize *)

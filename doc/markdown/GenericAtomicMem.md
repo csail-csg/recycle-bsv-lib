@@ -246,16 +246,7 @@ endinstance
 
 ```
 
-### [GenericAtomicBRAM](../../src/bsv/GenericAtomicMem.bsv#L203)
-```bluespec
-interface GenericAtomicBRAM#(numeric type writeEnSz, type atomicMemOpT, numeric type wordAddrSz, numeric type dataSz, numeric type numWords);
-    interface GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) mem;
-endinterface
-
-
-```
-
-### [['GenericAtomicBRAMPendingReq', ['numeric', 'type', 'writeEnSz', 'type', 'atomicMemOpT']]](../../src/bsv/GenericAtomicMem.bsv#L207)
+### [['GenericAtomicBRAMPendingReq', ['numeric', 'type', 'writeEnSz', 'type', 'atomicMemOpT']]](../../src/bsv/GenericAtomicMem.bsv#L203)
 ```bluespec
 typedef struct {
     Bit#(writeEnSz) write_en;
@@ -264,7 +255,7 @@ typedef struct {
 } GenericAtomicBRAMPendingReq#(numeric type writeEnSz, type atomicMemOpT) deriving (Bits, Eq, FShow);
 ```
 
-### [to_BRAM_PORT_BE](../../src/bsv/GenericAtomicMem.bsv#L215)
+### [to_BRAM_PORT_BE](../../src/bsv/GenericAtomicMem.bsv#L211)
 
 This function is needed because BRAMCore does not support write enables
 that are not 8 or 9 bits wide.
@@ -281,19 +272,57 @@ endfunction
 
 ```
 
-### [mkGenericAtomicBRAM](../../src/bsv/GenericAtomicMem.bsv#L224)
+### [['LoadFormat']](../../src/bsv/GenericAtomicMem.bsv#L221)
+
+This type matches the LoadFormat type in the Bluespec Reference Guide
 ```bluespec
-module mkGenericAtomicBRAM(GenericAtomicBRAM#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz, numWords))
+typedef union tagged {
+    void   None;
+    String Hex;
+    String Binary;
+} LoadFormat deriving (Bits, Eq);
+```
+
+### [mkGenericAtomicBRAM](../../src/bsv/GenericAtomicMem.bsv#L227)
+```bluespec
+module mkGenericAtomicBRAM#(Integer numWords)(GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz))
+        provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
+                  Mul#(TDiv#(dataSz, writeEnSz), writeEnSz, dataSz),
+                  Bits#(atomicMemOpT, atomicMemOpSz));
+    let _m <- mkGenericAtomicBRAMLoad(numWords, tagged None);
+    return _m;
+endmodule
+
+
+```
+
+### [mkGenericAtomicBRAMLoad](../../src/bsv/GenericAtomicMem.bsv#L235)
+```bluespec
+module mkGenericAtomicBRAMLoad#(Integer numWords, LoadFormat loadFile)(GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz))
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
                   Mul#(TDiv#(dataSz, writeEnSz), writeEnSz, dataSz), // This is needed for mkBRAMCore1BE
                   Bits#(atomicMemOpT, atomicMemOpSz));
+    // If numWords == 0, then assume the entire address space is used
+    Integer actualNumWords = numWords == 0 ? valueOf(TExp#(wordAddrSz)) : numWords;
+
+    // Instantiate the BRAM
     BRAM_PORT_BE#(Bit#(wordAddrSz), Bit#(dataSz), writeEnSz) bram;
     if (valueOf(writeEnSz) == 1) begin
-        BRAM_PORT#(Bit#(wordAddrSz), Bit#(dataSz)) bram_non_be <- mkBRAMCore1(valueOf(numWords), False);
+        BRAM_PORT#(Bit#(wordAddrSz), Bit#(dataSz)) bram_non_be;
+        case (loadFile) matches
+            tagged None: bram_non_be <- mkBRAMCore1(actualNumWords, False);
+            tagged Hex .hexfile: bram_non_be <- mkBRAMCore1Load(actualNumWords, False, hexfile, False);
+            tagged Binary .binfile: bram_non_be <- mkBRAMCore1Load(actualNumWords, False, binfile, True);
+        endcase
         bram = to_BRAM_PORT_BE(bram_non_be);
     end else begin
-        bram <- mkBRAMCore1BE(valueOf(numWords), False);
+        case (loadFile) matches
+            tagged None: bram <- mkBRAMCore1BE(actualNumWords, False);
+            tagged Hex .hexfile: bram <- mkBRAMCore1BELoad(actualNumWords, False, hexfile, False);
+            tagged Binary .binfile: bram <- mkBRAMCore1BELoad(actualNumWords, False, binfile, True);
+        endcase
     end
+
     Ehr#(2, Maybe#(GenericAtomicBRAMPendingReq#(writeEnSz, atomicMemOpT))) pendingReq <- mkEhr(tagged Invalid);
     FIFOG#(GenericAtomicMemResp#(dataSz)) pendingResp <- mkBypassFIFOG;
     Reg#(Bit#(wordAddrSz)) atomicOpWordAddr <- mkReg(0);
@@ -313,31 +342,29 @@ module mkGenericAtomicBRAM(GenericAtomicBRAM#(writeEnSz, atomicMemOpT, wordAddrS
         pendingReq[0] <= tagged Invalid;
     endrule
 
-    interface GenericAtomicMemServerPort mem;
-        interface InputPort request;
-            method Action enq(GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) req) if (!isValid(pendingReq[1]));
-                let atomic_op = (req.write_en == 0) ? nonAtomicMemOp : req.atomic_op;
-                if (isAtomicMemOp(atomic_op)) begin
-                    bram.put(0, req.word_addr, req.data);
-                    atomicOpWordAddr <= req.word_addr;
-                    atomicOpData <= req.data;
-                end else begin
-                    bram.put(req.write_en, req.word_addr, req.data);
-                end
-                pendingReq[1] <= tagged Valid GenericAtomicBRAMPendingReq{ write_en: req.write_en, atomic_op: atomic_op, rmw_write: False };
-            endmethod
-            method Bool canEnq;
-                return !isValid(pendingReq[1]);
-            endmethod
-        endinterface
-        interface OutputPort response = toOutputPort(pendingResp);
+    interface InputPort request;
+        method Action enq(GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) req) if (!isValid(pendingReq[1]));
+            let atomic_op = (req.write_en == 0) ? nonAtomicMemOp : req.atomic_op;
+            if (isAtomicMemOp(atomic_op)) begin
+                bram.put(0, req.word_addr, req.data);
+                atomicOpWordAddr <= req.word_addr;
+                atomicOpData <= req.data;
+            end else begin
+                bram.put(req.write_en, req.word_addr, req.data);
+            end
+            pendingReq[1] <= tagged Valid GenericAtomicBRAMPendingReq{ write_en: req.write_en, atomic_op: atomic_op, rmw_write: False };
+        endmethod
+        method Bool canEnq;
+            return !isValid(pendingReq[1]);
+        endmethod
     endinterface
+    interface OutputPort response = toOutputPort(pendingResp);
 endmodule
 
 
 ```
 
-### [performGenericAtomicMemOpOnRegs](../../src/bsv/GenericAtomicMem.bsv#L275)
+### [performGenericAtomicMemOpOnRegs](../../src/bsv/GenericAtomicMem.bsv#L298)
 ```bluespec
 function ActionValue#(GenericAtomicMemResp#(dataSz)) performGenericAtomicMemOpOnRegs(Vector#(numRegs, Reg#(Bit#(dataSz))) regs, GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) req)
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
@@ -367,7 +394,7 @@ endfunction
 
 ```
 
-### [performGenericAtomicMemOpOnRegFile](../../src/bsv/GenericAtomicMem.bsv#L300)
+### [performGenericAtomicMemOpOnRegFile](../../src/bsv/GenericAtomicMem.bsv#L323)
 ```bluespec
 function ActionValue#(GenericAtomicMemResp#(dataSz)) performGenericAtomicMemOpOnRegFile(RegFile#(Bit#(rfWordAddrSz), Bit#(dataSz)) rf, GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) req)
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
@@ -398,7 +425,7 @@ endfunction
 
 ```
 
-### [mkGenericAtomicMemFromRegs](../../src/bsv/GenericAtomicMem.bsv#L326)
+### [mkGenericAtomicMemFromRegs](../../src/bsv/GenericAtomicMem.bsv#L349)
 ```bluespec
 module mkGenericAtomicMemFromRegs#(Vector#(numRegs, Reg#(Bit#(dataSz))) regs)(GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz))
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
@@ -421,7 +448,7 @@ endmodule
 
 ```
 
-### [mkGenericAtomicMemFromRegFile](../../src/bsv/GenericAtomicMem.bsv#L344)
+### [mkGenericAtomicMemFromRegFile](../../src/bsv/GenericAtomicMem.bsv#L367)
 ```bluespec
 module mkGenericAtomicMemFromRegFile#(RegFile#(Bit#(rfWordAddrSz), Bit#(dataSz)) rf)(GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz))
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
