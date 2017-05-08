@@ -197,6 +197,8 @@ module [m] mkFIFOGfromFIFOF#(m#(FIFOF#(t)) mkM)(FIFOG#(t)) provisos (Bits#(t,tSz
     rule setCanEnqWire;
         canEnq_wire <= _m.notFull;
     endrule
+    // If this assertion fails, it may be due to outside scheduling
+    // constraints, especially for bypass FIFOs.
     (* fire_when_enabled *)
     rule setCanDeqWire;
         canDeq_wire <= _m.notEmpty;
