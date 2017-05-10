@@ -36,11 +36,12 @@ import BlueCheck::*;
 
 typedef TLog#(TDiv#(n,8)) DataSz#(numeric type n);
 
-module [BlueCheck] checkAtomicMemEmulationBridge(Empty);
+module [BlueCheck] checkEmulateMemServerPort(Empty);
     AtomicBRAM#(10, DataSz#(32), TDiv#(1024,4)) referenceBRAM <- mkAtomicBRAM;
 
     CoarseBRAM#(10, DataSz#(32), TDiv#(1024,4)) coarseBRAM <- mkCoarseBRAM;
-    AtomicMemServerPort#(10, DataSz#(32)) atomicEmu <- mkAtomicMemEmulationBridge(coarseBRAM.portA);
+    // AtomicMemServerPort#(10, DataSz#(32)) atomicEmu <- mkAtomicMemEmulationBridge(coarseBRAM.portA);
+    AtomicMemServerPort#(10, DataSz#(32)) atomicEmu <- mkEmulateMemServerPort(coarseBRAM.portA);
 
     FIFO#(Bool) isAtomicOpFIFO <- mkFIFO;
 
@@ -90,6 +91,6 @@ module [BlueCheck] checkAtomicMemEmulationBridge(Empty);
 endmodule
 
 (* synthesize *)
-module [Module] mkAtomicMemEmulationBridgeCheck(Empty);
-    blueCheck(checkAtomicMemEmulationBridge);
+module [Module] mkEmulateMemServerPortCheck(Empty);
+    blueCheck(checkEmulateMemServerPort);
 endmodule

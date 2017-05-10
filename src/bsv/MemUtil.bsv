@@ -1188,25 +1188,25 @@ module mkMixedAtomicMemBus#(Vector#(nServers, MixedMemBusItem#(addrSz, logNumByt
             case (bus_items[s].ifc) matches
                 tagged ReadOnly .ifc: begin
                     if(!isReadOnlyMemReq(serverMemReq[s].first)) begin
-                        $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-ReadOnly reqeust sent to ReadOnly server %0d", s);
+                        $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-ReadOnly request sent to ReadOnly server %0d", s);
                     end
                     ifc.request.enq( toReadOnlyMemReq(serverMemReq[s].first) );
                 end
                 tagged Coarse   .ifc: begin
                     if(!isCoarseMemReq(serverMemReq[s].first)) begin
-                        $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-Coarse reqeust sent to Coarse server %0d", s);
+                        $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-Coarse request sent to Coarse server %0d", s);
                     end
                     ifc.request.enq( toCoarseMemReq(serverMemReq[s].first) );
                 end
                 tagged ByteEn   .ifc: begin
                     if(!isByteEnMemReq(serverMemReq[s].first)) begin
-                        $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-ByteEn reqeust sent to ByteEn server %0d", s);
+                        $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-ByteEn request sent to ByteEn server %0d", s);
                     end
                     ifc.request.enq( toByteEnMemReq(serverMemReq[s].first) );
                 end
                 tagged Atomic   .ifc: begin
                     if(!isAtomicMemReq(serverMemReq[s].first)) begin
-                        $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-Atomic reqeust sent to Atomic server %0d", s);
+                        $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-Atomic request sent to Atomic server %0d", s);
                     end
                     ifc.request.enq( toAtomicMemReq(serverMemReq[s].first) );
                 end
@@ -1368,4 +1368,388 @@ instance HasAtomicMemOpFunc#(AtomicMemOp, dataSz, writeEnSz)
         return atomicMemOpAlu(op, memData, operandData, writeEn);
     endfunction
 endinstance
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Translation typeclasses
+
+typeclass SimplifyMemServerPort#(type inMemServerT, type outMemServerT);
+    function outMemServerT simplifyMemServerPort(inMemServerT mem);
+endtypeclass
+
+instance SimplifyMemServerPort#(AtomicMemServerPort#(addrSz, logNumBytes), ByteEnMemServerPort#(addrSz, logNumBytes));
+    function ByteEnMemServerPort#(addrSz, logNumBytes) simplifyMemServerPort(AtomicMemServerPort#(addrSz, logNumBytes) mem);
+        return (interface ByteEnMemServerPort;
+                interface InputPort request;
+                    method Action enq(ByteEnMemReq#(addrSz, logNumBytes) req);
+                        mem.request.enq( AtomicMemReq {
+                                            write_en: req.write_en,
+                                            atomic_op: None,
+                                            addr: req.addr,
+                                            data: req.data } );
+                    endmethod
+                    method Bool canEnq;
+                        return mem.request.canEnq;
+                    endmethod
+                endinterface
+                interface OutputPort response = mem.response;
+            endinterface);
+    endfunction
+endinstance
+
+instance SimplifyMemServerPort#(AtomicMemServerPort#(addrSz, logNumBytes), CoarseMemServerPort#(addrSz, logNumBytes));
+    function CoarseMemServerPort#(addrSz, logNumBytes) simplifyMemServerPort(AtomicMemServerPort#(addrSz, logNumBytes) mem);
+        return (interface CoarseMemServerPort;
+                interface InputPort request;
+                    method Action enq(CoarseMemReq#(addrSz, logNumBytes) req);
+                        mem.request.enq( AtomicMemReq {
+                                            write_en: req.write ? '1 : 0,
+                                            atomic_op: None,
+                                            addr: req.addr,
+                                            data: req.data } );
+                    endmethod
+                    method Bool canEnq;
+                        return mem.request.canEnq;
+                    endmethod
+                endinterface
+                interface OutputPort response = mem.response;
+            endinterface);
+    endfunction
+endinstance
+
+instance SimplifyMemServerPort#(AtomicMemServerPort#(addrSz, logNumBytes), ReadOnlyMemServerPort#(addrSz, logNumBytes));
+    function ReadOnlyMemServerPort#(addrSz, logNumBytes) simplifyMemServerPort(AtomicMemServerPort#(addrSz, logNumBytes) mem);
+        return (interface ReadOnlyMemServerPort;
+                interface InputPort request;
+                    method Action enq(ReadOnlyMemReq#(addrSz, logNumBytes) req);
+                        mem.request.enq( AtomicMemReq {
+                                            write_en: 0,
+                                            atomic_op: None,
+                                            addr: req.addr,
+                                            data: 0 } );
+                    endmethod
+                    method Bool canEnq;
+                        return mem.request.canEnq;
+                    endmethod
+                endinterface
+                interface OutputPort response;
+                    method ReadOnlyMemResp#(logNumBytes) first;
+                        return ReadOnlyMemResp { data: mem.response.first.data };
+                    endmethod
+                    method Action deq;
+                        mem.response.deq;
+                    endmethod
+                    method Bool canDeq;
+                        return mem.response.canDeq;
+                    endmethod
+                endinterface
+            endinterface);
+    endfunction
+endinstance
+
+instance SimplifyMemServerPort#(ByteEnMemServerPort#(addrSz, logNumBytes), CoarseMemServerPort#(addrSz, logNumBytes));
+    function CoarseMemServerPort#(addrSz, logNumBytes) simplifyMemServerPort(ByteEnMemServerPort#(addrSz, logNumBytes) mem);
+        return (interface CoarseMemServerPort;
+                interface InputPort request;
+                    method Action enq(CoarseMemReq#(addrSz, logNumBytes) req);
+                        mem.request.enq( ByteEnMemReq {
+                                            write_en: req.write ? '1 : 0,
+                                            addr: req.addr,
+                                            data: req.data } );
+                    endmethod
+                    method Bool canEnq;
+                        return mem.request.canEnq;
+                    endmethod
+                endinterface
+                interface OutputPort response = mem.response;
+            endinterface);
+    endfunction
+endinstance
+
+instance SimplifyMemServerPort#(ByteEnMemServerPort#(addrSz, logNumBytes), ReadOnlyMemServerPort#(addrSz, logNumBytes));
+    function ReadOnlyMemServerPort#(addrSz, logNumBytes) simplifyMemServerPort(ByteEnMemServerPort#(addrSz, logNumBytes) mem);
+        return (interface ReadOnlyMemServerPort;
+                interface InputPort request;
+                    method Action enq(ReadOnlyMemReq#(addrSz, logNumBytes) req);
+                        mem.request.enq( ByteEnMemReq {
+                                            write_en: 0,
+                                            addr: req.addr,
+                                            data: 0 } );
+                    endmethod
+                    method Bool canEnq;
+                        return mem.request.canEnq;
+                    endmethod
+                endinterface
+                interface OutputPort response;
+                    method ReadOnlyMemResp#(logNumBytes) first;
+                        return ReadOnlyMemResp { data: mem.response.first.data };
+                    endmethod
+                    method Action deq;
+                        mem.response.deq;
+                    endmethod
+                    method Bool canDeq;
+                        return mem.response.canDeq;
+                    endmethod
+                endinterface
+            endinterface);
+    endfunction
+endinstance
+
+instance SimplifyMemServerPort#(CoarseMemServerPort#(addrSz, logNumBytes), ReadOnlyMemServerPort#(addrSz, logNumBytes));
+    function ReadOnlyMemServerPort#(addrSz, logNumBytes) simplifyMemServerPort(CoarseMemServerPort#(addrSz, logNumBytes) mem);
+        return (interface ReadOnlyMemServerPort;
+                interface InputPort request;
+                    method Action enq(ReadOnlyMemReq#(addrSz, logNumBytes) req);
+                        mem.request.enq( CoarseMemReq {
+                                            write: False,
+                                            addr: req.addr,
+                                            data: 0 } );
+                    endmethod
+                    method Bool canEnq;
+                        return mem.request.canEnq;
+                    endmethod
+                endinterface
+                interface OutputPort response;
+                    method ReadOnlyMemResp#(logNumBytes) first;
+                        return ReadOnlyMemResp { data: mem.response.first.data };
+                    endmethod
+                    method Action deq;
+                        mem.response.deq;
+                    endmethod
+                    method Bool canDeq;
+                        return mem.response.canDeq;
+                    endmethod
+                endinterface
+            endinterface);
+    endfunction
+endinstance
+
+////
+
+typeclass MkEmulateMemServerPort#(type inMemServerT, type outMemServerT);
+    module mkEmulateMemServerPort#(inMemServerT mem)(outMemServerT);
+endtypeclass
+
+instance MkEmulateMemServerPort#(CoarseMemServerPort#(addrSz, logNumBytes), AtomicMemServerPort#(addrSz, logNumBytes));
+    module mkEmulateMemServerPort#(CoarseMemServerPort#(addrSz, logNumBytes) mem)(AtomicMemServerPort#(addrSz, logNumBytes))
+            provisos (NumAlias#(TMul#(8,TExp#(logNumBytes)), dataSz));
+        // bookkeeping reg
+        Ehr#(2, Maybe#(AtomicBRAMPendingReq#(logNumBytes))) pendingReq <- mkEhr(tagged Invalid);
+        Reg#(Bit#(dataSz)) atomicOpData <- mkReg(0);
+        Reg#(Bit#(addrSz)) atomicOpAddress <- mkReg(0);
+        Ehr#(2, Maybe#(AtomicMemResp#(logNumBytes))) pendingResp <- mkEhr(tagged Invalid);
+
+        // Add a buffer to the coarse mem response to avoid having requests.enq
+        // and response.deq together in performAtomicMemoryOp
+        FIFOG#(CoarseMemResp#(logNumBytes)) coarseMemRespFIFO <- mkBypassFIFOG;
+
+        mkConnection(mem.response, toInputPort(coarseMemRespFIFO));
+
+        rule performAtomicMemoryOp(pendingReq[0] matches tagged Valid .req
+                                    &&& req.atomic_op != None);
+            let writeData = atomicMemOpAlu(req.atomic_op, coarseMemRespFIFO.first.data, atomicOpData, req.write_en);
+            Vector#(TExp#(logNumBytes), Bit#(1)) byteEnVec = unpack(req.write_en);
+            Bit#(dataSz) bitMask = pack(map(signExtend, byteEnVec));
+            writeData = (writeData & bitMask) | (coarseMemRespFIFO.first.data & ~bitMask);
+            mem.request.enq( CoarseMemReq{ write: True, addr: atomicOpAddress, data: writeData } );
+            pendingReq[0] <= tagged Valid AtomicBRAMPendingReq{ write_en: req.write_en, atomic_op: None, rmw_write: True };
+            atomicOpData <= coarseMemRespFIFO.first.data;
+            coarseMemRespFIFO.deq;
+        endrule
+
+        rule getRespFromCore(pendingReq[0] matches tagged Valid .req
+                                &&& req.atomic_op == None
+                                &&& !isValid(pendingResp[0]));
+            pendingResp[0] <= tagged Valid AtomicMemResp{ write: req.write_en != 0, data: (req.rmw_write ? atomicOpData : coarseMemRespFIFO.first.data) };
+            pendingReq[0] <= tagged Invalid;
+            coarseMemRespFIFO.deq;
+        endrule
+
+        interface InputPort request;
+            method Action enq(AtomicMemReq#(addrSz, logNumBytes) req) if (!isValid(pendingReq[1]));
+                // Clean the atomic_op passed in
+                AtomicMemOp atomic_op = req.atomic_op;
+                if (req.write_en == 0) begin
+                    atomic_op = None;
+                end else if ((req.atomic_op == None) && (req.write_en != '1)) begin
+                    // use swap to implement narrow stores
+                    atomic_op = Swap;
+                end
+                pendingReq[1] <= tagged Valid AtomicBRAMPendingReq{ write_en: req.write_en, atomic_op: atomic_op, rmw_write: False };
+                if (atomic_op == None) begin
+                    // normal read/write
+                    mem.request.enq( CoarseMemReq { write: req.write_en == '1, addr: req.addr, data: req.data } );
+                end else begin
+                    // atomic memory operation, do read first
+                    mem.request.enq( CoarseMemReq { write: False, addr: req.addr, data: req.data } );
+                    // store operand data for later
+                    atomicOpData <= req.data;
+                    atomicOpAddress <= req.addr;
+                end
+            endmethod
+            method Bool canEnq;
+                return !isValid(pendingReq[1]);
+            endmethod
+        endinterface
+        interface OutputPort response;
+            method ByteEnMemResp#(logNumBytes) first if (pendingResp[1] matches tagged Valid .resp);
+                return resp;
+            endmethod
+            method Action deq if (isValid(pendingResp[1]));
+                pendingResp[1] <= tagged Invalid;
+            endmethod
+            method Bool canDeq;
+                return isValid(pendingResp[1]);
+            endmethod
+        endinterface
+    endmodule
+endinstance
+
+instance MkEmulateMemServerPort#(ByteEnMemServerPort#(addrSz, logNumBytes), AtomicMemServerPort#(addrSz, logNumBytes));
+    module mkEmulateMemServerPort#(ByteEnMemServerPort#(addrSz, logNumBytes) mem)(AtomicMemServerPort#(addrSz, logNumBytes))
+            provisos (NumAlias#(TMul#(8,TExp#(logNumBytes)), dataSz));
+        // bookkeeping reg
+        Ehr#(2, Maybe#(AtomicBRAMPendingReq#(logNumBytes))) pendingReq <- mkEhr(tagged Invalid);
+        Reg#(Bit#(dataSz)) atomicOpData <- mkReg(0);
+        Reg#(Bit#(addrSz)) atomicOpAddress <- mkReg(0);
+        Ehr#(2, Maybe#(AtomicMemResp#(logNumBytes))) pendingResp <- mkEhr(tagged Invalid);
+
+        // Add a buffer to the byteEn mem response to avoid having requests.enq
+        // and response.deq together in performAtomicMemoryOp
+        FIFOG#(ByteEnMemResp#(logNumBytes)) byteEnMemRespFIFO <- mkBypassFIFOG;
+
+        mkConnection(mem.response, toInputPort(byteEnMemRespFIFO));
+
+        rule performAtomicMemoryOp(pendingReq[0] matches tagged Valid .req
+                                    &&& req.atomic_op != None);
+            let writeData = atomicMemOpAlu(req.atomic_op, byteEnMemRespFIFO.first.data, atomicOpData, req.write_en);
+            mem.request.enq( ByteEnMemReq{ write_en: req.write_en, addr: atomicOpAddress, data: writeData } );
+            pendingReq[0] <= tagged Valid AtomicBRAMPendingReq{ write_en: req.write_en, atomic_op: None, rmw_write: True };
+            atomicOpData <= byteEnMemRespFIFO.first.data;
+            byteEnMemRespFIFO.deq;
+        endrule
+
+        rule getRespFromCore(pendingReq[0] matches tagged Valid .req
+                                &&& req.atomic_op == None
+                                &&& !isValid(pendingResp[0]));
+            pendingResp[0] <= tagged Valid AtomicMemResp{ write: req.write_en != 0, data: (req.rmw_write ? atomicOpData : byteEnMemRespFIFO.first.data) };
+            pendingReq[0] <= tagged Invalid;
+            byteEnMemRespFIFO.deq;
+        endrule
+
+        interface InputPort request;
+            method Action enq(AtomicMemReq#(addrSz, logNumBytes) req) if (!isValid(pendingReq[1]));
+                // Clean the atomic_op passed in
+                AtomicMemOp atomic_op = req.atomic_op;
+                if (req.write_en == 0) begin
+                    atomic_op = None;
+                end
+                pendingReq[1] <= tagged Valid AtomicBRAMPendingReq{ write_en: req.write_en, atomic_op: atomic_op, rmw_write: False };
+                if (atomic_op == None) begin
+                    // normal read/write
+                    mem.request.enq( ByteEnMemReq { write_en: req.write_en, addr: req.addr, data: req.data } );
+                end else begin
+                    // atomic memory operation, do read first
+                    mem.request.enq( ByteEnMemReq { write_en: 0, addr: req.addr, data: req.data } );
+                    // store operand data for later
+                    atomicOpData <= req.data;
+                    atomicOpAddress <= req.addr;
+                end
+            endmethod
+            method Bool canEnq;
+                return !isValid(pendingReq[1]);
+            endmethod
+        endinterface
+        interface OutputPort response;
+            method ByteEnMemResp#(logNumBytes) first if (pendingResp[1] matches tagged Valid .resp);
+                return resp;
+            endmethod
+            method Action deq if (isValid(pendingResp[1]));
+                pendingResp[1] <= tagged Invalid;
+            endmethod
+            method Bool canDeq;
+                return isValid(pendingResp[1]);
+            endmethod
+        endinterface
+    endmodule
+endinstance
+
+// This is implemented like the emulated AtomicMem
+instance MkEmulateMemServerPort#(CoarseMemServerPort#(addrSz, logNumBytes), ByteEnMemServerPort#(addrSz, logNumBytes));
+    module mkEmulateMemServerPort#(CoarseMemServerPort#(addrSz, logNumBytes) mem)(ByteEnMemServerPort#(addrSz, logNumBytes))
+            provisos (NumAlias#(TMul#(8,TExp#(logNumBytes)), dataSz));
+        // bookkeeping reg
+        Ehr#(2, Maybe#(Bit#(TExp#(logNumBytes)))) pendingReqWriteEn <- mkEhr(tagged Invalid);
+        Reg#(Bit#(dataSz)) byteEnData <- mkReg(0);
+        Reg#(Bit#(addrSz)) byteEnAddress <- mkReg(0);
+        Ehr#(2, Maybe#(ByteEnMemResp#(logNumBytes))) pendingResp <- mkEhr(tagged Invalid);
+
+        // Add a buffer to the coarse mem response to avoid having requests.enq
+        // and response.deq together in performByteEnMemoryOp
+        FIFOG#(CoarseMemResp#(logNumBytes)) coarseMemRespFIFO <- mkBypassFIFOG;
+
+        mkConnection(mem.response, toInputPort(coarseMemRespFIFO));
+
+        rule performByteEnMemoryOp(pendingReqWriteEn[0] matches tagged Valid .write_en
+                                    &&& ((write_en != 0) && (write_en != '1)));
+            Vector#(TExp#(logNumBytes), Bit#(1)) byteEnVec = unpack(write_en);
+            Bit#(dataSz) bitMask = pack(map(signExtend, byteEnVec));
+            let writeData = (byteEnData & bitMask) | (coarseMemRespFIFO.first.data & ~bitMask);
+            mem.request.enq( CoarseMemReq{ write: True, addr: byteEnAddress, data: writeData } );
+            pendingReqWriteEn[0] <= tagged Valid '1;
+            coarseMemRespFIFO.deq;
+        endrule
+
+        rule getRespFromCore(pendingReqWriteEn[0] matches tagged Valid .write_en
+                                &&& ((write_en == 0) || (write_en == '1))
+                                &&& !isValid(pendingResp[0]));
+            pendingResp[0] <= tagged Valid ByteEnMemResp{ write: write_en != 0, data: coarseMemRespFIFO.first.data };
+            pendingReqWriteEn[0] <= tagged Invalid;
+            coarseMemRespFIFO.deq;
+        endrule
+
+        interface InputPort request;
+            method Action enq(ByteEnMemReq#(addrSz, logNumBytes) req) if (!isValid(pendingReqWriteEn[1]));
+                pendingReqWriteEn[1] <= tagged Valid req.write_en;
+                if ((req.write_en == 0) || (req.write_en == '1)) begin
+                    // normal read/write
+                    mem.request.enq( CoarseMemReq { write: req.write_en == '1, addr: req.addr, data: req.data } );
+                end else begin
+                    // narrow store, do read first
+                    mem.request.enq( CoarseMemReq { write: False, addr: req.addr, data: req.data } );
+                    // store operand data for later
+                    byteEnData <= req.data;
+                    byteEnAddress <= req.addr;
+                end
+            endmethod
+            method Bool canEnq;
+                return !isValid(pendingReqWriteEn[1]);
+            endmethod
+        endinterface
+        interface OutputPort response;
+            method ByteEnMemResp#(logNumBytes) first if (pendingResp[1] matches tagged Valid .resp);
+                return resp;
+            endmethod
+            method Action deq if (isValid(pendingResp[1]));
+                pendingResp[1] <= tagged Invalid;
+            endmethod
+            method Bool canDeq;
+                return isValid(pendingResp[1]);
+            endmethod
+        endinterface
+    endmodule
+endinstance
+
+////
+
+typeclass NarrowerMemServerPort#(type inMemServerT, type outMemServerT);
+    function outMemServerT narrowerMemServerPort(inMemServerT mem);
+    // this module is required for CoarseMemServerPort
+    module mkNarrowerMemServerPort#(inMemServerT mem)(outMemServerT);
+endtypeclass
+
+typeclass WiderMemServerPort#(type inMemServerT, type outMemServerT);
+    module mkWiderMemServerPort#(inMemServerT mem)(outMemServerT);
+endtypeclass
+
 endpackage

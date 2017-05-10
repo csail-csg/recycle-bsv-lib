@@ -28,7 +28,7 @@ CHECK_NAME=\
 	AtomicBRAMCheck \
 	MemBusCheck \
 	MixedAtomicMemBusCheck \
-	AtomicMemEmulationBridgeCheck \
+	EmulateMemServerPortCheck \
 	NarrowAtomicMemBridgeCheck \
 	MemServerPortFromRegsCheck \
 	MemServerPortFromRegFileCheck \
