@@ -2068,18 +2068,199 @@ endinstance
 
 ```
 
-### [NarrowerMemServerPort](../../src/bsv/MemUtil.bsv#L1745)
+### [MkNarrowerMemServerPort](../../src/bsv/MemUtil.bsv#L1745)
 ```bluespec
-typeclass NarrowerMemServerPort#(type inMemServerT, type outMemServerT);
-    function outMemServerT narrowerMemServerPort(inMemServerT mem);
-    // this module is required for CoarseMemServerPort
+typeclass MkNarrowerMemServerPort#(type inMemServerT, type outMemServerT);
     module mkNarrowerMemServerPort#(inMemServerT mem)(outMemServerT);
 endtypeclass
 
 
 ```
 
-### [WiderMemServerPort](../../src/bsv/MemUtil.bsv#L1751)
+### [MkNarrowerMemServerPort](../../src/bsv/MemUtil.bsv#L1749)
+```bluespec
+instance MkNarrowerMemServerPort#(CoarseMemServerPort#(addrSz, inLogNumBytes), CoarseMemServerPort#(addrSz, outLogNumBytes))
+        provisos (Add#(logWidthFactor, outLogNumBytes, inLogNumBytes),
+                  Add#(a__, logWidthFactor, addrSz));
+    module mkNarrowerMemServerPort#(CoarseMemServerPort#(addrSz, inLogNumBytes) mem)(CoarseMemServerPort#(addrSz, outLogNumBytes));
+        // read requires a single read
+        // write requires a read followed by a write
+        FIFOG#(CoarseMemResp#(inLogNumBytes)) inRespFIFO <- mkBypassFIFOG;
+        FIFOG#(CoarseMemResp#(outLogNumBytes)) outRespFIFO <- mkBypassFIFOG;
+        Reg#(Bit#(TMul#(TExp#(outLogNumBytes), 8))) reqData <- mkReg(0);
+        Reg#(Bit#(addrSz)) reqAddr <- mkReg(0);
+        Ehr#(2, Maybe#(Bool)) pendingReqIsWrite <- mkEhr(tagged Invalid);
+
+        mkConnection(mem.response, toInputPort(inRespFIFO));
+
+        rule handleWrite(pendingReqIsWrite[0] matches tagged Valid .isWrite
+                        &&& (isWrite && !inRespFIFO.first.write));
+            Vector#(TExp#(logWidthFactor), Bit#(TMul#(8,TExp#(outLogNumBytes)))) write_data_vec = unpack(inRespFIFO.first.data);
+            Bit#(logWidthFactor) offset = truncate(reqAddr >> valueOf(outLogNumBytes));
+            write_data_vec[offset] = reqData;
+            mem.request.enq( CoarseMemReq { write: True, addr: reqAddr, data: pack(write_data_vec) } );
+            inRespFIFO.deq;
+        endrule
+
+        rule handleResp(pendingReqIsWrite[0] matches tagged Valid .isWrite
+                        &&& (!isWrite || inRespFIFO.first.write));
+            Vector#(TExp#(logWidthFactor), Bit#(TMul#(8,TExp#(outLogNumBytes)))) read_data_vec = unpack(inRespFIFO.first.data);
+            Bit#(logWidthFactor) offset = truncate(reqAddr >> valueOf(outLogNumBytes));
+            outRespFIFO.enq( CoarseMemResp { write: isWrite, data: read_data_vec[offset] } );
+            inRespFIFO.deq;
+            pendingReqIsWrite[0] <= tagged Invalid;
+        endrule
+
+        interface InputPort request;
+            method Action enq(CoarseMemReq#(addrSz, outLogNumBytes) req) if (!isValid(pendingReqIsWrite[1]));
+                reqAddr <= req.addr;
+                if (req.write) begin
+                    reqData <= req.data;
+                end
+                mem.request.enq( CoarseMemReq {
+                                    write: False,
+                                    addr: req.addr,
+                                    data: 0
+                                } );
+                pendingReqIsWrite[1] <= tagged Valid req.write;
+            endmethod
+            method Bool canEnq;
+                return mem.request.canEnq;
+            endmethod
+        endinterface
+    endmodule
+endinstance
+
+
+```
+
+### [MkNarrowerMemServerPort](../../src/bsv/MemUtil.bsv#L1801)
+```bluespec
+instance MkNarrowerMemServerPort#(AtomicMemServerPort#(addrSz, inLogNumBytes), AtomicMemServerPort#(addrSz, outLogNumBytes))
+        provisos (Add#(logWidthFactor, outLogNumBytes, inLogNumBytes),
+                  Add#(a__, logWidthFactor, addrSz));
+    module mkNarrowerMemServerPort#(AtomicMemServerPort#(addrSz, inLogNumBytes) mem)(AtomicMemServerPort#(addrSz, outLogNumBytes));
+        FIFOG#(Bit#(logWidthFactor)) pendingReqOffset <- mkFIFOG;
+
+        interface InputPort request;
+            method Action enq(AtomicMemReq#(addrSz, outLogNumBytes) req);
+                Bit#(logWidthFactor) offset = truncate(req.addr >> valueOf(outLogNumBytes));
+                Vector#(TExp#(logWidthFactor), Bit#(TExp#(outLogNumBytes))) write_en_vec = replicate(0);
+                Vector#(TExp#(logWidthFactor), Bit#(TMul#(TExp#(outLogNumBytes),8))) data_vec = replicate(req.data);
+                write_en_vec[offset] = req.write_en;
+                mem.request.enq( AtomicMemReq {
+                                    write_en: pack(write_en_vec),
+                                    atomic_op: req.atomic_op,
+                                    addr: req.addr,
+                                    data: pack(data_vec)
+                                } );
+                pendingReqOffset.enq(offset);
+            endmethod
+            method Bool canEnq;
+                return mem.request.canEnq && pendingReqOffset.canEnq;
+            endmethod
+        endinterface
+        interface OutputPort response;
+            method AtomicMemResp#(outLogNumBytes) first;
+                Vector#(TExp#(logWidthFactor), Bit#(TMul#(8,TExp#(outLogNumBytes)))) read_data_vec = unpack(mem.response.first.data);
+                return AtomicMemResp { write: mem.response.first.write, data: read_data_vec[pendingReqOffset.first] };
+            endmethod
+            method Action deq;
+                mem.response.deq;
+                pendingReqOffset.deq;
+            endmethod
+            method Bool canDeq;
+                return mem.response.canDeq && pendingReqOffset.canDeq;
+            endmethod
+        endinterface
+    endmodule
+endinstance
+
+
+```
+
+### [MkNarrowerMemServerPort](../../src/bsv/MemUtil.bsv#L1841)
+```bluespec
+instance MkNarrowerMemServerPort#(ByteEnMemServerPort#(addrSz, inLogNumBytes), ByteEnMemServerPort#(addrSz, outLogNumBytes))
+        provisos (Add#(logWidthFactor, outLogNumBytes, inLogNumBytes),
+                  Add#(a__, logWidthFactor, addrSz));
+    module mkNarrowerMemServerPort#(ByteEnMemServerPort#(addrSz, inLogNumBytes) mem)(ByteEnMemServerPort#(addrSz, outLogNumBytes));
+        FIFOG#(Bit#(logWidthFactor)) pendingReqOffset <- mkFIFOG;
+
+        interface InputPort request;
+            method Action enq(ByteEnMemReq#(addrSz, outLogNumBytes) req);
+                Bit#(logWidthFactor) offset = truncate(req.addr >> valueOf(outLogNumBytes));
+                Vector#(TExp#(logWidthFactor), Bit#(TExp#(outLogNumBytes))) write_en_vec = replicate(0);
+                Vector#(TExp#(logWidthFactor), Bit#(TMul#(TExp#(outLogNumBytes),8))) data_vec = replicate(req.data);
+                write_en_vec[offset] = req.write_en;
+                mem.request.enq( ByteEnMemReq {
+                                    write_en: pack(write_en_vec),
+                                    addr: req.addr,
+                                    data: pack(data_vec)
+                                } );
+                pendingReqOffset.enq(offset);
+            endmethod
+            method Bool canEnq;
+                return mem.request.canEnq && pendingReqOffset.canEnq;
+            endmethod
+        endinterface
+        interface OutputPort response;
+            method ByteEnMemResp#(outLogNumBytes) first;
+                Vector#(TExp#(logWidthFactor), Bit#(TMul#(8,TExp#(outLogNumBytes)))) read_data_vec = unpack(mem.response.first.data);
+                return ByteEnMemResp { write: mem.response.first.write, data: read_data_vec[pendingReqOffset.first] };
+            endmethod
+            method Action deq;
+                mem.response.deq;
+                pendingReqOffset.deq;
+            endmethod
+            method Bool canDeq;
+                return mem.response.canDeq && pendingReqOffset.canDeq;
+            endmethod
+        endinterface
+    endmodule
+endinstance
+
+
+```
+
+### [MkNarrowerMemServerPort](../../src/bsv/MemUtil.bsv#L1880)
+```bluespec
+instance MkNarrowerMemServerPort#(ReadOnlyMemServerPort#(addrSz, inLogNumBytes), ReadOnlyMemServerPort#(addrSz, outLogNumBytes))
+        provisos (Add#(logWidthFactor, outLogNumBytes, inLogNumBytes),
+                  Add#(a__, logWidthFactor, addrSz));
+    module mkNarrowerMemServerPort#(ReadOnlyMemServerPort#(addrSz, inLogNumBytes) mem)(ReadOnlyMemServerPort#(addrSz, outLogNumBytes));
+        FIFOG#(Bit#(logWidthFactor)) pendingReqOffset <- mkFIFOG;
+
+        interface InputPort request;
+            method Action enq(ReadOnlyMemReq#(addrSz, outLogNumBytes) req);
+                Bit#(logWidthFactor) offset = truncate(req.addr >> valueOf(outLogNumBytes));
+                mem.request.enq( ReadOnlyMemReq { addr: req.addr } );
+                pendingReqOffset.enq(offset);
+            endmethod
+            method Bool canEnq;
+                return mem.request.canEnq && pendingReqOffset.canEnq;
+            endmethod
+        endinterface
+        interface OutputPort response;
+            method ReadOnlyMemResp#(outLogNumBytes) first;
+                Vector#(TExp#(logWidthFactor), Bit#(TMul#(8,TExp#(outLogNumBytes)))) read_data_vec = unpack(mem.response.first.data);
+                return ReadOnlyMemResp { data: read_data_vec[pendingReqOffset.first] };
+            endmethod
+            method Action deq;
+                mem.response.deq;
+                pendingReqOffset.deq;
+            endmethod
+            method Bool canDeq;
+                return mem.response.canDeq && pendingReqOffset.canDeq;
+            endmethod
+        endinterface
+    endmodule
+endinstance
+
+
+```
+
+### [WiderMemServerPort](../../src/bsv/MemUtil.bsv#L1914)
 ```bluespec
 typeclass WiderMemServerPort#(type inMemServerT, type outMemServerT);
     module mkWiderMemServerPort#(inMemServerT mem)(outMemServerT);
