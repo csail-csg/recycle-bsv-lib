@@ -105,12 +105,13 @@ endinstance
 typeclass MkPolymorphicBRAM#(type reqT, type respT)
         dependencies (reqT determines respT);
     module mkPolymorphicBRAMLoad#(Integer numWords, LoadFormat loadfile)(ServerPort#(reqT, respT));
+    module mkPolymorphicBRAMLoad2Port#(Integer numWords, LoadFormat loadfile)(Vector#(2, ServerPort#(reqT, respT)));
 endtypeclass
 
 
 ```
 
-### [MkPolymorphicMemFromRegs](../../src/bsv/PolymorphicMem.bsv#L119)
+### [MkPolymorphicMemFromRegs](../../src/bsv/PolymorphicMem.bsv#L120)
 ```bluespec
 typeclass MkPolymorphicMemFromRegs#(type reqT, type respT, numeric type numRegs, numeric type dataSz)
         dependencies ((reqT, numRegs) determines (respT, dataSz));
@@ -120,7 +121,7 @@ endtypeclass
 
 ```
 
-### [MkPolymorphicMemFromRegFile](../../src/bsv/PolymorphicMem.bsv#L124)
+### [MkPolymorphicMemFromRegFile](../../src/bsv/PolymorphicMem.bsv#L125)
 ```bluespec
 typeclass MkPolymorphicMemFromRegFile#(type reqT, type respT, numeric type rfAddrSz, numeric type dataSz)
         dependencies ((reqT, rfAddrSz) determines (respT, dataSz));
@@ -130,7 +131,7 @@ endtypeclass
 
 ```
 
-### [mkPolymorphicBRAM](../../src/bsv/PolymorphicMem.bsv#L129)
+### [mkPolymorphicBRAM](../../src/bsv/PolymorphicMem.bsv#L130)
 ```bluespec
 module mkPolymorphicBRAM#(Integer numWords)(ServerPort#(reqT, respT))
         provisos (MkPolymorphicBRAM#(reqT, respT));
@@ -141,7 +142,18 @@ endmodule
 
 ```
 
-### [MkPolymorphicBRAM](../../src/bsv/PolymorphicMem.bsv#L135)
+### [mkPolymorphicBRAM2Port](../../src/bsv/PolymorphicMem.bsv#L136)
+```bluespec
+module mkPolymorphicBRAM2Port#(Integer numWords)(Vector#(2, ServerPort#(reqT, respT)))
+        provisos (MkPolymorphicBRAM#(reqT, respT));
+    let _m <- mkPolymorphicBRAMLoad2Port(numWords, tagged None);
+    return _m;
+endmodule
+
+
+```
+
+### [MkPolymorphicBRAM](../../src/bsv/PolymorphicMem.bsv#L142)
 ```bluespec
 instance MkPolymorphicBRAM#(reqT, respT)
         provisos(ToGenericAtomicMemReq#(reqT, writeEnSz, atomicMemOpT, wordAddrSz, dataSz),
@@ -177,12 +189,46 @@ instance MkPolymorphicBRAM#(reqT, respT)
             endmethod
         endinterface
     endmodule
+    module mkPolymorphicBRAMLoad2Port#(Integer numWords, LoadFormat loadFile)(Vector#(2, ServerPort#(reqT, respT)));
+        Vector#(2, GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz)) mem <- mkGenericAtomicBRAMLoad2Port(numWords, loadFile);
+        Vector#(2, FIFOG#(pendingReqT)) pendingReq <- replicateM(mkMaybeFIFOG);
+
+        function ServerPort#(reqT, respT) genPortIfc(Integer i);
+            return (interface ServerPort;
+                        interface InputPort request;
+                            method Action enq(reqT req);
+                                mem[i].request.enq(toGenericAtomicMemReq(req));
+                                pendingReq[i].enq(toGenericAtomicMemPendingReq(req));
+                            endmethod
+                            method Bool canEnq;
+                                return mem[i].request.canEnq && pendingReq[i].canEnq;
+                            endmethod
+                        endinterface
+                        interface OutputPort response;
+                            method respT first;
+                                return fromGenericAtomicMemResp(mem[i].response.first, pendingReq[i].first);
+                            endmethod
+                            method Action deq;
+                                mem[i].response.deq;
+                                pendingReq[i].deq;
+                            endmethod
+                            method Bool canDeq;
+                                return mem[i].response.canDeq && pendingReq[i].canDeq;
+                            endmethod
+                        endinterface
+                    endinterface);
+        endfunction
+
+        Vector#(2, ServerPort#(reqT, respT)) ifc = genWith(genPortIfc);
+
+        return ifc;
+    endmodule
 endinstance
 
 
 ```
 
-### [MkPolymorphicMemFromRegs](../../src/bsv/PolymorphicMem.bsv#L171)
+### [MkPolymorphicMemFromRegs](../../src/bsv/PolymorphicMem.bsv#L212)
 ```bluespec
 instance MkPolymorphicMemFromRegs#(reqT, respT, numRegs, dataSz)
         provisos(ToGenericAtomicMemReq#(reqT, writeEnSz, atomicMemOpT, wordAddrSz, dataSz),
@@ -226,7 +272,7 @@ endinstance
 
 ```
 
-### [MkPolymorphicMemFromRegFile](../../src/bsv/PolymorphicMem.bsv#L210)
+### [MkPolymorphicMemFromRegFile](../../src/bsv/PolymorphicMem.bsv#L251)
 ```bluespec
 instance MkPolymorphicMemFromRegFile#(reqT, respT, rfAddrSz, dataSz)
         provisos(ToGenericAtomicMemReq#(reqT, writeEnSz, atomicMemOpT, wordAddrSz, dataSz),

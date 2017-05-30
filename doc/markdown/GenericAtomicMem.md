@@ -8,7 +8,7 @@ The motivation behind this package is to give base memory implementations
 that can be built upon to produce specialized memory interfaces.
 
 
-### [['GenericAtomicMemReq', ['numeric', 'type', 'writeEnSz', 'type', 'atomicMemOpT', 'numeric', 'type', 'wordAddrSz', 'numeric', 'type', 'dataSz']]](../../src/bsv/GenericAtomicMem.bsv#L42)
+### [['GenericAtomicMemReq', ['numeric', 'type', 'writeEnSz', 'type', 'atomicMemOpT', 'numeric', 'type', 'wordAddrSz', 'numeric', 'type', 'dataSz']]](../../src/bsv/GenericAtomicMem.bsv#L43)
 ```bluespec
 typedef struct {
     Bit#(writeEnSz) write_en;
@@ -18,7 +18,7 @@ typedef struct {
 } GenericAtomicMemReq#(numeric type writeEnSz, type atomicMemOpT, numeric type wordAddrSz, numeric type dataSz) deriving (Bits, Eq, FShow);
 ```
 
-### [['GenericAtomicMemResp', ['numeric', 'type', 'dataSz']]](../../src/bsv/GenericAtomicMem.bsv#L49)
+### [['GenericAtomicMemResp', ['numeric', 'type', 'dataSz']]](../../src/bsv/GenericAtomicMem.bsv#L50)
 ```bluespec
 typedef struct {
     Bool write;
@@ -26,19 +26,19 @@ typedef struct {
 } GenericAtomicMemResp#(numeric type dataSz) deriving (Bits, Eq, FShow);
 ```
 
-### [['GenericAtomicMemServerPort', ['numeric', 'type', 'writeEnSz', 'type', 'atomicMemOpT', 'numeric', 'type', 'wordAddrSz', 'numeric', 'type', 'dataSz']]](../../src/bsv/GenericAtomicMem.bsv#L54)
+### [['GenericAtomicMemServerPort', ['numeric', 'type', 'writeEnSz', 'type', 'atomicMemOpT', 'numeric', 'type', 'wordAddrSz', 'numeric', 'type', 'dataSz']]](../../src/bsv/GenericAtomicMem.bsv#L55)
 ```bluespec
 typedef ServerPort#(GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz), GenericAtomicMemResp#(dataSz))
         GenericAtomicMemServerPort#(numeric type writeEnSz, type atomicMemOpT, numeric type wordAddrSz, numeric type dataSz);
 ```
 
-### [['GenericAtomicMemClientPort', ['numeric', 'type', 'writeEnSz', 'type', 'atomicMemOpT', 'numeric', 'type', 'wordAddrSz', 'numeric', 'type', 'dataSz']]](../../src/bsv/GenericAtomicMem.bsv#L57)
+### [['GenericAtomicMemClientPort', ['numeric', 'type', 'writeEnSz', 'type', 'atomicMemOpT', 'numeric', 'type', 'wordAddrSz', 'numeric', 'type', 'dataSz']]](../../src/bsv/GenericAtomicMem.bsv#L58)
 ```bluespec
 typedef ClientPort#(GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz), GenericAtomicMemResp#(dataSz))
         GenericAtomicMemClientPort#(numeric type writeEnSz, type atomicMemOpT, numeric type wordAddrSz, numeric type dataSz);
 ```
 
-### [IsAtomicMemOp](../../src/bsv/GenericAtomicMem.bsv#L64)
+### [IsAtomicMemOp](../../src/bsv/GenericAtomicMem.bsv#L65)
 ```bluespec
 typeclass IsAtomicMemOp#(type atomicMemOpT);
     function atomicMemOpT nonAtomicMemOp;
@@ -48,7 +48,7 @@ endtypeclass
 
 ```
 
-### [HasAtomicMemOpFunc](../../src/bsv/GenericAtomicMem.bsv#L69)
+### [HasAtomicMemOpFunc](../../src/bsv/GenericAtomicMem.bsv#L70)
 ```bluespec
 typeclass HasAtomicMemOpFunc#(type atomicMemOpT, numeric type dataSz, numeric type writeEnSz)
         provisos (IsAtomicMemOp#(atomicMemOpT));
@@ -58,12 +58,12 @@ endtypeclass
 
 ```
 
-### [['AMONone']](../../src/bsv/GenericAtomicMem.bsv#L74)
+### [['AMONone']](../../src/bsv/GenericAtomicMem.bsv#L75)
 ```bluespec
 typedef void AMONone;
 ```
 
-### [['AMOSwap']](../../src/bsv/GenericAtomicMem.bsv#L76)
+### [['AMOSwap']](../../src/bsv/GenericAtomicMem.bsv#L77)
 ```bluespec
 typedef enum {
     None,
@@ -71,7 +71,7 @@ typedef enum {
 } AMOSwap deriving (Bits, Eq, FShow, Bounded);
 ```
 
-### [['AMOLogical']](../../src/bsv/GenericAtomicMem.bsv#L81)
+### [['AMOLogical']](../../src/bsv/GenericAtomicMem.bsv#L82)
 ```bluespec
 typedef enum {
     None,
@@ -82,7 +82,7 @@ typedef enum {
 } AMOLogical deriving (Bits, Eq, FShow, Bounded);
 ```
 
-### [['AMOArithmetic']](../../src/bsv/GenericAtomicMem.bsv#L89)
+### [['AMOArithmetic']](../../src/bsv/GenericAtomicMem.bsv#L90)
 ```bluespec
 typedef enum {
     None,
@@ -98,7 +98,7 @@ typedef enum {
 } AMOArithmetic deriving (Bits, Eq, FShow, Bounded);
 ```
 
-### [writeEnExtend](../../src/bsv/GenericAtomicMem.bsv#L103)
+### [writeEnExtend](../../src/bsv/GenericAtomicMem.bsv#L104)
 
 This function extends byte enables into bit enables.
 ```bluespec
@@ -112,7 +112,7 @@ endfunction
 
 ```
 
-### [emulateWriteEn](../../src/bsv/GenericAtomicMem.bsv#L110)
+### [emulateWriteEn](../../src/bsv/GenericAtomicMem.bsv#L111)
 ```bluespec
 function Bit#(dataSz) emulateWriteEn(Bit#(dataSz) memData, Bit#(dataSz) writeData, Bit#(writeEnSz) writeEn)
         provisos (Mul#(writeEnSz, byteSz, dataSz),
@@ -124,7 +124,7 @@ endfunction
 
 ```
 
-### [IsAtomicMemOp](../../src/bsv/GenericAtomicMem.bsv#L117)
+### [IsAtomicMemOp](../../src/bsv/GenericAtomicMem.bsv#L118)
 ```bluespec
 instance IsAtomicMemOp#(AMONone);
     function AMONone nonAtomicMemOp = ?;
@@ -133,7 +133,7 @@ endinstance
 
 ```
 
-### [HasAtomicMemOpFunc](../../src/bsv/GenericAtomicMem.bsv#L121)
+### [HasAtomicMemOpFunc](../../src/bsv/GenericAtomicMem.bsv#L122)
 ```bluespec
 instance HasAtomicMemOpFunc#(AMONone, dataSz, writeEnSz);
     function Bit#(dataSz) atomicMemOpFunc(AMONone op, Bit#(dataSz) memData, Bit#(dataSz) operandData, Bit#(writeEnSz) writeEn);
@@ -144,7 +144,7 @@ endinstance
 
 ```
 
-### [IsAtomicMemOp](../../src/bsv/GenericAtomicMem.bsv#L127)
+### [IsAtomicMemOp](../../src/bsv/GenericAtomicMem.bsv#L128)
 ```bluespec
 instance IsAtomicMemOp#(AMOSwap);
     function AMOSwap nonAtomicMemOp = None;
@@ -153,7 +153,7 @@ endinstance
 
 ```
 
-### [HasAtomicMemOpFunc](../../src/bsv/GenericAtomicMem.bsv#L131)
+### [HasAtomicMemOpFunc](../../src/bsv/GenericAtomicMem.bsv#L132)
 ```bluespec
 instance HasAtomicMemOpFunc#(AMOSwap, dataSz, writeEnSz);
     function Bit#(dataSz) atomicMemOpFunc(AMOSwap op, Bit#(dataSz) memData, Bit#(dataSz) operandData, Bit#(writeEnSz) writeEn);
@@ -164,7 +164,7 @@ endinstance
 
 ```
 
-### [IsAtomicMemOp](../../src/bsv/GenericAtomicMem.bsv#L137)
+### [IsAtomicMemOp](../../src/bsv/GenericAtomicMem.bsv#L138)
 ```bluespec
 instance IsAtomicMemOp#(AMOLogical);
     function AMOLogical nonAtomicMemOp = None;
@@ -173,7 +173,7 @@ endinstance
 
 ```
 
-### [HasAtomicMemOpFunc](../../src/bsv/GenericAtomicMem.bsv#L141)
+### [HasAtomicMemOpFunc](../../src/bsv/GenericAtomicMem.bsv#L142)
 ```bluespec
 instance HasAtomicMemOpFunc#(AMOLogical, dataSz, writeEnSz);
     function Bit#(dataSz) atomicMemOpFunc(AMOLogical op, Bit#(dataSz) memData, Bit#(dataSz) operandData, Bit#(writeEnSz) writeEn);
@@ -191,7 +191,7 @@ endinstance
 
 ```
 
-### [IsAtomicMemOp](../../src/bsv/GenericAtomicMem.bsv#L154)
+### [IsAtomicMemOp](../../src/bsv/GenericAtomicMem.bsv#L155)
 ```bluespec
 instance IsAtomicMemOp#(AMOArithmetic);
     function AMOArithmetic nonAtomicMemOp = None;
@@ -200,7 +200,7 @@ endinstance
 
 ```
 
-### [HasAtomicMemOpFunc](../../src/bsv/GenericAtomicMem.bsv#L158)
+### [HasAtomicMemOpFunc](../../src/bsv/GenericAtomicMem.bsv#L159)
 ```bluespec
 instance HasAtomicMemOpFunc#(AMOArithmetic, dataSz, writeEnSz)
         provisos(Mul#(writeEnSz, byteSz, dataSz),
@@ -246,7 +246,7 @@ endinstance
 
 ```
 
-### [['GenericAtomicBRAMPendingReq', ['numeric', 'type', 'writeEnSz', 'type', 'atomicMemOpT']]](../../src/bsv/GenericAtomicMem.bsv#L203)
+### [['GenericAtomicBRAMPendingReq', ['numeric', 'type', 'writeEnSz', 'type', 'atomicMemOpT']]](../../src/bsv/GenericAtomicMem.bsv#L204)
 ```bluespec
 typedef struct {
     Bit#(writeEnSz) write_en;
@@ -255,7 +255,7 @@ typedef struct {
 } GenericAtomicBRAMPendingReq#(numeric type writeEnSz, type atomicMemOpT) deriving (Bits, Eq, FShow);
 ```
 
-### [to_BRAM_PORT_BE](../../src/bsv/GenericAtomicMem.bsv#L211)
+### [to_BRAM_PORT_BE](../../src/bsv/GenericAtomicMem.bsv#L212)
 
 This function is needed because BRAMCore does not support write enables
 that are not 8 or 9 bits wide.
@@ -272,7 +272,29 @@ endfunction
 
 ```
 
-### [['LoadFormat']](../../src/bsv/GenericAtomicMem.bsv#L221)
+### [to_BRAM_DUAL_PORT_BE](../../src/bsv/GenericAtomicMem.bsv#L221)
+```bluespec
+function BRAM_DUAL_PORT_BE#(addrT, dataT, writeEnSz) to_BRAM_DUAL_PORT_BE(BRAM_DUAL_PORT#(addrT, dataT) bram);
+    return (interface BRAM_DUAL_PORT_BE;
+                interface BRAM_PORT_BE a;
+                    method Action put(Bit#(writeEnSz) writeen, addrT addr, dataT data);
+                        bram.a.put(writeen != 0, addr, data);
+                    endmethod
+                    method dataT read = bram.a.read;
+                endinterface
+                interface BRAM_PORT_BE b;
+                    method Action put(Bit#(writeEnSz) writeen, addrT addr, dataT data);
+                        bram.b.put(writeen != 0, addr, data);
+                    endmethod
+                    method dataT read = bram.b.read;
+                endinterface
+            endinterface);
+endfunction
+
+
+```
+
+### [['LoadFormat']](../../src/bsv/GenericAtomicMem.bsv#L239)
 
 This type matches the LoadFormat type in the Bluespec Reference Guide
 ```bluespec
@@ -283,7 +305,7 @@ typedef union tagged {
 } LoadFormat deriving (Bits, Eq);
 ```
 
-### [mkGenericAtomicBRAM](../../src/bsv/GenericAtomicMem.bsv#L227)
+### [mkGenericAtomicBRAM](../../src/bsv/GenericAtomicMem.bsv#L245)
 ```bluespec
 module mkGenericAtomicBRAM#(Integer numWords)(GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz))
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
@@ -296,7 +318,7 @@ endmodule
 
 ```
 
-### [mkGenericAtomicBRAMLoad](../../src/bsv/GenericAtomicMem.bsv#L235)
+### [mkGenericAtomicBRAMLoad](../../src/bsv/GenericAtomicMem.bsv#L253)
 ```bluespec
 module mkGenericAtomicBRAMLoad#(Integer numWords, LoadFormat loadFile)(GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz))
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
@@ -364,7 +386,84 @@ endmodule
 
 ```
 
-### [performGenericAtomicMemOpOnRegs](../../src/bsv/GenericAtomicMem.bsv#L298)
+### [mkGenericAtomicBRAMLoad2Port](../../src/bsv/GenericAtomicMem.bsv#L316)
+```bluespec
+module mkGenericAtomicBRAMLoad2Port#(Integer numWords, LoadFormat loadFile)(Vector#(2, GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz)))
+        provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
+                  Mul#(TDiv#(dataSz, writeEnSz), writeEnSz, dataSz), // This is needed for mkBRAMCore1BE
+                  Bits#(atomicMemOpT, atomicMemOpSz));
+    // If numWords == 0, then assume the entire address space is used
+    Integer actualNumWords = numWords == 0 ? valueOf(TExp#(wordAddrSz)) : numWords;
+
+    // Instantiate the BRAM
+    BRAM_DUAL_PORT_BE#(Bit#(wordAddrSz), Bit#(dataSz), writeEnSz) bram;
+    if (valueOf(writeEnSz) == 1) begin
+        BRAM_DUAL_PORT#(Bit#(wordAddrSz), Bit#(dataSz)) bram_non_be;
+        case (loadFile) matches
+            tagged None: bram_non_be <- mkBRAMCore2(actualNumWords, False);
+            tagged Hex .hexfile: bram_non_be <- mkBRAMCore2Load(actualNumWords, False, hexfile, False);
+            tagged Binary .binfile: bram_non_be <- mkBRAMCore2Load(actualNumWords, False, binfile, True);
+        endcase
+        bram = to_BRAM_DUAL_PORT_BE(bram_non_be);
+    end else begin
+        case (loadFile) matches
+            tagged None: bram <- mkBRAMCore2BE(actualNumWords, False);
+            tagged Hex .hexfile: bram <- mkBRAMCore2BELoad(actualNumWords, False, hexfile, False);
+            tagged Binary .binfile: bram <- mkBRAMCore2BELoad(actualNumWords, False, binfile, True);
+        endcase
+    end
+
+    Vector#(2, BRAM_PORT_BE#(Bit#(wordAddrSz), Bit#(dataSz), writeEnSz)) bramVec = vec(bram.a, bram.b);
+    Vector#(2, Ehr#(2, Maybe#(GenericAtomicBRAMPendingReq#(writeEnSz, atomicMemOpT)))) pendingReq <- replicateM(mkEhr(tagged Invalid));
+    Vector#(2, FIFOG#(GenericAtomicMemResp#(dataSz))) pendingResp <- replicateM(mkBypassFIFOG);
+    Vector#(2, Reg#(Bit#(wordAddrSz))) atomicOpWordAddr <- replicateM(mkReg(0));
+    Vector#(2, Reg#(Bit#(dataSz))) atomicOpData <- replicateM(mkReg(0));
+
+    Vector#(2, GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz)) ifc;
+
+    for (Integer i = 0 ; i < 2 ; i = i+1) begin
+        rule performAtomicMemoryOp( pendingReq[i][0] matches tagged Valid .req
+                                    &&& isAtomicMemOp(req.atomic_op));
+            let writeData = atomicMemOpFunc(req.atomic_op, bramVec[i].read, atomicOpData[i], req.write_en);
+            bramVec[i].put(req.write_en, atomicOpWordAddr[i], writeData);
+            pendingReq[i][0] <= tagged Valid GenericAtomicBRAMPendingReq{ write_en: req.write_en, atomic_op: nonAtomicMemOp, rmw_write: True };
+            atomicOpData[i] <= bramVec[i].read;
+        endrule
+
+        rule getRespFromCore( pendingReq[i][0] matches tagged Valid .req
+                              &&& !isAtomicMemOp(req.atomic_op));
+            pendingResp[i].enq(GenericAtomicMemResp{ write: req.write_en != 0, data: (req.rmw_write ? atomicOpData[i] : bramVec[i].read) });
+            pendingReq[i][0] <= tagged Invalid;
+        endrule
+
+        ifc[i] = (interface GenericAtomicMemServerPort;
+                    interface InputPort request;
+                        method Action enq(GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) req) if (!isValid(pendingReq[i][1]));
+                            let atomic_op = (req.write_en == 0) ? nonAtomicMemOp : req.atomic_op;
+                            if (isAtomicMemOp(atomic_op)) begin
+                                bramVec[i].put(0, req.word_addr, req.data);
+                                atomicOpWordAddr[i] <= req.word_addr;
+                                atomicOpData[i] <= req.data;
+                            end else begin
+                                bramVec[i].put(req.write_en, req.word_addr, req.data);
+                            end
+                            pendingReq[i][1] <= tagged Valid GenericAtomicBRAMPendingReq{ write_en: req.write_en, atomic_op: atomic_op, rmw_write: False };
+                        endmethod
+                        method Bool canEnq;
+                            return !isValid(pendingReq[i][1]);
+                        endmethod
+                    endinterface
+                    interface OutputPort response = toOutputPort(pendingResp[i]);
+                endinterface);
+    end
+
+    return ifc;
+endmodule
+
+
+```
+
+### [performGenericAtomicMemOpOnRegs](../../src/bsv/GenericAtomicMem.bsv#L388)
 ```bluespec
 function ActionValue#(GenericAtomicMemResp#(dataSz)) performGenericAtomicMemOpOnRegs(Vector#(numRegs, Reg#(Bit#(dataSz))) regs, GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) req)
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
@@ -394,7 +493,7 @@ endfunction
 
 ```
 
-### [performGenericAtomicMemOpOnRegFile](../../src/bsv/GenericAtomicMem.bsv#L323)
+### [performGenericAtomicMemOpOnRegFile](../../src/bsv/GenericAtomicMem.bsv#L413)
 ```bluespec
 function ActionValue#(GenericAtomicMemResp#(dataSz)) performGenericAtomicMemOpOnRegFile(RegFile#(Bit#(rfWordAddrSz), Bit#(dataSz)) rf, GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) req)
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
@@ -425,7 +524,7 @@ endfunction
 
 ```
 
-### [mkGenericAtomicMemFromRegs](../../src/bsv/GenericAtomicMem.bsv#L349)
+### [mkGenericAtomicMemFromRegs](../../src/bsv/GenericAtomicMem.bsv#L439)
 ```bluespec
 module mkGenericAtomicMemFromRegs#(Vector#(numRegs, Reg#(Bit#(dataSz))) regs)(GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz))
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
@@ -448,7 +547,7 @@ endmodule
 
 ```
 
-### [mkGenericAtomicMemFromRegFile](../../src/bsv/GenericAtomicMem.bsv#L367)
+### [mkGenericAtomicMemFromRegFile](../../src/bsv/GenericAtomicMem.bsv#L457)
 ```bluespec
 module mkGenericAtomicMemFromRegFile#(RegFile#(Bit#(rfWordAddrSz), Bit#(dataSz)) rf)(GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz))
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),

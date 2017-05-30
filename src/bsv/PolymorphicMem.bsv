@@ -114,6 +114,7 @@ endinstance
 typeclass MkPolymorphicBRAM#(type reqT, type respT)
         dependencies (reqT determines respT);
     module mkPolymorphicBRAMLoad#(Integer numWords, LoadFormat loadfile)(ServerPort#(reqT, respT));
+    module mkPolymorphicBRAMLoad2Port#(Integer numWords, LoadFormat loadfile)(Vector#(2, ServerPort#(reqT, respT)));
 endtypeclass
 
 typeclass MkPolymorphicMemFromRegs#(type reqT, type respT, numeric type numRegs, numeric type dataSz)
@@ -129,6 +130,12 @@ endtypeclass
 module mkPolymorphicBRAM#(Integer numWords)(ServerPort#(reqT, respT))
         provisos (MkPolymorphicBRAM#(reqT, respT));
     let _m <- mkPolymorphicBRAMLoad(numWords, tagged None);
+    return _m;
+endmodule
+
+module mkPolymorphicBRAM2Port#(Integer numWords)(Vector#(2, ServerPort#(reqT, respT)))
+        provisos (MkPolymorphicBRAM#(reqT, respT));
+    let _m <- mkPolymorphicBRAMLoad2Port(numWords, tagged None);
     return _m;
 endmodule
 
@@ -165,6 +172,40 @@ instance MkPolymorphicBRAM#(reqT, respT)
                 return mem.response.canDeq && pendingReq.canDeq;
             endmethod
         endinterface
+    endmodule
+    module mkPolymorphicBRAMLoad2Port#(Integer numWords, LoadFormat loadFile)(Vector#(2, ServerPort#(reqT, respT)));
+        Vector#(2, GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz)) mem <- mkGenericAtomicBRAMLoad2Port(numWords, loadFile);
+        Vector#(2, FIFOG#(pendingReqT)) pendingReq <- replicateM(mkMaybeFIFOG);
+
+        function ServerPort#(reqT, respT) genPortIfc(Integer i);
+            return (interface ServerPort;
+                        interface InputPort request;
+                            method Action enq(reqT req);
+                                mem[i].request.enq(toGenericAtomicMemReq(req));
+                                pendingReq[i].enq(toGenericAtomicMemPendingReq(req));
+                            endmethod
+                            method Bool canEnq;
+                                return mem[i].request.canEnq && pendingReq[i].canEnq;
+                            endmethod
+                        endinterface
+                        interface OutputPort response;
+                            method respT first;
+                                return fromGenericAtomicMemResp(mem[i].response.first, pendingReq[i].first);
+                            endmethod
+                            method Action deq;
+                                mem[i].response.deq;
+                                pendingReq[i].deq;
+                            endmethod
+                            method Bool canDeq;
+                                return mem[i].response.canDeq && pendingReq[i].canDeq;
+                            endmethod
+                        endinterface
+                    endinterface);
+        endfunction
+
+        Vector#(2, ServerPort#(reqT, respT)) ifc = genWith(genPortIfc);
+
+        return ifc;
     endmodule
 endinstance
 
