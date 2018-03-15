@@ -279,13 +279,29 @@ endfunction
 typeclass IsMemResp#(type memRespT, numeric type logNumBytes) dependencies (memRespT determines logNumBytes);
     function memRespT fromReadOnlyMemResp(ReadOnlyMemResp#(logNumBytes) resp);
     function memRespT fromCoarseMemResp(CoarseMemResp#(logNumBytes) resp);
-   function memRespT fromByteEnMemResp(CoarseMemResp#(logNumBytes) resp); // = fromCoarseMemResp(resp);
-   function memRespT fromAtomicMemResp(CoarseMemResp#(logNumBytes) resp); // = fromCoarseMemResp(resp);
     function ReadOnlyMemResp#(logNumBytes) toReadOnlyMemResp(memRespT resp);
     function CoarseMemResp#(logNumBytes) toCoarseMemResp(memRespT resp);
-   function ByteEnMemResp#(logNumBytes) toByteEnMemResp(memRespT resp); // = toCoarseMemResp(resp);
-   function AtomicMemResp#(logNumBytes) toAtomicMemResp(memRespT resp); // = toCoarseMemResp(resp);
 endtypeclass
+
+function memRespT fromByteEnMemResp(CoarseMemResp#(logNumBytes) resp)
+   provisos (IsMemResp#(memRespT,logNumBytes));
+   return fromCoarseMemResp(resp);
+endfunction
+
+function memRespT fromAtomicMemResp(CoarseMemResp#(logNumBytes) resp)
+   provisos (IsMemResp#(memRespT,logNumBytes));
+   return fromCoarseMemResp(resp);
+endfunction
+
+function ByteEnMemResp#(logNumBytes) toByteEnMemResp(memRespT resp)
+   provisos (IsMemResp#(memRespT,logNumBytes));
+   return toCoarseMemResp(resp);
+endfunction
+
+function AtomicMemResp#(logNumBytes) toAtomicMemResp(memRespT resp)
+   provisos (IsMemResp#(memRespT,logNumBytes));
+   return toCoarseMemResp(resp);
+endfunction
 
 instance IsMemResp#(ReadOnlyMemResp#(logNumBytes), logNumBytes);
     function ReadOnlyMemResp#(logNumBytes) fromReadOnlyMemResp(ReadOnlyMemResp#(logNumBytes) resp);
@@ -294,16 +310,12 @@ instance IsMemResp#(ReadOnlyMemResp#(logNumBytes), logNumBytes);
     function ReadOnlyMemResp#(logNumBytes) fromCoarseMemResp(CoarseMemResp#(logNumBytes) resp);
         return ReadOnlyMemResp{ data: resp.data };
     endfunction
-    function memRespT fromByteEnMemResp(CoarseMemResp#(logNumBytes) resp) = fromCoarseMemResp(resp);
-    function memRespT fromAtomicMemResp(CoarseMemResp#(logNumBytes) resp) = fromCoarseMemResp(resp);
     function ReadOnlyMemResp#(logNumBytes) toReadOnlyMemResp(ReadOnlyMemResp#(logNumBytes) resp);
         return resp;
     endfunction
     function CoarseMemResp#(logNumBytes) toCoarseMemResp(ReadOnlyMemResp#(logNumBytes) resp);
         return CoarseMemResp { write: False, data: resp.data };
     endfunction
-    function ByteEnMemResp#(logNumBytes) toByteEnMemResp(memRespT resp) = toCoarseMemResp(resp);
-    function AtomicMemResp#(logNumBytes) toAtomicMemResp(memRespT resp) = toCoarseMemResp(resp);
 endinstance
 
 instance IsMemResp#(CoarseMemResp#(logNumBytes), logNumBytes);
@@ -313,16 +325,12 @@ instance IsMemResp#(CoarseMemResp#(logNumBytes), logNumBytes);
     function CoarseMemResp#(logNumBytes) fromCoarseMemResp(CoarseMemResp#(logNumBytes) resp);
         return resp;
     endfunction
-    function memRespT fromByteEnMemResp(CoarseMemResp#(logNumBytes) resp) = fromCoarseMemResp(resp);
-    function memRespT fromAtomicMemResp(CoarseMemResp#(logNumBytes) resp) = fromCoarseMemResp(resp);
     function ReadOnlyMemResp#(logNumBytes) toReadOnlyMemResp(CoarseMemResp#(logNumBytes) resp);
         return ReadOnlyMemResp { data: resp.data };
     endfunction
     function CoarseMemResp#(logNumBytes) toCoarseMemResp(CoarseMemResp#(logNumBytes) resp);
         return resp;
     endfunction
-    function ByteEnMemResp#(logNumBytes) toByteEnMemResp(memRespT resp) = toCoarseMemResp(resp);
-    function AtomicMemResp#(logNumBytes) toAtomicMemResp(memRespT resp) = toCoarseMemResp(resp);
 endinstance
 
 ////////////////////////////////////////////////////////////////////////////////
