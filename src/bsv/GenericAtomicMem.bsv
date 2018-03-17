@@ -385,6 +385,28 @@ module mkGenericAtomicBRAMLoad2Port#(Integer numWords, LoadFormat loadFile)(Vect
     return ifc;
 endmodule
 
+/// This function ignores the address of the request
+function ActionValue#(GenericAtomicMemResp#(dataSz)) performGenericAtomicMemOpOnReg(Reg#(Bit#(dataSz)) r, GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) req)
+        provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
+                  Mul#(writeEnSz, byteSz, dataSz),
+                  Add#(a__, 1, byteSz));
+    return (actionvalue
+            GenericAtomicMemResp#(dataSz) resp = GenericAtomicMemResp{ write: (req.write_en != 0), data: 0 };
+            if (req.write_en == 0) begin
+                resp.data = r;
+            end else if ((req.write_en == '1) && (!isAtomicMemOp(req.atomic_op))) begin
+                r <= req.data;
+            end else if (!isAtomicMemOp(req.atomic_op)) begin
+                r <= emulateWriteEn(r, req.data, req.write_en);
+            end else begin
+                let write_data = atomicMemOpFunc(req.atomic_op, r, req.data, req.write_en);
+                r <= emulateWriteEn(r, write_data, req.write_en);
+                resp.data = r;
+            end
+            return resp;
+        endactionvalue);
+endfunction
+
 function ActionValue#(GenericAtomicMemResp#(dataSz)) performGenericAtomicMemOpOnRegs(Vector#(numRegs, Reg#(Bit#(dataSz))) regs, GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) req)
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
                   Mul#(writeEnSz, byteSz, dataSz),
@@ -394,17 +416,7 @@ function ActionValue#(GenericAtomicMemResp#(dataSz)) performGenericAtomicMemOpOn
             Bit#(TLog#(numRegs)) index = truncate(req.word_addr);
             GenericAtomicMemResp#(dataSz) resp = GenericAtomicMemResp{ write: (req.write_en != 0), data: 0 };
             if (index <= fromInteger(valueOf(numRegs) - 1)) begin
-                if (req.write_en == 0) begin
-                    resp.data = regs[index];
-                end else if ((req.write_en == '1) && (!isAtomicMemOp(req.atomic_op))) begin
-                    regs[index] <= req.data;
-                end else if (!isAtomicMemOp(req.atomic_op)) begin
-                    regs[index] <= emulateWriteEn(regs[index], req.data, req.write_en);
-                end else begin
-                    let write_data = atomicMemOpFunc(req.atomic_op, regs[index], req.data, req.write_en);
-                    regs[index] <= emulateWriteEn(regs[index], write_data, req.write_en);
-                    resp.data = regs[index];
-                end
+                resp <- performGenericAtomicMemOpOnReg(regs[index], req);
             end
             return resp;
         endactionvalue);
