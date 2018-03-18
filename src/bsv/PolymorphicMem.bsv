@@ -122,6 +122,11 @@ typeclass MkPolymorphicMemFromRegs#(type reqT, type respT, numeric type numRegs,
     module mkPolymorphicMemFromRegs#(Vector#(numRegs, Reg#(Bit#(dataSz))) regs)(ServerPort#(reqT, respT));
 endtypeclass
 
+typeclass MkPolymorphicMemFromNarrowRegs#(type reqT, type respT, numeric type numWords, numeric type regsPerWord, numeric type regSz, numeric type dataSz)
+        dependencies ((reqT, numWords, regsPerWord) determines (respT, regSz, dataSz));
+    module mkPolymorphicMemFromNarrowRegs#(Vector#(numWords, Vector#(regsPerWord, Reg#(Bit#(regSz)))) regs)(ServerPort#(reqT, respT));
+endtypeclass
+
 typeclass MkPolymorphicMemFromRegFile#(type reqT, type respT, numeric type rfAddrSz, numeric type dataSz)
         dependencies ((reqT, rfAddrSz) determines (respT, dataSz));
     module mkPolymorphicMemFromRegFile#(RegFile#(Bit#(rfAddrSz), Bit#(dataSz)) rf)(ServerPort#(reqT, respT));
@@ -247,6 +252,48 @@ instance MkPolymorphicMemFromRegs#(reqT, respT, numRegs, dataSz)
         endinterface
     endmodule
 endinstance
+
+instance MkPolymorphicMemFromNarrowRegs#(reqT, respT, numWords, regsPerWord, regSz, dataSz)
+        provisos(ToGenericAtomicMemReq#(reqT, writeEnSz, atomicMemOpT, wordAddrSz, dataSz),
+                 ToGenericAtomicMemPendingReq#(reqT, pendingReqT),
+                 FromGenericAtomicMemResp#(respT, pendingReqT, dataSz),
+                 HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
+                 MkMaybeFIFOG#(pendingReqT),
+                 Mul#(TDiv#(dataSz, writeEnSz), writeEnSz, dataSz),
+                 Bits#(atomicMemOpT, a__),
+                 Bits#(pendingReqT, b__),
+                 Add#(c__, TLog#(numWords), wordAddrSz),
+                 Add#(d__, 1, TDiv#(dataSz, writeEnSz)),
+                 Mul#(regsPerWord, bytesPerReg, writeEnSz),
+                 Mul#(bytesPerReg, TDiv#(dataSz, writeEnSz), regSz)
+             );
+    module mkPolymorphicMemFromNarrowRegs#(Vector#(numWords, Vector#(regsPerWord, Reg#(Bit#(regSz)))) regs)(ServerPort#(reqT, respT));
+        GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) gam <- mkGenericAtomicMemFromNarrowRegs(regs);
+        FIFOG#(pendingReqT) pendingReq <- mkMaybeFIFOG;
+        interface InputPort request;
+            method Action enq(reqT req);
+                gam.request.enq(toGenericAtomicMemReq(req));
+                pendingReq.enq(toGenericAtomicMemPendingReq(req));
+            endmethod
+            method Bool canEnq;
+                return gam.request.canEnq && pendingReq.canEnq;
+            endmethod
+        endinterface
+        interface OutputPort response;
+            method respT first;
+                return fromGenericAtomicMemResp(gam.response.first, pendingReq.first);
+            endmethod
+            method Action deq;
+                gam.response.deq;
+                pendingReq.deq;
+            endmethod
+            method Bool canDeq;
+                return gam.response.canDeq && pendingReq.canDeq;
+            endmethod
+        endinterface
+    endmodule
+endinstance
+
 
 instance MkPolymorphicMemFromRegFile#(reqT, respT, rfAddrSz, dataSz)
         provisos(ToGenericAtomicMemReq#(reqT, writeEnSz, atomicMemOpT, wordAddrSz, dataSz),

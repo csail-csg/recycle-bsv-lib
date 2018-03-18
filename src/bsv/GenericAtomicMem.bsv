@@ -422,6 +422,57 @@ function ActionValue#(GenericAtomicMemResp#(dataSz)) performGenericAtomicMemOpOn
         endactionvalue);
 endfunction
  
+/// This function ignores the address of the request
+function ActionValue#(GenericAtomicMemResp#(dataSz)) performGenericAtomicMemOpOnNarrowRegs(Vector#(regsPerWord, Reg#(Bit#(regSz))) regs, GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) req)
+        provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
+                  Mul#(writeEnSz, byteSz, dataSz),
+                  Add#(a__, 1, byteSz),
+                  Mul#(bytesPerReg, byteSz, regSz),
+                  Mul#(regsPerWord, bytesPerReg, writeEnSz));
+    return (actionvalue
+            GenericAtomicMemResp#(dataSz) resp = GenericAtomicMemResp{ write: (req.write_en != 0), data: 0 };
+            Bit#(dataSz) reg_data = pack(readVReg(regs));
+            Bit#(dataSz) write_data = 0;
+            if (req.write_en == 0) begin
+                resp.data = reg_data;
+            end else if ((req.write_en == '1) && (!isAtomicMemOp(req.atomic_op))) begin
+                write_data = req.data;
+            end else if (!isAtomicMemOp(req.atomic_op)) begin
+                write_data = emulateWriteEn(reg_data, req.data, req.write_en);
+            end else begin
+                write_data = atomicMemOpFunc(req.atomic_op, reg_data, req.data, req.write_en);
+                write_data = emulateWriteEn(reg_data, write_data, req.write_en);
+                resp.data = reg_data;
+            end
+
+            Vector#(regsPerWord, Bit#(bytesPerReg)) vector_write_en = unpack(req.write_en);
+            Vector#(regsPerWord, Bit#(regSz)) write_data_vec = unpack(write_data);
+            for (Integer i = 0 ; i < valueOf(regsPerWord) ; i = i+1) begin
+                if (vector_write_en[i] != 0) begin
+                    regs[i] <= write_data_vec[i];
+                end
+            end
+            return resp;
+        endactionvalue);
+endfunction
+
+function ActionValue#(GenericAtomicMemResp#(dataSz)) performGenericAtomicMemOpOnVectorOfNarrowRegs(Vector#(numWords, Vector#(regsPerWord, Reg#(Bit#(regSz)))) regs, GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) req)
+        provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
+                  Mul#(writeEnSz, byteSz, dataSz),
+                  Add#(a__, 1, byteSz),
+                  Mul#(bytesPerReg, byteSz, regSz),
+                  Mul#(regsPerWord, bytesPerReg, writeEnSz),
+                  Add#(b__, TLog#(numWords), wordAddrSz));
+    return (actionvalue
+            Bit#(TLog#(numWords)) index = truncate(req.word_addr);
+            GenericAtomicMemResp#(dataSz) resp = GenericAtomicMemResp{ write: (req.write_en != 0), data: 0 };
+            if (index <= fromInteger(valueOf(numWords) - 1)) begin
+                resp <- performGenericAtomicMemOpOnNarrowRegs(regs[index], req);
+            end
+            return resp;
+        endactionvalue);
+endfunction
+ 
 function ActionValue#(GenericAtomicMemResp#(dataSz)) performGenericAtomicMemOpOnRegFile(RegFile#(Bit#(rfWordAddrSz), Bit#(dataSz)) rf, GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) req)
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
                   Mul#(writeEnSz, byteSz, dataSz),
@@ -460,6 +511,26 @@ module mkGenericAtomicMemFromRegs#(Vector#(numRegs, Reg#(Bit#(dataSz))) regs)(Ge
         let req = reqFIFO.first;
         reqFIFO.deq;
         let resp <- performGenericAtomicMemOpOnRegs(regs, req);
+        respFIFO.enq(resp);
+    endrule
+    interface InputPort request = toInputPort(reqFIFO);
+    interface OutputPort response = toOutputPort(respFIFO);
+endmodule
+
+module mkGenericAtomicMemFromNarrowRegs#(Vector#(numWords, Vector#(regsPerWord, Reg#(Bit#(regSz)))) regs)(GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz))
+        provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
+                  Mul#(writeEnSz, byteSz, dataSz),
+                  Add#(a__, 1, byteSz),
+                  Mul#(bytesPerReg, byteSz, regSz),
+                  Mul#(regsPerWord, bytesPerReg, writeEnSz),
+                  Add#(b__, TLog#(numWords), wordAddrSz),
+                  Bits#(atomicMemOpT, atomicMemOpSz));
+    FIFOG#(GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz)) reqFIFO <- mkLFIFOG;
+    FIFOG#(GenericAtomicMemResp#(dataSz)) respFIFO <- mkBypassFIFOG;
+    rule performMemReq;
+        let req = reqFIFO.first;
+        reqFIFO.deq;
+        let resp <- performGenericAtomicMemOpOnVectorOfNarrowRegs(regs, req);
         respFIFO.enq(resp);
     endrule
     interface InputPort request = toInputPort(reqFIFO);
