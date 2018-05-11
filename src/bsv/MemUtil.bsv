@@ -533,7 +533,7 @@ module mkNarrowAtomicMemBridge#(AtomicMemServerPort#(addrSz, TAdd#(logNumBytes, 
             write_en_vec[wordIndex] = req.write_en;
             data_vec[wordIndex] = req.data;
             whichWordFIFO.enq(wordIndex);
-            InputPort#(GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz)) requestifc = wideMem.request;
+            InputPort#(AtomicMemReq#(addrSz, TAdd#(logNumBytes, logNumWords))) requestifc = wideMem.request;
 	    requestifc.enq( AtomicMemReq{write_en: pack(write_en_vec), atomic_op: req.atomic_op, addr: req.addr, data: pack(data_vec)} );
         endmethod
         method Bool canEnq;
@@ -542,18 +542,18 @@ module mkNarrowAtomicMemBridge#(AtomicMemServerPort#(addrSz, TAdd#(logNumBytes, 
     endinterface
     interface OutputPort response;
         method AtomicMemResp#(logNumBytes) first;
-	    OutputPort#(GenericAtomicMemResp#(dataSz)) responseifc = wideMem.response;
-	    GenericAtomicMemResp#(dataSz) resp = responseifc.first;
+	    OutputPort#(AtomicMemResp#(TAdd#(logNumBytes, logNumWords))) responseifc = wideMem.response;
+	    AtomicMemResp#(TAdd#(logNumBytes, logNumWords)) resp = responseifc.first;
             Vector#(TExp#(logNumWords), Bit#(TMul#(8,TExp#(logNumBytes)))) dataVec = unpack(resp.data);
             return AtomicMemResp{write: resp.write, data: dataVec[whichWordFIFO.first]};
         endmethod
         method Action deq;
-	    OutputPort#(GenericAtomicMemResp#(dataSz)) responseifc = wideMem.response;
+	    OutputPort#(AtomicMemResp#(TAdd#(logNumBytes, logNumWords))) responseifc = wideMem.response;
             responseifc.deq;
             whichWordFIFO.deq;
         endmethod
         method Bool canDeq;
-	    OutputPort#(GenericAtomicMemResp#(dataSz)) responseifc = wideMem.response;
+	    OutputPort#(AtomicMemResp#(TAdd#(logNumBytes, logNumWords))) responseifc = wideMem.response;
             return responseifc.canDeq && whichWordFIFO.canDeq;
         endmethod
     endinterface
@@ -754,7 +754,7 @@ module mkAtomicBRAM( AtomicBRAM#(addrSz, logNumBytes, numWords) )
     interface ByteEnMemServerPort portA;
         interface InputPort request;
             method Action enq(AtomicMemReq#(addrSz, logNumBytes) req) if (!isValid(pendingReq[1]));
-                atomicMemOpT atomic_op = (req.write_en != 0) ? req.atomic_op : None;
+                AtomicMemOp atomic_op = (req.write_en != 0) ? req.atomic_op : None;
                 pendingReq[1] <= tagged Valid AtomicBRAMPendingReq{ write_en: req.write_en, atomic_op: atomic_op, rmw_write: False };
                 if (atomic_op == None) begin
                     // normal read/write
