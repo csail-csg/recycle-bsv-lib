@@ -171,10 +171,10 @@ endmodule
 /// the `notEmpty` and `notFull` signals so they can be used as `canDeq` and `canEnq`.
 module [m] mkFIFOGfromFIFOF#(m#(FIFOF#(t)) mkM)(FIFOG#(t)) provisos (Bits#(t,tSz), IsModule#(m, a__));
     (* hide *)
-    FIFOF#(t) _m <- mkM;
+    FIFOF#(t) _m <- mkM();
 
-    Wire#(Bool) canEnq_wire <- mkBypassWire;
-    Wire#(Bool) canDeq_wire <- mkBypassWire;
+    Wire#(Bool) canEnq_wire <- mkBypassWire();
+    Wire#(Bool) canDeq_wire <- mkBypassWire();
     // virtual regs are only used to force SB ordering between methods
     Reg#(Bool) virtualEnqReg <- mkRevertingVirtualReg(True);
     Reg#(Bool) virtualDeqReg <- mkRevertingVirtualReg(True);

@@ -258,7 +258,7 @@ module mkGenericAtomicBRAMLoad#(Integer numWords, LoadFormat loadFile)(GenericAt
     end
 
     Ehr#(2, Maybe#(GenericAtomicBRAMPendingReq#(writeEnSz, atomicMemOpT))) pendingReq <- mkEhr(tagged Invalid);
-    FIFOG#(GenericAtomicMemResp#(dataSz)) pendingResp <- mkBypassFIFOG;
+    FIFOG#(GenericAtomicMemResp#(dataSz)) pendingResp <- mkBypassFIFOG();
     Reg#(Bit#(wordAddrSz)) atomicOpWordAddr <- mkReg(0);
     Reg#(Bit#(dataSz)) atomicOpData <- mkReg(0);
 
@@ -278,7 +278,7 @@ module mkGenericAtomicBRAMLoad#(Integer numWords, LoadFormat loadFile)(GenericAt
 
     interface InputPort request;
         method Action enq(GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz) req) if (!isValid(pendingReq[1]));
-            let atomic_op = (req.write_en == 0) ? nonAtomicMemOp : req.atomic_op;
+            atomicMemOpT atomic_op = (req.write_en == 0) ? nonAtomicMemOp : req.atomic_op;
             if (isAtomicMemOp(atomic_op)) begin
                 bram.put(0, req.word_addr, req.data);
                 atomicOpWordAddr <= req.word_addr;
@@ -352,8 +352,8 @@ module mkGenericAtomicMemFromRegs#(Vector#(numRegs, Reg#(Bit#(dataSz))) regs)(Ge
                   Add#(a__, 1, byteSz),
                   Add#(b__, TLog#(numRegs), wordAddrSz),
                   Bits#(atomicMemOpT, atomicMemOpSz));
-    FIFOG#(GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz)) reqFIFO <- mkLFIFOG;
-    FIFOG#(GenericAtomicMemResp#(dataSz)) respFIFO <- mkBypassFIFOG;
+    FIFOG#(GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz)) reqFIFO <- mkLFIFOG();
+    FIFOG#(GenericAtomicMemResp#(dataSz)) respFIFO <- mkBypassFIFOG();
     rule performMemReq;
         let req = reqFIFO.first;
         reqFIFO.deq;
@@ -370,8 +370,8 @@ module mkGenericAtomicMemFromRegFile#(RegFile#(Bit#(rfWordAddrSz), Bit#(dataSz))
                   Add#(a__, 1, byteSz),
                   Add#(b__, rfWordAddrSz, wordAddrSz),
                   Bits#(atomicMemOpT, atomicMemOpSz));
-    FIFOG#(GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz)) reqFIFO <- mkLFIFOG;
-    FIFOG#(GenericAtomicMemResp#(dataSz)) respFIFO <- mkBypassFIFOG;
+    FIFOG#(GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz)) reqFIFO <- mkLFIFOG();
+    FIFOG#(GenericAtomicMemResp#(dataSz)) respFIFO <- mkBypassFIFOG();
     rule performMemReq;
         let req = reqFIFO.first;
         reqFIFO.deq;

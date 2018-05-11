@@ -451,7 +451,7 @@ instance MkAtomicMemEmulationBridge#(CoarseMemServerPort#(addrSz, logNumBytes), 
 
         // Add a buffer to the coarse mem response to avoid having requests.enq
         // and response.deq together in performAtomicMemoryOp
-        FIFOG#(CoarseMemResp#(logNumBytes)) coarseMemRespFIFO <- mkBypassFIFOG;
+        FIFOG#(CoarseMemResp#(logNumBytes)) coarseMemRespFIFO <- mkBypassFIFOG();
 
         mkConnection(mem.response, toInputPort(coarseMemRespFIFO));
 
@@ -523,17 +523,18 @@ module mkNarrowAtomicMemBridge#(AtomicMemServerPort#(addrSz, TAdd#(logNumBytes, 
         return truncate(x >> valueOf(logNumBytes));
     endfunction
 
-    FIFOG#(Bit#(logNumWords)) whichWordFIFO <- mkFIFOG;
+    FIFOG#(Bit#(logNumWords)) whichWordFIFO <- mkFIFOG();
 
     interface InputPort request;
         method Action enq(AtomicMemReq#(addrSz, logNumBytes) req);
-            let wordIndex = getWhichWord(req.addr);
+	    Bit#(logNumWords) wordIndex = getWhichWord(req.addr);
             Vector#(TExp#(logNumWords), Bit#(TExp#(logNumBytes))) write_en_vec = replicate(0);
             Vector#(TExp#(logNumWords), Bit#(TMul#(8,TExp#(logNumBytes)))) data_vec = replicate(0);
             write_en_vec[wordIndex] = req.write_en;
             data_vec[wordIndex] = req.data;
             whichWordFIFO.enq(wordIndex);
-            wideMem.request.enq( AtomicMemReq{write_en: pack(write_en_vec), atomic_op: req.atomic_op, addr: req.addr, data: pack(data_vec)} );
+            InputPort#(GenericAtomicMemReq#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz)) requestifc = wideMem.request;
+	    requestifc.enq( AtomicMemReq{write_en: pack(write_en_vec), atomic_op: req.atomic_op, addr: req.addr, data: pack(data_vec)} );
         endmethod
         method Bool canEnq;
             return wideMem.request.canEnq && whichWordFIFO.canEnq;
@@ -541,16 +542,19 @@ module mkNarrowAtomicMemBridge#(AtomicMemServerPort#(addrSz, TAdd#(logNumBytes, 
     endinterface
     interface OutputPort response;
         method AtomicMemResp#(logNumBytes) first;
-            let resp = wideMem.response.first;
+	    OutputPort#(GenericAtomicMemResp#(dataSz)) responseifc = wideMem.response;
+	    GenericAtomicMemResp#(dataSz) resp = responseifc.first;
             Vector#(TExp#(logNumWords), Bit#(TMul#(8,TExp#(logNumBytes)))) dataVec = unpack(resp.data);
             return AtomicMemResp{write: resp.write, data: dataVec[whichWordFIFO.first]};
         endmethod
         method Action deq;
-            wideMem.response.deq;
+	    OutputPort#(GenericAtomicMemResp#(dataSz)) responseifc = wideMem.response;
+            responseifc.deq;
             whichWordFIFO.deq;
         endmethod
         method Bool canDeq;
-            return wideMem.response.canDeq && whichWordFIFO.canDeq;
+	    OutputPort#(GenericAtomicMemResp#(dataSz)) responseifc = wideMem.response;
+            return responseifc.canDeq && whichWordFIFO.canDeq;
         endmethod
     endinterface
 endmodule
@@ -750,7 +754,7 @@ module mkAtomicBRAM( AtomicBRAM#(addrSz, logNumBytes, numWords) )
     interface ByteEnMemServerPort portA;
         interface InputPort request;
             method Action enq(AtomicMemReq#(addrSz, logNumBytes) req) if (!isValid(pendingReq[1]));
-                let atomic_op = (req.write_en != 0) ? req.atomic_op : None;
+                atomicMemOpT atomic_op = (req.write_en != 0) ? req.atomic_op : None;
                 pendingReq[1] <= tagged Valid AtomicBRAMPendingReq{ write_en: req.write_en, atomic_op: atomic_op, rmw_write: False };
                 if (atomic_op == None) begin
                     // normal read/write
@@ -835,8 +839,8 @@ module mkMemServerPortFromRegs#( Vector#(numRegs, Reg#(Bit#(TMul#(8,TExp#(logNum
                   Bits#(memRespT, memRespSz),
                   Add#(a__, TLog#(numRegs), addrSz));
 
-    FIFOG#(memReqT) memReqFIFO <- mkLFIFOG;
-    FIFOG#(memRespT) memRespFIFO <- mkLFIFOG;
+    FIFOG#(memReqT) memReqFIFO <- mkLFIFOG();
+    FIFOG#(memRespT) memRespFIFO <- mkLFIFOG();
 
     rule performMemReq;
         let req = memReqFIFO.first;
@@ -898,8 +902,8 @@ module mkMemServerPortFromRegFile#( RegFile#(Bit#(rfAddrSz), Bit#(TMul#(8,TExp#(
                   Bits#(memRespT, memRespSz),
                   Add#(a__, rfAddrSz, addrSz));
 
-    FIFOG#(memReqT) memReqFIFO <- mkLFIFOG;
-    FIFOG#(memRespT) memRespFIFO <- mkLFIFOG;
+    FIFOG#(memReqT) memReqFIFO <- mkLFIFOG();
+    FIFOG#(memRespT) memRespFIFO <- mkLFIFOG();
 
     rule performMemReq;
         let req = memReqFIFO.first;
@@ -996,7 +1000,7 @@ module mkMemBus#(Vector#(nServers, MemBusItem#(memReqT, memRespT, addrSz)) bus_i
     Vector#(nClients, FIFOG#(Bit#(TLog#(TAdd#(nServers,1))))) clientBookkeeping <- replicateM(mkPipelineFIFOG);
     Vector#(nServers, FIFOG#(Bit#(TLog#(nClients)))) serverBookkeeping <- replicateM(mkPipelineFIFOG);
     // out-of-bounds responses, acts like another client.
-    FIFOG#(memRespT) oobResp <- mkPipelineFIFOG;
+    FIFOG#(memRespT) oobResp <- mkPipelineFIFOG();
 
     function Bit#(TLog#(TAdd#(nServers,1))) getServer(memReqT req);
         Bit#(addrSz) addr = getAddr(req);
@@ -1149,7 +1153,7 @@ module mkMixedAtomicMemBus#(Vector#(nServers, MixedMemBusItem#(addrSz, logNumByt
     Vector#(nClients, FIFOG#(Bit#(TLog#(TAdd#(nServers,1))))) clientBookkeeping <- replicateM(mkPipelineFIFOG);
     Vector#(nServers, FIFOG#(Bit#(TLog#(nClients)))) serverBookkeeping <- replicateM(mkPipelineFIFOG);
     // out-of-bounds responses, acts like another client.
-    FIFOG#(AtomicMemResp#(logNumBytes)) oobResp <- mkPipelineFIFOG;
+    FIFOG#(AtomicMemResp#(logNumBytes)) oobResp <- mkPipelineFIFOG();
 
     function Bit#(TLog#(TAdd#(nServers,1))) getServer(AtomicMemReq#(addrSz, logNumBytes) req);
         Bit#(addrSz) addr = getAddr(req);
@@ -1206,25 +1210,33 @@ module mkMixedAtomicMemBus#(Vector#(nServers, MixedMemBusItem#(addrSz, logNumByt
                     if(!isReadOnlyMemReq(serverMemReq[s].first)) begin
                         $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-ReadOnly request sent to ReadOnly server %0d", s);
                     end
-                    ifc.request.enq( toReadOnlyMemReq(serverMemReq[s].first) );
+		    ReadOnlyMemServerPort#(addrSz, logNumBytes) _ifc = ifc;
+                    InputPort#(ReadOnlyMemReq#(addrSz, logNumBytes)) requestifc = _ifc.request;
+		    requestifc.enq( toReadOnlyMemReq(serverMemReq[s].first) );
                 end
                 tagged Coarse   .ifc: begin
                     if(!isCoarseMemReq(serverMemReq[s].first)) begin
                         $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-Coarse request sent to Coarse server %0d", s);
                     end
-                    ifc.request.enq( toCoarseMemReq(serverMemReq[s].first) );
+		    CoarseMemServerPort#(addrSz, logNumBytes) _ifc = ifc;
+                    InputPort#(CoarseMemReq#(addrSz, logNumBytes)) requestifc = _ifc.request;
+                    requestifc.enq( toCoarseMemReq(serverMemReq[s].first) );
                 end
                 tagged ByteEn   .ifc: begin
                     if(!isByteEnMemReq(serverMemReq[s].first)) begin
                         $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-ByteEn request sent to ByteEn server %0d", s);
                     end
-                    ifc.request.enq( toByteEnMemReq(serverMemReq[s].first) );
+		    ByteEnMemServerPort#(addrSz, logNumBytes) _ifc = ifc;
+                    InputPort#(ByteEnMemReq#(addrSz, logNumBytes)) requestifc = _ifc.request;
+                    requestifc.enq( toByteEnMemReq(serverMemReq[s].first) );
                 end
                 tagged Atomic   .ifc: begin
                     if(!isAtomicMemReq(serverMemReq[s].first)) begin
                         $fdisplay(stderr, "[WARNING] mkMixedAtomicMemBus: non-Atomic request sent to Atomic server %0d", s);
                     end
-                    ifc.request.enq( toAtomicMemReq(serverMemReq[s].first) );
+		    AtomicMemServerPort#(addrSz, logNumBytes) _ifc = ifc;
+		    InputPort#(AtomicMemReq#(addrSz, logNumBytes)) requestifc = _ifc.request;
+                    requestifc.enq( toAtomicMemReq(serverMemReq[s].first) );
                 end
             endcase
             serverMemReq[s].deq;
@@ -1234,19 +1246,27 @@ module mkMixedAtomicMemBus#(Vector#(nServers, MixedMemBusItem#(addrSz, logNumByt
             case (bus_items[s].ifc) matches
                 tagged ReadOnly .ifc: begin
                     serverMemResp[s].enq( fromReadOnlyMemResp(ifc.response.first) );
-                    ifc.response.deq;
+		    ReadOnlyMemServerPort#(addrSz, logNumBytes) _ifc = ifc;
+		    OutputPort#(ReadOnlyMemResp#(logNumBytes)) ifcresponse = _ifc.response;
+                    ifcresponse.deq;
                 end
                 tagged Coarse   .ifc: begin
                     serverMemResp[s].enq( fromCoarseMemResp(ifc.response.first) );
-                    ifc.response.deq;
+		    CoarseMemServerPort#(addrSz, logNumBytes) _ifc = ifc;
+		    OutputPort#(CoarseMemResp#(logNumBytes)) ifcresponse = _ifc.response;
+                    ifcresponse.deq;
                 end
                 tagged ByteEn   .ifc: begin
                     serverMemResp[s].enq( fromByteEnMemResp(ifc.response.first) );
-                    ifc.response.deq;
+		    ByteEnMemServerPort#(addrSz, logNumBytes) _ifc = ifc;
+		    OutputPort#(ByteEnMemResp#(logNumBytes)) ifcresponse = _ifc.response;
+                    ifcresponse.deq;
                 end
                 tagged Atomic   .ifc: begin
                     serverMemResp[s].enq( fromAtomicMemResp(ifc.response.first) );
-                    ifc.response.deq;
+		    AtomicMemServerPort#(addrSz, logNumBytes) _ifc = ifc;
+		    OutputPort#(AtomicMemResp#(logNumBytes)) ifcresponse = _ifc.response;
+                    ifcresponse.deq;
                 end
             endcase
         endrule
@@ -1557,7 +1577,7 @@ instance MkEmulateMemServerPort#(CoarseMemServerPort#(addrSz, logNumBytes), Atom
 
         // Add a buffer to the coarse mem response to avoid having requests.enq
         // and response.deq together in performAtomicMemoryOp
-        FIFOG#(CoarseMemResp#(logNumBytes)) coarseMemRespFIFO <- mkBypassFIFOG;
+        FIFOG#(CoarseMemResp#(logNumBytes)) coarseMemRespFIFO <- mkBypassFIFOG();
 
         mkConnection(mem.response, toInputPort(coarseMemRespFIFO));
 
@@ -1632,7 +1652,7 @@ instance MkEmulateMemServerPort#(ByteEnMemServerPort#(addrSz, logNumBytes), Atom
 
         // Add a buffer to the byteEn mem response to avoid having requests.enq
         // and response.deq together in performAtomicMemoryOp
-        FIFOG#(ByteEnMemResp#(logNumBytes)) byteEnMemRespFIFO <- mkBypassFIFOG;
+        FIFOG#(ByteEnMemResp#(logNumBytes)) byteEnMemRespFIFO <- mkBypassFIFOG();
 
         mkConnection(mem.response, toInputPort(byteEnMemRespFIFO));
 
@@ -1702,7 +1722,7 @@ instance MkEmulateMemServerPort#(CoarseMemServerPort#(addrSz, logNumBytes), Byte
 
         // Add a buffer to the coarse mem response to avoid having requests.enq
         // and response.deq together in performByteEnMemoryOp
-        FIFOG#(CoarseMemResp#(logNumBytes)) coarseMemRespFIFO <- mkBypassFIFOG;
+        FIFOG#(CoarseMemResp#(logNumBytes)) coarseMemRespFIFO <- mkBypassFIFOG();
 
         mkConnection(mem.response, toInputPort(coarseMemRespFIFO));
 
@@ -1768,8 +1788,8 @@ instance MkNarrowerMemServerPort#(CoarseMemServerPort#(addrSz, inLogNumBytes), C
     module mkNarrowerMemServerPort#(CoarseMemServerPort#(addrSz, inLogNumBytes) mem)(CoarseMemServerPort#(addrSz, outLogNumBytes));
         // read requires a single read
         // write requires a read followed by a write
-        FIFOG#(CoarseMemResp#(inLogNumBytes)) inRespFIFO <- mkBypassFIFOG;
-        FIFOG#(CoarseMemResp#(outLogNumBytes)) outRespFIFO <- mkBypassFIFOG;
+        FIFOG#(CoarseMemResp#(inLogNumBytes)) inRespFIFO <- mkBypassFIFOG();
+        FIFOG#(CoarseMemResp#(outLogNumBytes)) outRespFIFO <- mkBypassFIFOG();
         Reg#(Bit#(TMul#(TExp#(outLogNumBytes), 8))) reqData <- mkReg(0);
         Reg#(Bit#(addrSz)) reqAddr <- mkReg(0);
         Ehr#(2, Maybe#(Bool)) pendingReqIsWrite <- mkEhr(tagged Invalid);
@@ -1818,7 +1838,7 @@ instance MkNarrowerMemServerPort#(AtomicMemServerPort#(addrSz, inLogNumBytes), A
         provisos (Add#(logWidthFactor, outLogNumBytes, inLogNumBytes),
                   Add#(a__, logWidthFactor, addrSz));
     module mkNarrowerMemServerPort#(AtomicMemServerPort#(addrSz, inLogNumBytes) mem)(AtomicMemServerPort#(addrSz, outLogNumBytes));
-        FIFOG#(Bit#(logWidthFactor)) pendingReqOffset <- mkFIFOG;
+        FIFOG#(Bit#(logWidthFactor)) pendingReqOffset <- mkFIFOG();
 
         interface InputPort request;
             method Action enq(AtomicMemReq#(addrSz, outLogNumBytes) req);
@@ -1858,7 +1878,7 @@ instance MkNarrowerMemServerPort#(ByteEnMemServerPort#(addrSz, inLogNumBytes), B
         provisos (Add#(logWidthFactor, outLogNumBytes, inLogNumBytes),
                   Add#(a__, logWidthFactor, addrSz));
     module mkNarrowerMemServerPort#(ByteEnMemServerPort#(addrSz, inLogNumBytes) mem)(ByteEnMemServerPort#(addrSz, outLogNumBytes));
-        FIFOG#(Bit#(logWidthFactor)) pendingReqOffset <- mkFIFOG;
+        FIFOG#(Bit#(logWidthFactor)) pendingReqOffset <- mkFIFOG();
 
         interface InputPort request;
             method Action enq(ByteEnMemReq#(addrSz, outLogNumBytes) req);
@@ -1897,7 +1917,7 @@ instance MkNarrowerMemServerPort#(ReadOnlyMemServerPort#(addrSz, inLogNumBytes),
         provisos (Add#(logWidthFactor, outLogNumBytes, inLogNumBytes),
                   Add#(a__, logWidthFactor, addrSz));
     module mkNarrowerMemServerPort#(ReadOnlyMemServerPort#(addrSz, inLogNumBytes) mem)(ReadOnlyMemServerPort#(addrSz, outLogNumBytes));
-        FIFOG#(Bit#(logWidthFactor)) pendingReqOffset <- mkFIFOG;
+        FIFOG#(Bit#(logWidthFactor)) pendingReqOffset <- mkFIFOG();
 
         interface InputPort request;
             method Action enq(ReadOnlyMemReq#(addrSz, outLogNumBytes) req);
