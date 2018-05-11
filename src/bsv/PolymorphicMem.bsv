@@ -128,7 +128,7 @@ endtypeclass
 
 module mkPolymorphicBRAM#(Integer numWords)(ServerPort#(reqT, respT))
         provisos (MkPolymorphicBRAM#(reqT, respT));
-    let _m <- mkPolymorphicBRAMLoad(numWords, tagged None);
+    let _m <- mkPolymorphicBRAMLoad(numWords, tagged LfNone);
     return _m;
 endmodule
 

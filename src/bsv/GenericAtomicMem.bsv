@@ -74,29 +74,29 @@ endtypeclass
 typedef void AMONone;
 
 typedef enum {
-    None,
-    Swap
+    AsNone,
+    AsSwap
 } AMOSwap deriving (Bits, Eq, FShow, Bounded);
 
 typedef enum {
-    None,
-    Swap,
-    And,
-    Or,
-    Xor
+    AlNone,
+    AlSwap,
+    AlAnd,
+    AlOr,
+    AlXor
 } AMOLogical deriving (Bits, Eq, FShow, Bounded);
 
 typedef enum {
-    None,
-    Swap,
-    And,
-    Or,
-    Xor,
-    Add,
-    Min,
-    Max,
-    Minu,
-    Maxu
+    AaNone,
+    AaSwap,
+    AaAnd,
+    AaOr,
+    AaXor,
+    AaAdd,
+    AaMin,
+    AaMax,
+    AaMinu,
+    AaMaxu
 } AMOArithmetic deriving (Bits, Eq, FShow, Bounded);
 
 /// This function extends byte enables into bit enables.
@@ -125,8 +125,8 @@ instance HasAtomicMemOpFunc#(AMONone, dataSz, writeEnSz);
 endinstance
 
 instance IsAtomicMemOp#(AMOSwap);
-    function AMOSwap nonAtomicMemOp = None;
-    function Bool isAtomicMemOp(AMOSwap op) = (op != None);
+    function AMOSwap nonAtomicMemOp = AsNone;
+    function Bool isAtomicMemOp(AMOSwap op) = (op != AsNone);
 endinstance
 instance HasAtomicMemOpFunc#(AMOSwap, dataSz, writeEnSz);
     function Bit#(dataSz) atomicMemOpFunc(AMOSwap op, Bit#(dataSz) memData, Bit#(dataSz) operandData, Bit#(writeEnSz) writeEn);
@@ -135,25 +135,25 @@ instance HasAtomicMemOpFunc#(AMOSwap, dataSz, writeEnSz);
 endinstance
 
 instance IsAtomicMemOp#(AMOLogical);
-    function AMOLogical nonAtomicMemOp = None;
-    function Bool isAtomicMemOp(AMOLogical op) = (op != None);
+    function AMOLogical nonAtomicMemOp = AlNone;
+    function Bool isAtomicMemOp(AMOLogical op) = (op != AlNone);
 endinstance
 instance HasAtomicMemOpFunc#(AMOLogical, dataSz, writeEnSz);
     function Bit#(dataSz) atomicMemOpFunc(AMOLogical op, Bit#(dataSz) memData, Bit#(dataSz) operandData, Bit#(writeEnSz) writeEn);
         return (case (op)
-                    None: operandData;
-                    Swap: operandData;
-                    And:  (operandData & memData);
-                    Or:   (operandData | memData);
-                    Xor:  (operandData ^ memData);
+                    AlNone: operandData;
+                    AlSwap: operandData;
+                    AlAnd:  (operandData & memData);
+                    AlOr:   (operandData | memData);
+                    AlXor:  (operandData ^ memData);
                     default: operandData;
                 endcase);
     endfunction
 endinstance
 
 instance IsAtomicMemOp#(AMOArithmetic);
-    function AMOArithmetic nonAtomicMemOp = None;
-    function Bool isAtomicMemOp(AMOArithmetic op) = (op != None);
+    function AMOArithmetic nonAtomicMemOp = AaNone;
+    function Bool isAtomicMemOp(AMOArithmetic op) = (op != AaNone);
 endinstance
 instance HasAtomicMemOpFunc#(AMOArithmetic, dataSz, writeEnSz)
         provisos(Mul#(writeEnSz, byteSz, dataSz),
@@ -165,7 +165,7 @@ instance HasAtomicMemOpFunc#(AMOArithmetic, dataSz, writeEnSz)
         Vector#(writeEnSz, Bit#(byteSz)) operandDataVec = unpack(operandData);
         Bit#(1) memDataMSB = 0;
         Bit#(1) operandDataMSB = 0;
-        Bool isSigned = ((op == Min) || (op == Max));
+        Bool isSigned = ((op == AaMin) || (op == AaMax));
         for (Integer i = 0 ; i < valueOf(writeEnSz) ; i = i+1) begin
             if (writeEn[i] == 1) begin
                 memDataMSB = msb(memDataVec[i]);
@@ -181,16 +181,16 @@ instance HasAtomicMemOpFunc#(AMOArithmetic, dataSz, writeEnSz)
         Bool operandDataLarger = operandInt > memInt;
 
         return (case (op)
-                    None: operandData;
-                    Swap: operandData;
-                    And:  (operandData & memData);
-                    Or:   (operandData | memData);
-                    Xor:  (operandData ^ memData);
-                    Add:  ((operandData & bitEn) + (memData & bitEn));
-                    Min:  (operandDataLarger ? memData : operandData);
-                    Max:  (operandDataLarger ? operandData : memData);
-                    Minu: (operandDataLarger ? memData : operandData);
-                    Maxu: (operandDataLarger ? operandData : memData);
+                    AaNone: operandData;
+                    AaSwap: operandData;
+                    AaAnd:  (operandData & memData);
+                    AaOr:   (operandData | memData);
+                    AaXor:  (operandData ^ memData);
+                    AaAdd:  ((operandData & bitEn) + (memData & bitEn));
+                    AaMin:  (operandDataLarger ? memData : operandData);
+                    AaMax:  (operandDataLarger ? operandData : memData);
+                    AaMinu: (operandDataLarger ? memData : operandData);
+                    AaMaxu: (operandDataLarger ? operandData : memData);
                     default: operandData;
                 endcase);
     endfunction
@@ -219,16 +219,16 @@ endfunction
 
 /// This type matches the LoadFormat type in the Bluespec Reference Guide
 typedef union tagged {
-    void   None;
-    String Hex;
-    String Binary;
+    void   LfNone;
+    String LfHex;
+    String LfBinary;
 } LoadFormat deriving (Bits, Eq);
 
 module mkGenericAtomicBRAM#(Integer numWords)(GenericAtomicMemServerPort#(writeEnSz, atomicMemOpT, wordAddrSz, dataSz))
         provisos (HasAtomicMemOpFunc#(atomicMemOpT, dataSz, writeEnSz),
                   Mul#(TDiv#(dataSz, writeEnSz), writeEnSz, dataSz),
                   Bits#(atomicMemOpT, atomicMemOpSz));
-    let _m <- mkGenericAtomicBRAMLoad(numWords, tagged None);
+    let _m <- mkGenericAtomicBRAMLoad(numWords, tagged LfNone);
     return _m;
 endmodule
 
@@ -244,16 +244,16 @@ module mkGenericAtomicBRAMLoad#(Integer numWords, LoadFormat loadFile)(GenericAt
     if (valueOf(writeEnSz) == 1) begin
         BRAM_PORT#(Bit#(wordAddrSz), Bit#(dataSz)) bram_non_be;
         case (loadFile) matches
-            tagged None: bram_non_be <- mkBRAMCore1(actualNumWords, False);
-            tagged Hex .hexfile: bram_non_be <- mkBRAMCore1Load(actualNumWords, False, hexfile, False);
-            tagged Binary .binfile: bram_non_be <- mkBRAMCore1Load(actualNumWords, False, binfile, True);
+            tagged LfNone: bram_non_be <- mkBRAMCore1(actualNumWords, False);
+            tagged LfHex .hexfile: bram_non_be <- mkBRAMCore1Load(actualNumWords, False, hexfile, False);
+            tagged LfBinary .binfile: bram_non_be <- mkBRAMCore1Load(actualNumWords, False, binfile, True);
         endcase
         bram = to_BRAM_PORT_BE(bram_non_be);
     end else begin
         case (loadFile) matches
-            tagged None: bram <- mkBRAMCore1BE(actualNumWords, False);
-            tagged Hex .hexfile: bram <- mkBRAMCore1BELoad(actualNumWords, False, hexfile, False);
-            tagged Binary .binfile: bram <- mkBRAMCore1BELoad(actualNumWords, False, binfile, True);
+            tagged LfNone: bram <- mkBRAMCore1BE(actualNumWords, False);
+            tagged LfHex .hexfile: bram <- mkBRAMCore1BELoad(actualNumWords, False, hexfile, False);
+            tagged LfBinary .binfile: bram <- mkBRAMCore1BELoad(actualNumWords, False, binfile, True);
         endcase
     end
 
