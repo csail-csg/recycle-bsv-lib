@@ -26,43 +26,82 @@
  */
 package RegUtil;
 
-function Reg#(Bit#(n)) truncateReg(Reg#(Bit#(m)) r) provisos (Add#(a__,n,m));
-    return (interface Reg;
-            method Bit#(n) _read = truncate(r._read);
-            method Action _write(Bit#(n) x) = r._write({truncateLSB(r._read), x});
-        endinterface);
-endfunction
+interface CSRReg#(type a);
+   method a read();
+   method Action write(a v);
+endinterface
 
-function Reg#(Bit#(n)) truncateRegLSB(Reg#(Bit#(m)) r) provisos (Add#(a__,n,m));
-    return (interface Reg;
-            method Bit#(n) _read = truncateLSB(r._read);
-            method Action _write(Bit#(n) x) = r._write({x, truncate(r._read)});
-        endinterface);
-endfunction
+module mkCSRReg(CSRReg#(Bit#(asz)));
+   Reg#(Bit#(asz)) r <- mkReg(0);
+   method Bit#(asz) read();
+      return r;
+   endmethod
+   method Action write(Bit#(asz) v);
+      r <= v;
+   endmethod
+endmodule
 
-function Reg#(Bit#(n)) zeroExtendReg(Reg#(Bit#(m)) r) provisos (Add#(a__,m,n));
-    return (interface Reg;
-            method Bit#(n) _read = zeroExtend(r._read);
-            method Action _write(Bit#(n) x) = r._write(truncate(x));
-        endinterface);
-endfunction
+(* nogen *)
+module mkCSRRegFromReg#(Reg#(a) r)(CSRReg#(a))
+   provisos (Bits#(a));
+   method a read();
+      return r;
+   endmethod
+   method Action write(a v);
+      r <= v;
+   endmethod
+endmodule
+
+module truncateReg#(Reg#(Bit#(TAdd#(n,m))) r)(CSRReg#(Bit#(n)));
+	    method Bit#(n) read();
+	       Bit#(n) v = truncate(r);
+	       return v;
+	    endmethod
+            method Action write(Bit#(n) x);
+	       Bit#(m) vmsb = truncateLSB(r);
+	       Bit#(TAdd#(n,m)) v = {vmsb, x};
+	       r <= v;
+	    endmethod
+endmodule
+
+module truncateRegLSB#(Reg#(Bit#(m)) r)(CSRReg#(Bit#(n))) provisos (Add#(a__,n,m));
+	    method Bit#(n) read();
+	       Bit#(n) v = truncateLSB(r);
+	       return v;
+	    endmethod
+            method Action write(Bit#(n) x);
+	       Bit#(n) v = ({x, truncate(r)});
+	       r <= v;
+	    endmethod
+endmodule
+
+module zeroExtendReg#(Reg#(Bit#(m)) r)(CSRReg#(Bit#(n))) provisos (Add#(a__,m,n));
+	    method Bit#(n) read();
+	       Bit#(n) v = zeroExtend(r);
+	       return v;
+	    endmethod
+            method Action write(Bit#(n) x);
+	       Bit#(m) v = (truncate(x));
+	       r <= v;
+	    endmethod
+endmodule
 
 /**
- * This function takes a `Reg#(Maybe#(t))` and converts it to a `Reg#(t)`.
+ * This module takes a `Reg#(Maybe#(t))` and converts it to a `Reg#(t)`.
  *
  * Writes always store a valid value in the register, and reads either return
  * the valid value, or default_value if the register if invalid.
  */
-function Reg#(t) fromMaybeReg(t default_value, Reg#(Maybe#(t)) r);
-    return (interface Reg;
-                method t _read;
-                    return fromMaybe(default_value, r);
+module fromMaybeReg#(t default_value, Reg#(Maybe#(t)) r)(CSRReg#(t));
+                method t read;
+                   t v = fromMaybe(default_value, r);
+		   return v;
                 endmethod
-                method Action _write(t x);
-                    r <= tagged Valid x;
+                method Action write(t x);
+		   Maybe#(t) v = tagged Valid x;
+                   r <= v;
                 endmethod
-            endinterface);
-endfunction
+endmodule
 
 /**
  * This function takes a `Reg#(t)` and converts it to a `Reg#(Bit#(tsz))`.
@@ -70,16 +109,16 @@ endfunction
  * This function parallels the standard `pack` function that converts `t` to
  * `Bit#(tsz)` provided there is an instance of `Bits#(t, tsz)`.
  */
-function Reg#(Bit#(tsz)) packReg(Reg#(t) r) provisos (Bits#(t, tsz));
-    return (interface Reg;
-                method Bit#(tsz) _read;
-                    return pack(r);
+module packReg#(Reg#(t) r)(CSRReg#(Bit#(tsz))) provisos (Bits#(t, tsz));
+                method Bit#(tsz) read;
+                    Bit#(tsz) v = pack(r);
+		   return v;
                 endmethod
-                method Action _write(Bit#(tsz) x);
-                    r <= unpack(x);
+                method Action write(Bit#(tsz) x);
+		   Bit#(tsz) v = unpack(x);
+                    r <= v;
                 endmethod
-            endinterface);
-endfunction
+endmodule
 
 /**
  * This function takes a `Reg#(Bit#(tsz))` and converts it to a `Reg#(t)`.
@@ -87,63 +126,68 @@ endfunction
  * This function parallels the standard `unpack` function that converts
  * `Bit#(tsz)` to `t` provided there is an instance of `Bits#(t, tsz)`.
  */
-function Reg#(t) unpackReg(Reg#(Bit#(tsz)) r) provisos (Bits#(t, tsz));
-    return (interface Reg;
-                method t _read;
-                    return unpack(r);
+module unpackReg#(Reg#(Bit#(tsz)) r)(CSRReg#(t)) provisos (Bits#(t, tsz));
+                method t read;
+                    t v = unpack(r);
+		   return v;
                 endmethod
-                method Action _write(t x);
-                    r <= pack(x);
+                method Action write(t x);
+		   Bit#(tsz) v = pack(x);
+                   r <= v;
                 endmethod
-            endinterface);
-endfunction
+endmodule
 
-function Reg#(t) readOnlyReg(t r);
-    return (interface Reg;
-            method t _read = r;
-            method Action _write(t x) = noAction;
-        endinterface);
-endfunction
+module readOnlyReg#(t r)(CSRReg#(t));
+	    method t read();
+	       return r;
+	    endmethod
+   method Action write(t x);
+   endmethod
+endmodule
 
-function Reg#(t) readOnlyRegWarn(t r, String msg);
-    return (interface Reg;
-            method t _read = r;
-            method Action _write(t x);
+module readOnlyRegWarn#(t r, String msg)(CSRReg#(t));
+	    method t read();
+	       return r;
+	    endmethod
+            method Action write(t x);
                 $fdisplay(stderr, "[WARNING] readOnlyReg: %s", msg);
             endmethod
-        endinterface);
-endfunction
+endmodule
 
-function Reg#(t) readOnlyRegError(t r, String msg);
-    return (interface Reg;
-            method t _read = r;
-            method Action _write(t x);
+module readOnlyRegError#(t r, String msg)(CSRReg#(t));
+	    method t read();
+	       return r;
+	    endmethod
+            method Action write(t x);
                 $fdisplay(stderr, "[ERROR] readOnlyReg: %s", msg);
                 $finish(1);
             endmethod
-        endinterface);
-endfunction
+endmodule
 
+(* nogen *)
 module mkReadOnlyReg#(t x)(Reg#(t));
     return readOnlyReg(x);
 endmodule
 
+(* nogen *)
 module mkReadOnlyRegWarn#(t x, String msg)(Reg#(t));
     return readOnlyRegWarn(x, msg);
 endmodule
 
+(* nogen *)
 module mkReadOnlyRegError#(t x, String msg)(Reg#(t));
     return readOnlyRegError(x, msg);
 endmodule
 
-function Reg#(t) addWriteSideEffect(Reg#(t) r, Action a);
-    return (interface Reg;
-            method t _read = r._read;
-            method Action _write(t x);
-                r._write(x);
-                a;
-            endmethod
-        endinterface);
-endfunction
+(* nogen *)
+module addWriteSideEffect#(Reg#(t) r, Action a)(CSRReg#(t));
+   method t read();
+      return r;
+   endmethod
+   method Action write(t x);
+      r <= (x);
+      a;
+   endmethod
+endmodule
 
 endpackage

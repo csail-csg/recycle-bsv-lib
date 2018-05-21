@@ -65,19 +65,16 @@ endinterface
 /// This is only a function because our documentation system cannot handle
 /// top-level variable definitions. This function and other functions like it
 /// can be used as if it was defined as if it were just a variable.
-function InputPort#(t) nullInputPort;
-    return (interface InputPort;
+module  nullInputPort(InputPort#(t));
             method Action enq(t val) if (False);
                 noAction;
             endmethod
             method canEnq;
                 return False;
             endmethod
-        endinterface);
-endfunction
+endmodule
 
-function OutputPort#(t) nullOutputPort;
-    return (interface OutputPort;
+module nullOutputPort(OutputPort#(t));
             method t first if (False);
                 return ?;
             endmethod
@@ -87,8 +84,7 @@ function OutputPort#(t) nullOutputPort;
             method Bool canDeq;
                 return False;
             endmethod
-        endinterface);
-endfunction
+endmodule
 
 interface ServerPort#(type req_t, type resp_t);
     interface InputPort#(req_t) request;
@@ -100,19 +96,15 @@ interface ClientPort#(type req_t, type resp_t);
     interface InputPort#(resp_t) response;
 endinterface
 
-function ServerPort#(req_t, resp_t) nullServerPort;
-    return (interface ServerPort;
+module  nullServerPort(ServerPort#(req_t, resp_t));
             interface InputPort request = nullInputPort;
             interface OutputPort response = nullOutputPort;
-        endinterface);
-endfunction
+endmodule
 
-function ClientPort#(req_t, resp_t) nullClientPort;
-    return (interface ClientPort;
+module nullClientPort(ClientPort#(req_t, resp_t));
             interface OutputPort request = nullOutputPort;
             interface InputPort response = nullInputPort;
-        endinterface);
-endfunction
+endmodule
 
 typeclass ToInputPort#(type in_t, type port_t) dependencies (in_t determines port_t);
     function InputPort#(port_t) toInputPort(in_t x);
@@ -133,6 +125,7 @@ typeclass MkOutputPortBuffer#(type in_t, type port_t) dependencies (in_t determi
 endtypeclass
 
 // Instances
+(* nogen *)
 instance Connectable#(OutputPort#(t), InputPort#(t));
     module mkConnection#(OutputPort#(t) a, InputPort#(t) b)(Empty);
         rule connection;
@@ -142,6 +135,7 @@ instance Connectable#(OutputPort#(t), InputPort#(t));
     endmodule
 endinstance
 
+(* nogen *)
 instance Connectable#(InputPort#(t), OutputPort#(t));
     module mkConnection#(InputPort#(t) a, OutputPort#(t) b)(Empty);
         rule connection;
@@ -151,6 +145,7 @@ instance Connectable#(InputPort#(t), OutputPort#(t));
     endmodule
 endinstance
 
+(* nogen *)
 instance Connectable#(ServerPort#(req_t, resp_t), ClientPort#(req_t, resp_t));
     module mkConnection#(ServerPort#(req_t, resp_t) a, ClientPort#(req_t, resp_t) b)(Empty);
         mkConnection(a.request, b.request);
@@ -158,6 +153,7 @@ instance Connectable#(ServerPort#(req_t, resp_t), ClientPort#(req_t, resp_t));
     endmodule
 endinstance
 
+(* nogen *)
 instance Connectable#(ClientPort#(req_t, resp_t), ServerPort#(req_t, resp_t));
     module mkConnection#(ClientPort#(req_t, resp_t) a, ServerPort#(req_t, resp_t) b)(Empty);
         mkConnection(a.request, b.request);
@@ -166,6 +162,7 @@ instance Connectable#(ClientPort#(req_t, resp_t), ServerPort#(req_t, resp_t));
 endinstance
 
 // connecting with Put#(t)
+(* nogen *)
 instance Connectable#(OutputPort#(t), Put#(t));
     module mkConnection#(OutputPort#(t) a, Put#(t) b)(Empty);
         rule connection;
@@ -175,6 +172,7 @@ instance Connectable#(OutputPort#(t), Put#(t));
     endmodule
 endinstance
 
+(* nogen *)
 instance Connectable#(Put#(t), OutputPort#(t));
     module mkConnection#(Put#(t) a, OutputPort#(t) b)(Empty);
         rule connection;
@@ -185,6 +183,7 @@ instance Connectable#(Put#(t), OutputPort#(t));
 endinstance
 
 // connecting with Get#(t)
+(* nogen *)
 instance Connectable#(Get#(t), InputPort#(t));
     module mkConnection#(Get#(t) a, InputPort#(t) b)(Empty);
         rule connection;
@@ -194,6 +193,7 @@ instance Connectable#(Get#(t), InputPort#(t));
     endmodule
 endinstance
 
+(* nogen *)
 instance Connectable#(InputPort#(t), Get#(t));
     module mkConnection#(InputPort#(t) a, Get#(t) b)(Empty);
         rule connection;
@@ -204,6 +204,7 @@ instance Connectable#(InputPort#(t), Get#(t));
 endinstance
 
 // connecting with Client#(req_t,resp_t)
+(* nogen *)
 instance Connectable#(ServerPort#(req_t, resp_t), Client#(req_t, resp_t));
     module mkConnection#(ServerPort#(req_t, resp_t) a, Client#(req_t, resp_t) b)(Empty);
         mkConnection(a.request, b.request);
@@ -211,6 +212,7 @@ instance Connectable#(ServerPort#(req_t, resp_t), Client#(req_t, resp_t));
     endmodule
 endinstance
 
+(* nogen *)
 instance Connectable#(Client#(req_t, resp_t), ServerPort#(req_t, resp_t));
     module mkConnection#(Client#(req_t, resp_t) a, ServerPort#(req_t, resp_t) b)(Empty);
         mkConnection(a.request, b.request);
@@ -219,6 +221,7 @@ instance Connectable#(Client#(req_t, resp_t), ServerPort#(req_t, resp_t));
 endinstance
 
 // connecting with Server#(req_t,resp_t)
+(* nogen *)
 instance Connectable#(Server#(req_t, resp_t), ClientPort#(req_t, resp_t));
     module mkConnection#(Server#(req_t, resp_t) a, ClientPort#(req_t, resp_t) b)(Empty);
         mkConnection(a.request, b.request);
@@ -226,6 +229,7 @@ instance Connectable#(Server#(req_t, resp_t), ClientPort#(req_t, resp_t));
     endmodule
 endinstance
 
+(* nogen *)
 instance Connectable#(ClientPort#(req_t, resp_t), Server#(req_t, resp_t));
     module mkConnection#(ClientPort#(req_t, resp_t) a, Server#(req_t, resp_t) b)(Empty);
         mkConnection(a.request, b.request);
@@ -233,6 +237,7 @@ instance Connectable#(ClientPort#(req_t, resp_t), Server#(req_t, resp_t));
     endmodule
 endinstance
 
+(* nogen *)
 instance ToInputPort#(FIFOG#(port_t), port_t);
     function InputPort#(port_t) toInputPort(FIFOG#(port_t) x);
         return (interface InputPort;
@@ -246,6 +251,7 @@ instance ToInputPort#(FIFOG#(port_t), port_t);
     endfunction
 endinstance
 
+(* nogen *)
 instance ToOutputPort#(FIFOG#(port_t), port_t);
     function OutputPort#(port_t) toOutputPort(FIFOG#(port_t) x);
         return (interface OutputPort;
@@ -262,6 +268,7 @@ instance ToOutputPort#(FIFOG#(port_t), port_t);
     endfunction
 endinstance
 
+(* nogen *)
 // If you can do toInputPort(x), you can do mkInputPortBuffer(x)
 instance MkInputPortBuffer#(in_t, port_t) provisos (ToInputPort#(in_t, port_t));
     module mkInputPortBuffer#(in_t x)(InputPort#(port_t));
@@ -273,6 +280,7 @@ instance MkInputPortBuffer#(in_t, port_t) provisos (ToInputPort#(in_t, port_t));
 endinstance
 
 // If you can do toOutputPort(x), you can do mkOutputPortBuffer(x)
+(* nogen *)
 instance MkOutputPortBuffer#(in_t, port_t) provisos (ToOutputPort#(in_t, port_t));
     module mkOutputPortBuffer#(in_t x)(OutputPort#(port_t));
         return toOutputPort(x);
@@ -282,6 +290,7 @@ instance MkOutputPortBuffer#(in_t, port_t) provisos (ToOutputPort#(in_t, port_t)
     endmodule
 endinstance
 
+(* nogen *)
 instance MkInputPortBuffer#(Put#(t), t) provisos (Bits#(t, tSz));
     module mkInputPortBuffer#(Put#(t) x)(InputPort#(t));
         Ehr#(2, Maybe#(t)) put_buffer <- mkEhr(tagged Invalid);
@@ -317,6 +326,7 @@ instance MkInputPortBuffer#(Put#(t), t) provisos (Bits#(t, tSz));
     endmodule
 endinstance
 
+(* nogen *)
 instance MkOutputPortBuffer#(Get#(t), t) provisos (Bits#(t, tSz));
     module mkOutputPortBuffer#(Get#(t) x)(OutputPort#(t));
         Ehr#(2, Maybe#(t)) get_buffer <- mkEhr(tagged Invalid);
@@ -360,6 +370,7 @@ typeclass ToServerPort#(type req_ifc_t, type resp_ifc_t, type req_t, type resp_t
     function ServerPort#(req_t, resp_t) toServerPort(req_ifc_t req_ifc, resp_ifc_t resp_ifc);
 endtypeclass
 
+(* nogen *)
 instance ToServerPort#(InputPort#(req_t), OutputPort#(resp_t), req_t, resp_t);
     function ServerPort#(req_t, resp_t) toServerPort(InputPort#(req_t) req_ifc, OutputPort#(resp_t) resp_ifc);
         return (interface ServerPort;
@@ -369,6 +380,7 @@ instance ToServerPort#(InputPort#(req_t), OutputPort#(resp_t), req_t, resp_t);
     endfunction
 endinstance
 
+(* nogen *)
 instance ToServerPort#(req_ifc_t, resp_ifc_t, req_t, resp_t) provisos (ToInputPort#(req_ifc_t, req_t), ToOutputPort#(resp_ifc_t, resp_t));
     function ServerPort#(req_t, resp_t) toServerPort(req_ifc_t req_ifc, resp_ifc_t resp_ifc);
         return (interface ServerPort;
@@ -382,6 +394,7 @@ typeclass ToClientPort#(type req_ifc_t, type resp_ifc_t, type req_t, type resp_t
     function ClientPort#(req_t, resp_t) toClientPort(req_ifc_t req_ifc, resp_ifc_t resp_ifc);
 endtypeclass
 
+(* nogen *)
 instance ToClientPort#(OutputPort#(req_t), InputPort#(resp_t), req_t, resp_t);
     function ClientPort#(req_t, resp_t) toClientPort(OutputPort#(req_t) req_ifc, InputPort#(resp_t) resp_ifc);
         return (interface ClientPort;
@@ -391,6 +404,7 @@ instance ToClientPort#(OutputPort#(req_t), InputPort#(resp_t), req_t, resp_t);
     endfunction
 endinstance
 
+(* nogen *)
 instance ToClientPort#(req_ifc_t, resp_ifc_t, req_t, resp_t) provisos (ToOutputPort#(req_ifc_t, req_t), ToInputPort#(resp_ifc_t, resp_t));
     function ClientPort#(req_t, resp_t) toClientPort(req_ifc_t req_ifc, resp_ifc_t resp_ifc);
         return (interface ClientPort;
