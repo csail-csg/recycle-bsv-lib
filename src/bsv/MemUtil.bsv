@@ -115,6 +115,18 @@ typedef struct {
 
 typedef CoarseMemResp#(logNumBytes) AtomicMemResp#(numeric type logNumBytes);
 
+// MMIO - AtomicMem with separate write and byte_en
+
+typedef struct {
+    Bool                              write;
+    Bit#(TExp#(logNumBytes))          byte_en;   // corresponds to bytes in data
+    AtomicMemOp                       atomic_op; // which atomic operation to perform, requires write_en to be set to specified bytes
+    Bit#(addrSz)                      addr;      // bottom two bits are unused
+    Bit#(TMul#(8,TExp#(logNumBytes))) data;      // always word-aligned
+} MMIOReq#(numeric type addrSz, numeric type logNumBytes) deriving (Bits, Eq, FShow);
+
+typedef CoarseMemResp#(logNumBytes) MMIOResp#(numeric type logNumBytes);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Port interfaces
@@ -130,6 +142,9 @@ typedef ClientPort#(ByteEnMemReq#(addrSz, logNumBytes), ByteEnMemResp#(logNumByt
 
 typedef ServerPort#(AtomicMemReq#(addrSz, logNumBytes), AtomicMemResp#(logNumBytes)) AtomicMemServerPort#(numeric type addrSz, numeric type logNumBytes);
 typedef ClientPort#(AtomicMemReq#(addrSz, logNumBytes), AtomicMemResp#(logNumBytes)) AtomicMemClientPort#(numeric type addrSz, numeric type logNumBytes);
+
+typedef ServerPort#(MMIOReq#(addrSz, logNumBytes), MMIOResp#(logNumBytes)) MMIOServerPort#(numeric type addrSz, numeric type logNumBytes);
+typedef ClientPort#(MMIOReq#(addrSz, logNumBytes), MMIOResp#(logNumBytes)) MMIOClientPort#(numeric type addrSz, numeric type logNumBytes);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -155,6 +170,11 @@ typedef AtomicMemResp#(2)               AtomicMem32Resp;
 typedef AtomicMemServerPort#(addrSz, 2) AtomicMem32ServerPort#(numeric type addrSz);
 typedef AtomicMemClientPort#(addrSz, 2) AtomicMem32ClientPort#(numeric type addrSz);
 
+typedef MMIOReq#(addrSz, 2)        MMIO32Req#(numeric type addrSz);
+typedef MMIOResp#(2)               MMIO32Resp;
+typedef MMIOServerPort#(addrSz, 2) MMIO32ServerPort#(numeric type addrSz);
+typedef MMIOClientPort#(addrSz, 2) MMIO32ClientPort#(numeric type addrSz);
+
 // 64-bit memory interfaces
 
 typedef ReadOnlyMemReq#(addrSz, 3)        ReadOnlyMem64Req#(numeric type addrSz);
@@ -177,6 +197,11 @@ typedef AtomicMemResp#(3)               AtomicMem64Resp;
 typedef AtomicMemServerPort#(addrSz, 3) AtomicMem64ServerPort#(numeric type addrSz);
 typedef AtomicMemClientPort#(addrSz, 3) AtomicMem64ClientPort#(numeric type addrSz);
 
+typedef MMIOReq#(addrSz, 3)        MMIO64Req#(numeric type addrSz);
+typedef MMIOResp#(3)               MMIO64Resp;
+typedef MMIOServerPort#(addrSz, 3) MMIO64ServerPort#(numeric type addrSz);
+typedef MMIOClientPort#(addrSz, 3) MMIO64ClientPort#(numeric type addrSz);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Unifying Memory Types and Typeclasses
@@ -185,7 +210,8 @@ typedef enum {
     ReadOnly,
     Coarse,
     ByteEn,
-    Atomic
+    Atomic,
+    MMIO
 } MemType deriving (Bits, Eq, FShow, Bounded);
 
 typedef union tagged {
@@ -193,6 +219,7 @@ typedef union tagged {
     CoarseMemServerPort#(addrSz, logNumBytes)   Coarse;
     ByteEnMemServerPort#(addrSz, logNumBytes)   ByteEn;
     AtomicMemServerPort#(addrSz, logNumBytes)   Atomic;
+    MMIOServerPort#(addrSz, logNumBytes)        MMIO;
 } TaggedMemServerPort#(numeric type addrSz, numeric type logNumBytes);
 
 typeclass IsMemReq#(type memReqT, type memRespT, type addrSz, type logNumBytes)
@@ -246,6 +273,16 @@ instance IsMemReq#(AtomicMemReq#(addrSz, logNumBytes), AtomicMemResp#(logNumByte
     function AtomicMemResp#(logNumBytes) getDefaultResp(AtomicMemReq#(addrSz, logNumBytes) req) = AtomicMemResp{ write: req.write_en != 0, data: 0 };
 endinstance
 
+instance IsMemReq#(MMIOReq#(addrSz, logNumBytes), MMIOResp#(logNumBytes), addrSz, logNumBytes);
+    function Bit#(addrSz) getAddr(MMIOReq#(addrSz, logNumBytes) req) = req.addr;
+    function Bit#(TMul#(8,TExp#(logNumBytes))) getData(MMIOReq#(addrSz, logNumBytes) req) = req.data;
+    function Bool isWrite(MMIOReq#(addrSz, logNumBytes) req) = req.write;
+    function Bit#(TExp#(logNumBytes)) getWriteEn(MMIOReq#(addrSz, logNumBytes) req) = req.write ? req.byte_en : 0;
+    function AtomicMemOp getAtomicOp(MMIOReq#(addrSz, logNumBytes) req) = req.atomic_op;
+    function Bool isAtomicOp(MMIOReq#(addrSz, logNumBytes) req) = req.atomic_op != None;
+    function MMIOResp#(logNumBytes) getDefaultResp(MMIOReq#(addrSz, logNumBytes) req) = MMIOResp{ write: req.write, data: 0 };
+endinstance
+
 function ReadOnlyMemReq#(addrSz, logNumBytes) toReadOnlyMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
     return ReadOnlyMemReq { addr: getAddr(req) };
 endfunction
@@ -274,6 +311,14 @@ function Bool isAtomicMemReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT,
     return True;
 endfunction
 
+// Assume reads try to read entire word
+function MMIOReq#(addrSz, logNumBytes) toMMIOReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
+    return MMIOReq { write: isWrite(req), byte_en: isWrite(req) ? getWriteEn(req) : '1, atomic_op: getAtomicOp(req), addr: getAddr(req), data: getData(req) };
+endfunction
+function Bool isMMIOReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
+    return True;
+endfunction
+
 //
 
 typeclass IsMemResp#(type memRespT, numeric type logNumBytes) dependencies (memRespT determines logNumBytes);
@@ -281,10 +326,12 @@ typeclass IsMemResp#(type memRespT, numeric type logNumBytes) dependencies (memR
     function memRespT fromCoarseMemResp(CoarseMemResp#(logNumBytes) resp);
     function memRespT fromByteEnMemResp(CoarseMemResp#(logNumBytes) resp) = fromCoarseMemResp(resp);
     function memRespT fromAtomicMemResp(CoarseMemResp#(logNumBytes) resp) = fromCoarseMemResp(resp);
+    function memRespT fromMMIOResp(CoarseMemResp#(logNumBytes) resp) = fromCoarseMemResp(resp);
     function ReadOnlyMemResp#(logNumBytes) toReadOnlyMemResp(memRespT resp);
     function CoarseMemResp#(logNumBytes) toCoarseMemResp(memRespT resp);
     function ByteEnMemResp#(logNumBytes) toByteEnMemResp(memRespT resp) = toCoarseMemResp(resp);
     function AtomicMemResp#(logNumBytes) toAtomicMemResp(memRespT resp) = toCoarseMemResp(resp);
+    function MMIOResp#(logNumBytes) toMMIOResp(memRespT resp) = toCoarseMemResp(resp);
 endtypeclass
 
 instance IsMemResp#(ReadOnlyMemResp#(logNumBytes), logNumBytes);
@@ -1263,6 +1310,195 @@ module mkMixedAtomicMemBus#(Vector#(nServers, MixedMemBusItem#(addrSz, logNumByt
     return ifc;
 endmodule
 
+interface MixedMMIOBus#(numeric type nClients, numeric type addrSz, numeric type logNumBytes);
+    interface Vector#(nClients, MMIOServerPort#(addrSz, logNumBytes)) clients;
+    method Maybe#(MemType) getMemType(Bit#(addrSz) addr);
+endinterface
+
+/**
+ * This module makes a memory bus from a provided address map.
+ *
+ * This module takes in an address map as a vector of `MemBusItem`. Each item
+ * consists of a `ServerPort` interface and an address mask and match. This
+ * module produces a vector of `ServerPort` memory interfaces for clients to
+ * attach to to.
+ *
+ * The internal implementation consists of many bypass FIFOs for decoupling
+ * to avoid adding unnecessary scheduling constraints between the independent
+ * memory servers. This implementation also consists of many internal rules to
+ * easily support concurrent access between independent clients and servers.
+ * There are better ways to get this concurrency, but they require more
+ * implementation effort and are harder to verify.
+ */
+module mkMixedMMIOBus#(Vector#(nServers, MixedMemBusItem#(addrSz, logNumBytes)) bus_items)(MixedMMIOBus#(nClients, addrSz, logNumBytes));
+    // check for consistency of addr_mask and addr_match in bus_items
+    for (Integer i = 0 ; i < valueOf(nServers) ; i = i+1) begin
+        if ((bus_items[i].addr_mask & bus_items[i].addr_match) != bus_items[i].addr_match) begin
+            errorM("mkMixedMMIOBus compilation error: Illegal addr_mask addr_match combination");
+        end
+        for (Integer j = 0 ; j < valueOf(nServers) ; j = j+1) begin
+            if (i != j) begin
+                Bit#(addrSz) shared_mask = bus_items[i].addr_mask & bus_items[j].addr_mask;
+                Bit#(addrSz) different_match = bus_items[i].addr_match ^ bus_items[j].addr_match;
+                if ((shared_mask & different_match) == 0) begin
+                    errorM("mkMixedMMIOBus compilation error: Overlapping address regions in bus_items");
+                end
+            end
+        end
+    end
+
+    // Bypass FIFOs to buffer all the inputs and outputs. Without these
+    // buffers, this module would add additional scheduling constraints
+    // between client items and server items.
+    Vector#(nClients, FIFOG#(MMIOReq#(addrSz, logNumBytes))) clientMemReq <- replicateM(mkBypassFIFOG);
+    Vector#(nClients, FIFOG#(MMIOResp#(logNumBytes))) clientMemResp <- replicateM(mkBypassFIFOG);
+    Vector#(nServers, FIFOG#(MMIOReq#(addrSz, logNumBytes))) serverMemReq <- replicateM(mkBypassFIFOG);
+    Vector#(nServers, FIFOG#(MMIOResp#(logNumBytes))) serverMemResp <- replicateM(mkBypassFIFOG);
+    // Bookkeeping FIFOs to keep track of request routing
+    // clientBookkeeping can hold valueOf(nServers) to corresponds to an
+    // out-of-bounds address.
+    Vector#(nClients, FIFOG#(Bit#(TLog#(TAdd#(nServers,1))))) clientBookkeeping <- replicateM(mkPipelineFIFOG);
+    Vector#(nServers, FIFOG#(Bit#(TLog#(nClients)))) serverBookkeeping <- replicateM(mkPipelineFIFOG);
+    // out-of-bounds responses, acts like another client.
+    FIFOG#(MMIOResp#(logNumBytes)) oobResp <- mkPipelineFIFOG;
+
+    function Bit#(TLog#(TAdd#(nServers,1))) getServer(MMIOReq#(addrSz, logNumBytes) req);
+        Bit#(addrSz) addr = getAddr(req);
+        // This value corresponds to an out-of-bounds address
+        Bit#(TLog#(TAdd#(nServers,1))) server = fromInteger(valueOf(nServers));
+        for (Integer i = 0 ; i < valueOf(nServers) ; i = i+1) begin
+            if ((addr & bus_items[i].addr_mask) == bus_items[i].addr_match) begin
+                server = fromInteger(i);
+            end
+        end
+        return server;
+    endfunction
+
+    // make a ton of rules
+    for (Integer c = 0 ; c < valueOf(nClients) ; c = c+1) begin
+        for (Integer s = 0 ; s < valueOf(nServers) ; s = s+1) begin
+            rule connectReq( getServer(clientMemReq[c].first) == fromInteger(s) );
+                // $display("connectReq: c = %0d to s = %0d", c, s);
+                serverMemReq[s].enq( clientMemReq[c].first );
+                clientMemReq[c].deq;
+                clientBookkeeping[c].enq( fromInteger(s) );
+                serverBookkeeping[s].enq( fromInteger(c) );
+            endrule
+
+            rule connectResp( (clientBookkeeping[c].first == fromInteger(s)) && (serverBookkeeping[s].first == fromInteger(c)) );
+                // $display("connectResp: c = %0d to s = %0d", c, s);
+                clientBookkeeping[c].deq;
+                serverBookkeeping[s].deq;
+                clientMemResp[c].enq( serverMemResp[s].first );
+                serverMemResp[s].deq;
+            endrule
+        end
+
+        // out-of-bounds requests
+        rule connectOobReq( getServer(clientMemReq[c].first) == fromInteger(valueOf(nServers)) );
+            // $display("connectOobReq: c = %0d", c);
+            oobResp.enq( getDefaultResp(clientMemReq[c].first) );
+            clientMemReq[c].deq;
+            clientBookkeeping[c].enq( fromInteger(valueOf(nServers)) );
+        endrule
+
+        rule connectOobResp( clientBookkeeping[c].first == fromInteger(valueOf(nServers)) );
+            // $display("connectOobResp: c = %0d", c);
+            clientBookkeeping[c].deq;
+            clientMemResp[c].enq( oobResp.first );
+            oobResp.deq;
+        endrule
+    end
+    for (Integer s = 0 ; s < valueOf(nServers) ; s = s+1) begin
+        rule connectServerReq;
+            // $display("connectServerReq: s = %0d", s);
+            case (bus_items[s].ifc) matches
+                tagged ReadOnly .ifc: begin
+                    if(!isReadOnlyMemReq(serverMemReq[s].first)) begin
+                        $fdisplay(stderr, "[WARNING] mkMixedMMIOBus: non-ReadOnly request sent to ReadOnly server %0d", s);
+                    end
+                    ifc.request.enq( toReadOnlyMemReq(serverMemReq[s].first) );
+                end
+                tagged Coarse   .ifc: begin
+                    if(!isCoarseMemReq(serverMemReq[s].first)) begin
+                        $fdisplay(stderr, "[WARNING] mkMixedMMIOBus: non-Coarse request sent to Coarse server %0d", s);
+                    end
+                    ifc.request.enq( toCoarseMemReq(serverMemReq[s].first) );
+                end
+                tagged ByteEn   .ifc: begin
+                    if(!isByteEnMemReq(serverMemReq[s].first)) begin
+                        $fdisplay(stderr, "[WARNING] mkMixedMMIOBus: non-ByteEn request sent to ByteEn server %0d", s);
+                    end
+                    ifc.request.enq( toByteEnMemReq(serverMemReq[s].first) );
+                end
+                tagged Atomic   .ifc: begin
+                    if(!isAtomicMemReq(serverMemReq[s].first)) begin
+                        $fdisplay(stderr, "[WARNING] mkMixedMMIOBus: non-Atomic request sent to Atomic server %0d", s);
+                    end
+                    ifc.request.enq( toAtomicMemReq(serverMemReq[s].first) );
+                end
+                tagged MMIO     .ifc: begin
+                    // all memory accesses can be mapped to MMIO
+                    ifc.request.enq( toMMIOReq(serverMemReq[s].first) );
+                end
+            endcase
+            serverMemReq[s].deq;
+        endrule
+        rule connectServerResp;
+            // $display("connectServerResp: s = %0d", s);
+            case (bus_items[s].ifc) matches
+                tagged ReadOnly .ifc: begin
+                    serverMemResp[s].enq( fromReadOnlyMemResp(ifc.response.first) );
+                    ifc.response.deq;
+                end
+                tagged Coarse   .ifc: begin
+                    serverMemResp[s].enq( fromCoarseMemResp(ifc.response.first) );
+                    ifc.response.deq;
+                end
+                tagged ByteEn   .ifc: begin
+                    serverMemResp[s].enq( fromByteEnMemResp(ifc.response.first) );
+                    ifc.response.deq;
+                end
+                tagged Atomic   .ifc: begin
+                    serverMemResp[s].enq( fromAtomicMemResp(ifc.response.first) );
+                    ifc.response.deq;
+                end
+                tagged MMIO     .ifc: begin
+                    serverMemResp[s].enq( ifc.response.first );
+                    ifc.response.deq;
+                end
+            endcase
+        endrule
+    end
+
+    MixedMMIOBus#(nClients, addrSz, logNumBytes) ifc = (interface MixedMMIOBus;
+            interface Vector clients = zipWith( toServerPort, clientMemReq, clientMemResp );
+            method Maybe#(MemType) getMemType(Bit#(addrSz) addr);
+                // This value corresponds to an out-of-bounds address
+                Maybe#(Bit#(TLog#(nServers))) server = tagged Invalid;
+                for (Integer i = 0 ; i < valueOf(nServers) ; i = i+1) begin
+                    if ((addr & bus_items[i].addr_mask) == bus_items[i].addr_match) begin
+                        server = tagged Valid fromInteger(i);
+                    end
+                end
+                if (server matches tagged Valid .serverIndex) begin
+                    return (case (bus_items[serverIndex].ifc) matches
+                                tagged ReadOnly .*: tagged Valid ReadOnly;
+                                tagged Coarse .*: tagged Valid Coarse;
+                                tagged ByteEn .*: tagged Valid ByteEn;
+                                tagged Atomic .*: tagged Valid Atomic;
+                                tagged MMIO .*: tagged Valid MMIO;
+                                default: tagged Invalid;
+                            endcase);
+                end else begin
+                    return tagged Invalid;
+                end
+            endmethod
+        endinterface);
+
+    return ifc;
+endmodule
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // instances for PolymorphicMem
@@ -1376,6 +1612,100 @@ endinstance
 typeclass SimplifyMemServerPort#(type inMemServerT, type outMemServerT);
     function outMemServerT simplifyMemServerPort(inMemServerT mem);
 endtypeclass
+
+instance SimplifyMemServerPort#(MMIOServerPort#(addrSz, logNumBytes), AtomicMemServerPort#(addrSz, logNumBytes));
+    function AtomicMemServerPort#(addrSz, logNumBytes) simplifyMemServerPort(MMIOServerPort#(addrSz, logNumBytes) mem);
+        return (interface AtomicMemServerPort;
+                interface InputPort request;
+                    method Action enq(AtomicMemReq#(addrSz, logNumBytes) req);
+                        mem.request.enq( MMIOReq {
+                                            write: req.write_en != 0,
+                                            byte_en: ((req.write_en != 0) ? req.write_en : '1),
+                                            atomic_op: req.atomic_op,
+                                            addr: req.addr,
+                                            data: req.data } );
+                    endmethod
+                    method Bool canEnq;
+                        return mem.request.canEnq;
+                    endmethod
+                endinterface
+                interface OutputPort response = mem.response;
+            endinterface);
+    endfunction
+endinstance
+
+instance SimplifyMemServerPort#(MMIOServerPort#(addrSz, logNumBytes), ByteEnMemServerPort#(addrSz, logNumBytes));
+    function ByteEnMemServerPort#(addrSz, logNumBytes) simplifyMemServerPort(MMIOServerPort#(addrSz, logNumBytes) mem);
+        return (interface ByteEnMemServerPort;
+                interface InputPort request;
+                    method Action enq(ByteEnMemReq#(addrSz, logNumBytes) req);
+                        mem.request.enq( MMIOReq {
+                                            write: req.write_en != 0,
+                                            byte_en: ((req.write_en != 0) ? req.write_en : '1),
+                                            atomic_op: None,
+                                            addr: req.addr,
+                                            data: req.data } );
+                    endmethod
+                    method Bool canEnq;
+                        return mem.request.canEnq;
+                    endmethod
+                endinterface
+                interface OutputPort response = mem.response;
+            endinterface);
+    endfunction
+endinstance
+
+instance SimplifyMemServerPort#(MMIOServerPort#(addrSz, logNumBytes), CoarseMemServerPort#(addrSz, logNumBytes));
+    function CoarseMemServerPort#(addrSz, logNumBytes) simplifyMemServerPort(MMIOServerPort#(addrSz, logNumBytes) mem);
+        return (interface CoarseMemServerPort;
+                interface InputPort request;
+                    method Action enq(CoarseMemReq#(addrSz, logNumBytes) req);
+                        mem.request.enq( MMIOReq {
+                                            write: req.write,
+                                            byte_en: '1,
+                                            atomic_op: None,
+                                            addr: req.addr,
+                                            data: req.data } );
+                    endmethod
+                    method Bool canEnq;
+                        return mem.request.canEnq;
+                    endmethod
+                endinterface
+                interface OutputPort response = mem.response;
+            endinterface);
+    endfunction
+endinstance
+
+instance SimplifyMemServerPort#(MMIOServerPort#(addrSz, logNumBytes), ReadOnlyMemServerPort#(addrSz, logNumBytes));
+    function ReadOnlyMemServerPort#(addrSz, logNumBytes) simplifyMemServerPort(MMIOServerPort#(addrSz, logNumBytes) mem);
+        return (interface ReadOnlyMemServerPort;
+                interface InputPort request;
+                    method Action enq(ReadOnlyMemReq#(addrSz, logNumBytes) req);
+                        mem.request.enq( MMIOReq {
+                                            write: False,
+                                            byte_en: '1,
+                                            atomic_op: None,
+                                            addr: req.addr,
+                                            data: 0 } );
+                    endmethod
+                    method Bool canEnq;
+                        return mem.request.canEnq;
+                    endmethod
+                endinterface
+                interface OutputPort response;
+                    method ReadOnlyMemResp#(logNumBytes) first;
+                        return ReadOnlyMemResp { data: mem.response.first.data };
+                    endmethod
+                    method Action deq;
+                        mem.response.deq;
+                    endmethod
+                    method Bool canDeq;
+                        return mem.response.canDeq;
+                    endmethod
+                endinterface
+            endinterface);
+    endfunction
+endinstance
 
 instance SimplifyMemServerPort#(AtomicMemServerPort#(addrSz, logNumBytes), ByteEnMemServerPort#(addrSz, logNumBytes));
     function ByteEnMemServerPort#(addrSz, logNumBytes) simplifyMemServerPort(AtomicMemServerPort#(addrSz, logNumBytes) mem);
@@ -1529,6 +1859,32 @@ endinstance
 typeclass MkEmulateMemServerPort#(type inMemServerT, type outMemServerT);
     module mkEmulateMemServerPort#(inMemServerT mem)(outMemServerT);
 endtypeclass
+
+instance MkEmulateMemServerPort#(CoarseMemServerPort#(addrSz, logNumBytes), MMIOServerPort#(addrSz, logNumBytes));
+    module mkEmulateMemServerPort#(CoarseMemServerPort#(addrSz, logNumBytes) mem)(MMIOServerPort#(addrSz, logNumBytes))
+            provisos (NumAlias#(TMul#(8,TExp#(logNumBytes)), dataSz));
+        AtomicMemServerPort#(addrSz, logNumBytes) _mem <- mkEmulateMemServerPort(mem);
+        interface InputPort request;
+            method Action enq(MMIOReq#(addrSz, logNumBytes) req);
+                _mem.request.enq(AtomicMemReq{ write_en: getWriteEn(req), atomic_op: req.atomic_op, addr: req.addr, data: req.data });
+            endmethod
+            method Bool canEnq;
+                return _mem.request.canEnq;
+            endmethod
+        endinterface
+        interface OutputPort response;
+            method ByteEnMemResp#(logNumBytes) first;
+                return _mem.response.first;
+            endmethod
+            method Action deq;
+                _mem.response.deq;
+            endmethod
+            method Bool canDeq;
+                return _mem.response.canDeq;
+            endmethod
+        endinterface
+    endmodule
+endinstance
 
 instance MkEmulateMemServerPort#(CoarseMemServerPort#(addrSz, logNumBytes), AtomicMemServerPort#(addrSz, logNumBytes));
     module mkEmulateMemServerPort#(CoarseMemServerPort#(addrSz, logNumBytes) mem)(AtomicMemServerPort#(addrSz, logNumBytes))
@@ -1826,6 +2182,47 @@ instance MkNarrowerMemServerPort#(AtomicMemServerPort#(addrSz, inLogNumBytes), A
             method AtomicMemResp#(outLogNumBytes) first;
                 Vector#(TExp#(logWidthFactor), Bit#(TMul#(8,TExp#(outLogNumBytes)))) read_data_vec = unpack(mem.response.first.data);
                 return AtomicMemResp { write: mem.response.first.write, data: read_data_vec[pendingReqOffset.first] };
+            endmethod
+            method Action deq;
+                mem.response.deq;
+                pendingReqOffset.deq;
+            endmethod
+            method Bool canDeq;
+                return mem.response.canDeq && pendingReqOffset.canDeq;
+            endmethod
+        endinterface
+    endmodule
+endinstance
+
+instance MkNarrowerMemServerPort#(MMIOServerPort#(addrSz, inLogNumBytes), MMIOServerPort#(addrSz, outLogNumBytes))
+        provisos (Add#(logWidthFactor, outLogNumBytes, inLogNumBytes),
+                  Add#(a__, logWidthFactor, addrSz));
+    module mkNarrowerMemServerPort#(MMIOServerPort#(addrSz, inLogNumBytes) mem)(MMIOServerPort#(addrSz, outLogNumBytes));
+        FIFOG#(Bit#(logWidthFactor)) pendingReqOffset <- mkFIFOG;
+
+        interface InputPort request;
+            method Action enq(MMIOReq#(addrSz, outLogNumBytes) req);
+                Bit#(logWidthFactor) offset = truncate(req.addr >> valueOf(outLogNumBytes));
+                Vector#(TExp#(logWidthFactor), Bit#(TExp#(outLogNumBytes))) byte_en_vec = replicate(0);
+                Vector#(TExp#(logWidthFactor), Bit#(TMul#(TExp#(outLogNumBytes),8))) data_vec = replicate(req.data);
+                byte_en_vec[offset] = req.byte_en;
+                mem.request.enq( MMIOReq {
+                                    write: req.write,
+                                    byte_en: pack(byte_en_vec),
+                                    atomic_op: req.atomic_op,
+                                    addr: req.addr,
+                                    data: pack(data_vec)
+                                } );
+                pendingReqOffset.enq(offset);
+            endmethod
+            method Bool canEnq;
+                return mem.request.canEnq && pendingReqOffset.canEnq;
+            endmethod
+        endinterface
+        interface OutputPort response;
+            method MMIOResp#(outLogNumBytes) first;
+                Vector#(TExp#(logWidthFactor), Bit#(TMul#(8,TExp#(outLogNumBytes)))) read_data_vec = unpack(mem.response.first.data);
+                return MMIOResp { write: mem.response.first.write, data: read_data_vec[pendingReqOffset.first] };
             endmethod
             method Action deq;
                 mem.response.deq;
