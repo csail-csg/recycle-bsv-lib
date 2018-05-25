@@ -191,10 +191,10 @@ endmodule
 /// There are many possible variations on this function (as seen in
 /// `ClientServerUtil.bsv`), but currently this is the only one needed by the
 /// Riscy processors.
-function ServerPort#(req_t, resp_t) transformServerPortReq(function req_t f(req_t x), ServerPort#(req_t, resp_t) s);
+function ServerPort#(req_in_t, resp_t) transformServerPortReq(function req_out_t f(req_in_t x), ServerPort#(req_out_t, resp_t) s);
     return (interface ServerPort;
                 interface InputPort request;
-                    method Action enq(req_t x);
+                    method Action enq(req_in_t x);
                         s.request.enq( f(x) );
                     endmethod
                     method Bool canEnq;
