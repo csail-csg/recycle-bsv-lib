@@ -228,6 +228,7 @@ typeclass IsMemReq#(type memReqT, type memRespT, type addrSz, type logNumBytes)
     function Bit#(TMul#(8,TExp#(logNumBytes))) getData(memReqT req);
     function Bool                              isWrite(memReqT req);
     function Bit#(TExp#(logNumBytes))          getWriteEn(memReqT req);
+    function Bit#(TExp#(logNumBytes))          getReadEn(memReqT req);
     function AtomicMemOp                       getAtomicOp(memReqT req);
     function Bool                              isAtomicOp(memReqT req);
     function memRespT                          getDefaultResp(memReqT req);
@@ -238,6 +239,7 @@ instance IsMemReq#(ReadOnlyMemReq#(addrSz, logNumBytes), ReadOnlyMemResp#(logNum
     function Bit#(TMul#(8,TExp#(logNumBytes))) getData(ReadOnlyMemReq#(addrSz, logNumBytes) req) = 0;
     function Bool isWrite(ReadOnlyMemReq#(addrSz, logNumBytes) req) = False;
     function Bit#(TExp#(logNumBytes)) getWriteEn(ReadOnlyMemReq#(addrSz, logNumBytes) req) = 0;
+    function Bit#(TExp#(logNumBytes)) getReadEn(ReadOnlyMemReq#(addrSz, logNumBytes) req) = '1;
     function AtomicMemOp getAtomicOp(ReadOnlyMemReq#(addrSz, logNumBytes) req) = None;
     function Bool isAtomicOp(ReadOnlyMemReq#(addrSz, logNumBytes) req) = False;
     function ReadOnlyMemResp#(logNumBytes) getDefaultResp(ReadOnlyMemReq#(addrSz, logNumBytes) req) = ReadOnlyMemResp{ data: 0 };
@@ -248,6 +250,7 @@ instance IsMemReq#(CoarseMemReq#(addrSz, logNumBytes), CoarseMemResp#(logNumByte
     function Bit#(TMul#(8,TExp#(logNumBytes))) getData(CoarseMemReq#(addrSz, logNumBytes) req) = req.data;
     function Bool isWrite(CoarseMemReq#(addrSz, logNumBytes) req) = req.write;
     function Bit#(TExp#(logNumBytes)) getWriteEn(CoarseMemReq#(addrSz, logNumBytes) req) = req.write ? '1 : 0;
+    function Bit#(TExp#(logNumBytes)) getReadEn(CoarseMemReq#(addrSz, logNumBytes) req) = !req.write ? '1 : 0;
     function AtomicMemOp getAtomicOp(CoarseMemReq#(addrSz, logNumBytes) req) = None;
     function Bool isAtomicOp(CoarseMemReq#(addrSz, logNumBytes) req) = False;
     function CoarseMemResp#(logNumBytes) getDefaultResp(CoarseMemReq#(addrSz, logNumBytes) req) = CoarseMemResp{ write: req.write, data: 0 };
@@ -258,6 +261,7 @@ instance IsMemReq#(ByteEnMemReq#(addrSz, logNumBytes), ByteEnMemResp#(logNumByte
     function Bit#(TMul#(8,TExp#(logNumBytes))) getData(ByteEnMemReq#(addrSz, logNumBytes) req) = req.data;
     function Bool isWrite(ByteEnMemReq#(addrSz, logNumBytes) req) = req.write_en != 0;
     function Bit#(TExp#(logNumBytes)) getWriteEn(ByteEnMemReq#(addrSz, logNumBytes) req) = req.write_en;
+    function Bit#(TExp#(logNumBytes)) getReadEn(ByteEnMemReq#(addrSz, logNumBytes) req) = (req.write_en != 0) ? 0 : '1;
     function AtomicMemOp getAtomicOp(ByteEnMemReq#(addrSz, logNumBytes) req) = None;
     function Bool isAtomicOp(ByteEnMemReq#(addrSz, logNumBytes) req) = False;
     function ByteEnMemResp#(logNumBytes) getDefaultResp(ByteEnMemReq#(addrSz, logNumBytes) req) = ByteEnMemResp{ write: req.write_en != 0, data: 0 };
@@ -268,6 +272,7 @@ instance IsMemReq#(AtomicMemReq#(addrSz, logNumBytes), AtomicMemResp#(logNumByte
     function Bit#(TMul#(8,TExp#(logNumBytes))) getData(AtomicMemReq#(addrSz, logNumBytes) req) = req.data;
     function Bool isWrite(AtomicMemReq#(addrSz, logNumBytes) req) = req.write_en != 0;
     function Bit#(TExp#(logNumBytes)) getWriteEn(AtomicMemReq#(addrSz, logNumBytes) req) = req.write_en;
+    function Bit#(TExp#(logNumBytes)) getReadEn(AtomicMemReq#(addrSz, logNumBytes) req) = ((req.write_en == 0) ? '1 : ((req.atomic_op == None) ? 0 : req.write_en));
     function AtomicMemOp getAtomicOp(AtomicMemReq#(addrSz, logNumBytes) req) = req.atomic_op;
     function Bool isAtomicOp(AtomicMemReq#(addrSz, logNumBytes) req) = req.atomic_op != None;
     function AtomicMemResp#(logNumBytes) getDefaultResp(AtomicMemReq#(addrSz, logNumBytes) req) = AtomicMemResp{ write: req.write_en != 0, data: 0 };
@@ -278,6 +283,7 @@ instance IsMemReq#(MMIOReq#(addrSz, logNumBytes), MMIOResp#(logNumBytes), addrSz
     function Bit#(TMul#(8,TExp#(logNumBytes))) getData(MMIOReq#(addrSz, logNumBytes) req) = req.data;
     function Bool isWrite(MMIOReq#(addrSz, logNumBytes) req) = req.write;
     function Bit#(TExp#(logNumBytes)) getWriteEn(MMIOReq#(addrSz, logNumBytes) req) = req.write ? req.byte_en : 0;
+    function Bit#(TExp#(logNumBytes)) getReadEn(MMIOReq#(addrSz, logNumBytes) req) = (req.write && (req.atomic_op == None)) ? 0 : req.byte_en;
     function AtomicMemOp getAtomicOp(MMIOReq#(addrSz, logNumBytes) req) = req.atomic_op;
     function Bool isAtomicOp(MMIOReq#(addrSz, logNumBytes) req) = req.atomic_op != None;
     function MMIOResp#(logNumBytes) getDefaultResp(MMIOReq#(addrSz, logNumBytes) req) = MMIOResp{ write: req.write, data: 0 };
@@ -313,7 +319,7 @@ endfunction
 
 // Assume reads try to read entire word
 function MMIOReq#(addrSz, logNumBytes) toMMIOReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
-    return MMIOReq { write: isWrite(req), byte_en: isWrite(req) ? getWriteEn(req) : '1, atomic_op: getAtomicOp(req), addr: getAddr(req), data: getData(req) };
+    return MMIOReq { write: isWrite(req), byte_en: isWrite(req) ? getWriteEn(req) : getReadEn(req), atomic_op: getAtomicOp(req), addr: getAddr(req), data: getData(req) };
 endfunction
 function Bool isMMIOReq(memReqT req) provisos (IsMemReq#(memReqT, memRespT, addrSz, logNumBytes));
     return True;
