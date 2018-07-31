@@ -2157,6 +2157,7 @@ instance MkNarrowerMemServerPort#(CoarseMemServerPort#(addrSz, inLogNumBytes), C
                 return mem.request.canEnq;
             endmethod
         endinterface
+        interface OutputPort response = toOutputPort(outRespFIFO);
     endmodule
 endinstance
 
