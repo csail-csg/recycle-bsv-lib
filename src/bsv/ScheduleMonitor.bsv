@@ -27,6 +27,7 @@ import Vector::*;
 
 interface ScheduleMonitor;
     method Action record(String ruleName, Char char);
+    method Action recordPC(Bit#(64) pc);
 endinterface
 
 module mkScheduleMonitor#(File file, Vector#(n, String) ruleNames)(ScheduleMonitor);
@@ -36,6 +37,7 @@ module mkScheduleMonitor#(File file, Vector#(n, String) ruleNames)(ScheduleMonit
 
     Reg#(Bool) init <- mkReg(False);
     Vector#(n, Reg#(Bit#(8))) schedWires <- replicateM(mkDWire(charToBits("_")));
+    Reg#(Maybe#(Bit#(64))) pcWire <- mkDWire(tagged Invalid);
 
     rule printLegend(!init);
         for (Integer i = 0 ; i < valueOf(n) ; i = i+1) begin
@@ -51,6 +53,9 @@ module mkScheduleMonitor#(File file, Vector#(n, String) ruleNames)(ScheduleMonit
         for (Integer i = 0 ; i < valueOf(n) ; i = i+1) begin
             $fwrite(file, "%c", schedWires[i]);
         end
+        if (pcWire matches tagged Valid .pc) begin
+            $fwrite(file, " 0x%0h", pc);
+        end
         $fdisplay(file, "");
     endrule
 
@@ -60,6 +65,9 @@ module mkScheduleMonitor#(File file, Vector#(n, String) ruleNames)(ScheduleMonit
         end else begin
             $fdisplay(stderr, "ERROR: schedule monitor can't find rule named: %s", ruleName);
         end
+    endmethod
+    method Action recordPC(Bit#(64) pc);
+        pcWire <= tagged Valid pc;
     endmethod
 endmodule
 
