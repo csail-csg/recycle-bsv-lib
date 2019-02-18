@@ -1598,6 +1598,29 @@ endinstance
 //     endfunction
 // endinstance
 
+instance ToGenericAtomicMemReq#(MMIOReq#(addrSz, logNumBytes), TExp#(logNumBytes), AtomicMemOp, TSub#(addrSz, logNumBytes), TMul#(8,TExp#(logNumBytes)));
+    function GenericAtomicMemReq#(TExp#(logNumBytes), AtomicMemOp, TSub#(addrSz, logNumBytes), TMul#(8,TExp#(logNumBytes))) toGenericAtomicMemReq(MMIOReq#(addrSz, logNumBytes) req);
+        return GenericAtomicMemReq {
+                write_en: req.write ? req.byte_en : 0,
+                atomic_op: req.atomic_op,
+                word_addr: truncate(req.addr >> valueOf(logNumBytes)),
+                data: req.data
+            };
+    endfunction
+endinstance
+instance ToGenericAtomicMemPendingReq#(MMIOReq#(addrSz, logNumBytes), void);
+    function void toGenericAtomicMemPendingReq(MMIOReq#(addrSz, logNumBytes) req) = ?;
+endinstance
+// // MMIOResp is an alias of CoarseMemResp, so this instance is not needed
+// instance FromGenericMMIOResp#(MMIOResp#(logNumBytes), void, TMul#(8,TExp#(logNumBytes)));
+//     function MMIOResp#(logNumBytes) fromGenericMMIOResp(GenericMMIOResp#(TMul#(8,TExp#(logNumBytes))) resp, void pending);
+//         return MMIOResp {
+//                 write: resp.write,
+//                 data: resp.data
+//             };
+//     endfunction
+// endinstance
+
 instance IsAtomicMemOp#(AtomicMemOp);
     function AtomicMemOp nonAtomicMemOp = None;
     function Bool isAtomicMemOp(AtomicMemOp op);
