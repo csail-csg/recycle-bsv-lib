@@ -28,6 +28,7 @@ import Vector::*;
 interface ScheduleMonitor;
     method Action record(String ruleName, Char char);
     method Action recordPC(Bit#(64) pc);
+    method Action recordInst(Bit#(32) inst);
 endinterface
 
 module mkScheduleMonitor#(File file, Vector#(n, String) ruleNames)(ScheduleMonitor);
@@ -38,6 +39,7 @@ module mkScheduleMonitor#(File file, Vector#(n, String) ruleNames)(ScheduleMonit
     Reg#(Bool) init <- mkReg(False);
     Vector#(n, Reg#(Bit#(8))) schedWires <- replicateM(mkDWire(charToBits("_")));
     Reg#(Maybe#(Bit#(64))) pcWire <- mkDWire(tagged Invalid);
+    Reg#(Maybe#(Bit#(32))) instWire <- mkDWire(tagged Invalid);
 
     rule printLegend(!init);
         for (Integer i = 0 ; i < valueOf(n) ; i = i+1) begin
@@ -56,6 +58,9 @@ module mkScheduleMonitor#(File file, Vector#(n, String) ruleNames)(ScheduleMonit
         if (pcWire matches tagged Valid .pc) begin
             $fwrite(file, " 0x%0h", pc);
         end
+        if (instWire matches tagged Valid .inst) begin
+            $fwrite(file, " DASM(0x%0h)", inst);
+        end
         $fdisplay(file, "");
     endrule
 
@@ -68,6 +73,9 @@ module mkScheduleMonitor#(File file, Vector#(n, String) ruleNames)(ScheduleMonit
     endmethod
     method Action recordPC(Bit#(64) pc);
         pcWire <= tagged Valid pc;
+    endmethod
+    method Action recordInst(Bit#(32) inst);
+        instWire <= tagged Valid inst;
     endmethod
 endmodule
 
