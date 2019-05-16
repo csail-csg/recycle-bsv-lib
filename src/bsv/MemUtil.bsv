@@ -1335,6 +1335,11 @@ endinterface
  * easily support concurrent access between independent clients and servers.
  * There are better ways to get this concurrency, but they require more
  * implementation effort and are harder to verify.
+ *
+ * Warning: This module does not support devices that don't fit the match/mask
+ * convention. If you connect the same interface to two different regions, it
+ * will not work because responses may be enqueued into the wrong internal
+ * FIFO and cause deadlock.
  */
 module mkMixedMMIOBus#(Vector#(nServers, MixedMemBusItem#(addrSz, logNumBytes)) bus_items)(MixedMMIOBus#(nClients, addrSz, logNumBytes));
     // check for consistency of addr_mask and addr_match in bus_items
