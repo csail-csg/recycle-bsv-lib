@@ -35,6 +35,13 @@ import RevertingVirtualReg::*;
 
 import Ehr::*;
 
+// If SRAMUTIL_SRAM is defined, then this package will use SRAM
+// `define SRAMUTIL_SRAM
+
+`ifdef SRAMUTIL_SRAM
+import SRAMCore::*;
+`endif
+
 /// Single port SRAM interface
 interface SRAM_1RW#(type addrT, type dataT);
     method Action req(Bool write, addrT a, dataT d);
@@ -68,18 +75,30 @@ endinterface
 module mkSRAM_1RW( SRAM_1RW#(addrT, dataT) ) provisos (Bits#(addrT, addrSz), Bits#(dataT, dataSz));
     Integer memSz = valueOf(TExp#(addrSz));
     Bool hasOutputRegister = False;
+`ifdef SRAMUTIL_SRAM
+    SRAMCore1RW#(addrT, dataT) sram <- mkSRAMCore1RW;
+`else
     BRAM_PORT#(addrT, dataT) bram <- mkBRAMCore1(memSz, hasOutputRegister);
+`endif
 
     Ehr#(2, Bool) readPending <- mkEhr(False);
 
     method Action req(Bool write, addrT a, dataT d) if (!readPending[1]);
+`ifdef SRAMUTIL_SRAM
+        sram.req(write, a, d);
+`else
         bram.put(write, a, d);
+`endif
         if (!write) begin
             readPending[1] <= True;
         end
     endmethod
     method dataT readData if (readPending[0]);
+`ifdef SRAMUTIL_SRAM
+        return sram.readData;
+`else
         return bram.read;
+`endif
     endmethod
     method Action readDataDeq;
         readPending[0] <= False;
@@ -97,24 +116,40 @@ endmodule
 module mkSRAM_1R1W( SRAM_1R1W#(addrT, dataT) ) provisos (Bits#(addrT, addrSz), Bits#(dataT, dataSz));
     Integer memSz = valueOf(TExp#(addrSz));
     Bool hasOutputRegister = False;
+`ifdef SRAMUTIL_SRAM
+    SRAMCore1R1W#(addrT, dataT) sram <- mkSRAMCore1R1W;
+`else
     BRAM_DUAL_PORT#(addrT, dataT) bram <- mkBRAMCore2(memSz, hasOutputRegister);
+`endif
 
     Ehr#(2, Bool) readPending <- mkEhr(False);
     Reg#(Bool) _rvr_readReq_sb_writeReq <- mkRevertingVirtualReg(True);
 
     method Action writeReq(addrT a, dataT d);
+`ifdef SRAMUTIL_SRAM
+        sram.writeReq(a, d);
+`else
         bram.a.put(True, a, d);
+`endif
 
         // reverting virtual register for scheduling purposes
         _rvr_readReq_sb_writeReq <= False;
     endmethod
 
     method Action readReq(addrT a) if (!readPending[1] && _rvr_readReq_sb_writeReq);
+`ifdef SRAMUTIL_SRAM
+        sram.readReq(a);
+`else
         bram.b.put(False, a, unpack(0));
+`endif
         readPending[1] <= True;
     endmethod
     method dataT readData if (readPending[0]);
+`ifdef SRAMUTIL_SRAM
+        return sram.readData;
+`else
         return bram.b.read;
+`endif
     endmethod
     method Action readDataDeq;
         readPending[0] <= False;
@@ -134,7 +169,11 @@ endmodule
 module mkSRAM_1R1W_Bypass( SRAM_1R1W#(addrT, dataT) ) provisos (Bits#(addrT, addrSz), Bits#(dataT, dataSz));
     Integer memSz = valueOf(TExp#(addrSz));
     Bool hasOutputRegister = False;
+`ifdef SRAMUTIL_SRAM
+    SRAMCore1R1W#(addrT, dataT) sram <- mkSRAMCore1R1W;
+`else
     BRAM_DUAL_PORT#(addrT, dataT) bram <- mkBRAMCore2(memSz, hasOutputRegister);
+`endif
 
     Ehr#(2, Bool) readPending <- mkEhr(False);
     Ehr#(2, Maybe#(dataT)) bypassData <- mkEhr(tagged Invalid);
@@ -142,12 +181,20 @@ module mkSRAM_1R1W_Bypass( SRAM_1R1W#(addrT, dataT) ) provisos (Bits#(addrT, add
     Wire#(Maybe#(Tuple2#(addrT, dataT))) writeReqWire <- mkDWire(tagged Invalid);
 
     method Action writeReq(addrT a, dataT d);
+`ifdef SRAMUTIL_SRAM
+        sram.writeReq(a, d);
+`else
         bram.a.put(True, a, d);
+`endif
         writeReqWire <= tagged Valid tuple2(a, d);
     endmethod
 
     method Action readReq(addrT a) if (!readPending[1]);
+`ifdef SRAMUTIL_SRAM
+        sram.readReq(a);
+`else
         bram.b.put(False, a, unpack(0));
+`endif
         readPending[1] <= True;
         if (writeReqWire matches tagged Valid {.writeAddr, .writeData} &&& pack(writeAddr) == pack(a)) begin
             bypassData[1] <= tagged Valid writeData;
@@ -157,7 +204,11 @@ module mkSRAM_1R1W_Bypass( SRAM_1R1W#(addrT, dataT) ) provisos (Bits#(addrT, add
         if (bypassData[0] matches tagged Valid .bypassData) begin
             return bypassData;
         end else begin
+`ifdef SRAMUTIL_SRAM
+            return sram.readData;
+`else
             return bram.b.read;
+`endif
         end
     endmethod
     method Action readDataDeq;
