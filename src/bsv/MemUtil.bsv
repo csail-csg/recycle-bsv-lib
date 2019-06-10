@@ -1341,7 +1341,8 @@ endinterface
  * will not work because responses may be enqueued into the wrong internal
  * FIFO and cause deadlock.
  */
-module mkMixedMMIOBus#(Vector#(nServers, MixedMemBusItem#(addrSz, logNumBytes)) bus_items)(MixedMMIOBus#(nClients, addrSz, logNumBytes));
+module mkMixedMMIOBus#(Vector#(nServers, MixedMemBusItem#(addrSz, logNumBytes)) bus_items)(MixedMMIOBus#(nClients, addrSz, logNumBytes))
+        provisos (Add#(__a, 1, nClients)); // This proviso is necessary because the bookkeeping FIFOs do not work if their type is Bit#(0)
     // check for consistency of addr_mask and addr_match in bus_items
     for (Integer i = 0 ; i < valueOf(nServers) ; i = i+1) begin
         if ((bus_items[i].addr_mask & bus_items[i].addr_match) != bus_items[i].addr_match) begin
