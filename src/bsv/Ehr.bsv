@@ -49,6 +49,9 @@ export writeVEhr;
 
 import Vector::*;
 import RevertingVirtualReg::*;
+`ifdef EHR_USE_VERILOG
+import VerilogEHR::*;
+`endif
 
 typedef Vector#(n, Reg#(t)) Ehr#(numeric type n, type t);
 
@@ -62,6 +65,16 @@ function Action writeVEhr(i ehr_index, Vector#(n, Ehr#(n2, t)) vec_ehr, Vector#(
     return writeVReg(map(get_ehr_index, vec_ehr), data);
 endfunction
 
+`ifdef EHR_USE_VERILOG
+module mkEhr#(t initVal)(Ehr#(n, t)) provisos (Bits#(t, tSz));
+    Reg#(t) _m[valueOf(n)] <- mkVerilogEHR(valueOf(n), initVal);
+    return arrayToVector(_m);
+endmodule
+module mkEhrU(Ehr#(n, t)) provisos (Bits#(t, tSz));
+    let _m <- mkVerilogEHRU(valueOf(n));
+    return arrayToVector(_m);
+endmodule
+`else
 module mkEhr#(t initVal)(Ehr#(n, t)) provisos (Bits#(t, tSz));
     // mkUnsafeWire allows for combinational paths through the EHR within the
     // same rule. To prevent this behavior, use mkRWire instead.
@@ -131,5 +144,6 @@ module mkEhrU(Ehr#(n, t)) provisos (Bits#(t, tSz));
     Ehr#(n, t) _m <- mkEhr(?);
     return _m;
 endmodule
+`endif
 
 endpackage
