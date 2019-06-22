@@ -3,7 +3,12 @@ recycle-bsv-lib
 
 [![Build Status](https://travis-ci.org/csail-csg/recycle-bsv-lib.svg?branch=master)](https://travis-ci.org/csail-csg/recycle-bsv-lib)
 
-This repository is a collection of BSV packages and C++ code.
+This repository is a collection of BSV modules and Verilog code for common building blocks.
+
+There are two macros used by this package for special configurations
+
+- `EHR_USE_VERILOG` - With this defined, `Ehr.bsv` uses `VerilogEHR.bsv` to make `mkEhr` and `mkEhrU` use Verilog EHRs.
+- `SRAMUTIL_SRAM` - With this defined, `SRAMUtil.bsv` uses SRAMs from `SRAMCore.bsv` instead of BRAM.
 
 List of packages and links to their automatically generated documentation:
 * [ClientServerUtil](doc/markdown/ClientServerUtil.md)
