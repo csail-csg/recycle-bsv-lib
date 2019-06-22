@@ -86,13 +86,13 @@ module EHR_7 (
     wire   [DATA_SZ-1:0] wire_7;
 
     assign wire_0 = r;
-    assign wire_1 = EN_write_0 ? write_0 : wire_0
-    assign wire_2 = EN_write_1 ? write_1 : wire_1
-    assign wire_3 = EN_write_2 ? write_2 : wire_2
-    assign wire_4 = EN_write_3 ? write_3 : wire_3
-    assign wire_5 = EN_write_4 ? write_4 : wire_4
-    assign wire_6 = EN_write_5 ? write_5 : wire_5
-    assign wire_7 = EN_write_6 ? write_6 : wire_6
+    assign wire_1 = EN_write_0 ? write_0 : wire_0;
+    assign wire_2 = EN_write_1 ? write_1 : wire_1;
+    assign wire_3 = EN_write_2 ? write_2 : wire_2;
+    assign wire_4 = EN_write_3 ? write_3 : wire_3;
+    assign wire_5 = EN_write_4 ? write_4 : wire_4;
+    assign wire_6 = EN_write_5 ? write_5 : wire_5;
+    assign wire_7 = EN_write_6 ? write_6 : wire_6;
 
     assign read_0 = wire_0;
     assign read_1 = wire_1;

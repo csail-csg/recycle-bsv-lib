@@ -43,7 +43,7 @@ module EHRU_1 (
     wire   [DATA_SZ-1:0] wire_1;
 
     assign wire_0 = r;
-    assign wire_1 = EN_write_0 ? write_0 : wire_0
+    assign wire_1 = EN_write_0 ? write_0 : wire_0;
 
     assign read_0 = wire_0;
 

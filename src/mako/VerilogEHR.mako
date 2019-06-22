@@ -61,7 +61,7 @@ module ${module_name} (
 
     assign wire_0 = r;
 % for i in range(num_ports):
-    assign wire_${i+1} = EN_write_${i} ? write_${i} : wire_${i}
+    assign wire_${i+1} = EN_write_${i} ? write_${i} : wire_${i};
 % endfor
 
 % for i in range(num_ports):
