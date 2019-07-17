@@ -25,7 +25,6 @@
 
 module EHRU_8 (
     CLK,
-    RST_N,
     read_0,
     write_0,
     EN_write_0,

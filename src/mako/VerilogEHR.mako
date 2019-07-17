@@ -30,7 +30,9 @@
 %>
 module ${module_name} (
     CLK,
+% if has_reset:
     RST_N,
+% endif
 % for i in range(num_ports):
     read_${i},
     write_${i},
