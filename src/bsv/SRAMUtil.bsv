@@ -36,7 +36,7 @@ import RevertingVirtualReg::*;
 import Ehr::*;
 
 // If SRAMUTIL_SRAM is defined, then this package will use SRAM
-// `define SRAMUTIL_SRAM
+//`define SRAMUTIL_SRAM
 
 `ifdef SRAMUTIL_SRAM
 import SRAMCore::*;
@@ -105,6 +105,49 @@ module mkSRAM_1RW( SRAM_1RW#(addrT, dataT) ) provisos (Bits#(addrT, addrSz), Bit
     endmethod
 endmodule
 
+`ifdef SRAMUTIL_SRAM
+module mkSRAM_1RW_64x52( SRAM_1RW#(Bit#(6), Bit#(52)) );
+    Integer memSz = valueOf(TExp#(6));
+    Bool hasOutputRegister = False;
+
+    SRAMCore1RW#(Bit#(6), Bit#(52)) sram <- mkSRAMCore1RW_64x52;
+    Ehr#(2, Bool) readPending <- mkEhr(False);
+
+    method Action req(Bool write, Bit#(6) a, Bit#(52) d) if (!readPending[1]);
+        sram.req(write, a, d);
+        if (!write) begin
+            readPending[1] <= True;
+        end
+    endmethod
+    method Bit#(52) readData if (readPending[0]);
+        return sram.readData;
+    endmethod
+    method Action readDataDeq;
+        readPending[0] <= False;
+    endmethod
+endmodule
+
+module mkSRAM_1RW_64x64( SRAM_1RW#(Bit#(6), Bit#(64)) );
+    Integer memSz = valueOf(TExp#(6));
+    Bool hasOutputRegister = False;
+
+    SRAMCore1RW#(Bit#(6), Bit#(64)) sram <- mkSRAMCore1RW_64x64;
+    Ehr#(2, Bool) readPending <- mkEhr(False);
+
+    method Action req(Bool write, Bit#(6) a, Bit#(64) d) if (!readPending[1]);
+        sram.req(write, a, d);
+        if (!write) begin
+            readPending[1] <= True;
+        end
+    endmethod
+    method Bit#(64) readData if (readPending[0]);
+        return sram.readData;
+    endmethod
+    method Action readDataDeq;
+        readPending[0] <= False;
+    endmethod
+endmodule
+`endif
 /**
  * Simple Dual-Port SRAM
  *
@@ -155,6 +198,99 @@ module mkSRAM_1R1W( SRAM_1R1W#(addrT, dataT) ) provisos (Bits#(addrT, addrSz), B
         readPending[0] <= False;
     endmethod
 endmodule
+
+
+/*module mkSRAM_1R1W_64x64( SRAM_1R1W#(addrT, dataT) ) provisos (Bits#(addrT, 6), Bits#(dataT, 64));
+    Integer memSz = valueOf(TExp#(6));
+    Bool hasOutputRegister = False;
+
+    SRAMCore1R1W#(addrT, dataT) sram <- mkSRAMCore1R1W_64x64;
+
+    Ehr#(2, Bool) readPending <- mkEhr(False);
+    Reg#(Bool) _rvr_readReq_sb_writeReq <- mkRevertingVirtualReg(True);
+
+    method Action writeReq(addrT a, dataT d);
+        sram.writeReq(a, d);
+        // reverting virtual register for scheduling purposes
+        _rvr_readReq_sb_writeReq <= False;
+    endmethod
+
+    method Action readReq(addrT a) if (!readPending[1] && _rvr_readReq_sb_writeReq);
+
+        sram.readReq(a);
+
+        readPending[1] <= True;
+    endmethod
+    method dataT readData if (readPending[0]);
+        return sram.readData;
+
+    endmethod
+    method Action readDataDeq;
+        readPending[0] <= False;
+    endmethod
+endmodule
+
+
+module mkSRAM_1R1W_64x52( SRAM_1R1W#(addrT, dataT) ) provisos (Bits#(addrT, 6), Bits#(dataT, 52));
+    Integer memSz = valueOf(TExp#(6));
+    Bool hasOutputRegister = False;
+
+    SRAMCore1R1W#(addrT, dataT) sram <- mkSRAMCore1R1W_64x52;
+
+    Ehr#(2, Bool) readPending <- mkEhr(False);
+    Reg#(Bool) _rvr_readReq_sb_writeReq <- mkRevertingVirtualReg(True);
+
+    method Action writeReq(addrT a, dataT d);
+        sram.writeReq(a, d);
+        // reverting virtual register for scheduling purposes
+        _rvr_readReq_sb_writeReq <= False;
+    endmethod
+
+    method Action readReq(addrT a) if (!readPending[1] && _rvr_readReq_sb_writeReq);
+
+        sram.readReq(a);
+
+        readPending[1] <= True;
+    endmethod
+    method dataT readData if (readPending[0]);
+        return sram.readData;
+
+    endmethod
+    method Action readDataDeq;
+        readPending[0] <= False;
+    endmethod
+endmodule
+
+
+module mkSRAM_1R1W_64x4( SRAM_1R1W#(addrT, dataT) ) provisos (Bits#(addrT, 6), Bits#(dataT, 2));
+    Integer memSz = valueOf(TExp#(6));
+    Bool hasOutputRegister = False;
+
+    SRAMCore1R1W#(addrT, dataT) sram <- mkSRAMCore1R1W_64x2;
+
+    Ehr#(2, Bool) readPending <- mkEhr(False);
+    Reg#(Bool) _rvr_readReq_sb_writeReq <- mkRevertingVirtualReg(True);
+
+    method Action writeReq(addrT a, dataT d);
+        sram.writeReq(a, d);
+        // reverting virtual register for scheduling purposes
+        _rvr_readReq_sb_writeReq <= False;
+    endmethod
+
+    method Action readReq(addrT a) if (!readPending[1] && _rvr_readReq_sb_writeReq);
+
+        sram.readReq(a);
+
+        readPending[1] <= True;
+    endmethod
+    method dataT readData if (readPending[0]);
+        return sram.readData;
+
+    endmethod
+    method Action readDataDeq;
+        readPending[0] <= False;
+    endmethod
+endmodule*/
 
 /**
  * Simple Dual-Port SRAM with bypassing
@@ -218,6 +354,137 @@ module mkSRAM_1R1W_Bypass( SRAM_1R1W#(addrT, dataT) ) provisos (Bits#(addrT, add
         end
     endmethod
 endmodule
+
+`ifdef SRAMUTIL_SRAM
+module mkSRAM_1R1W_Bypass_64x64( SRAM_1R1W#(Bit#(6), Bit#(64)) );
+    Integer memSz = valueOf(TExp#(6));
+    Bool hasOutputRegister = False;
+
+    SRAMCore1R1W#(Bit#(6), Bit#(64)) sram <- mkSRAMCore1R1W_64x64;
+
+
+    Ehr#(2, Bool) readPending <- mkEhr(False);
+    Ehr#(2, Maybe#(Bit#(64))) bypassData <- mkEhr(tagged Invalid);
+
+    Wire#(Maybe#(Tuple2#(Bit#(6), Bit#(64)))) writeReqWire <- mkDWire(tagged Invalid);
+
+    method Action writeReq(Bit#(6) a, Bit#(64) d);
+
+        sram.writeReq(a, d);
+
+        writeReqWire <= tagged Valid tuple2(a, d);
+    endmethod
+
+    method Action readReq(Bit#(6) a) if (!readPending[1]);
+
+        sram.readReq(a);
+
+        readPending[1] <= True;
+        if (writeReqWire matches tagged Valid {.writeAddr, .writeData} &&& pack(writeAddr) == pack(a)) begin
+            bypassData[1] <= tagged Valid writeData;
+        end
+    endmethod
+    method Bit#(64) readData if (readPending[0]);
+        if (bypassData[0] matches tagged Valid .bypassData) begin
+            return bypassData;
+        end else begin
+            return sram.readData;
+        end
+    endmethod
+    method Action readDataDeq;
+        readPending[0] <= False;
+        if (isValid(bypassData[0])) begin
+            bypassData[0] <= tagged Invalid;
+        end
+    endmethod
+endmodule
+
+module mkSRAM_1R1W_Bypass_64x52( SRAM_1R1W#(Bit#(6), Bit#(52)) );
+    Integer memSz = valueOf(TExp#(6));
+    Bool hasOutputRegister = False;
+
+    SRAMCore1R1W#(Bit#(6), Bit#(52)) sram <- mkSRAMCore1R1W_64x52;
+
+
+    Ehr#(2, Bool) readPending <- mkEhr(False);
+    Ehr#(2, Maybe#(Bit#(52))) bypassData <- mkEhr(tagged Invalid);
+
+    Wire#(Maybe#(Tuple2#(Bit#(6), Bit#(52)))) writeReqWire <- mkDWire(tagged Invalid);
+
+    method Action writeReq(Bit#(6) a, Bit#(52) d);
+
+        sram.writeReq(a, d);
+
+        writeReqWire <= tagged Valid tuple2(a, d);
+    endmethod
+
+    method Action readReq(Bit#(6) a) if (!readPending[1]);
+
+        sram.readReq(a);
+
+        readPending[1] <= True;
+        if (writeReqWire matches tagged Valid {.writeAddr, .writeData} &&& pack(writeAddr) == pack(a)) begin
+            bypassData[1] <= tagged Valid writeData;
+        end
+    endmethod
+    method Bit#(52) readData if (readPending[0]);
+        if (bypassData[0] matches tagged Valid .bypassData) begin
+            return bypassData;
+        end else begin
+            return sram.readData;
+        end
+    endmethod
+    method Action readDataDeq;
+        readPending[0] <= False;
+        if (isValid(bypassData[0])) begin
+            bypassData[0] <= tagged Invalid;
+        end
+    endmethod
+endmodule
+
+module mkSRAM_1R1W_Bypass_64x2( SRAM_1R1W#(Bit#(6), dataT) ) provisos (Bits#(dataT, 2));
+    Integer memSz = valueOf(TExp#(6));
+    Bool hasOutputRegister = False;
+
+    SRAMCore1R1W#(Bit#(6), dataT) sram <- mkSRAMCore1R1W_64x2;
+
+
+    Ehr#(2, Bool) readPending <- mkEhr(False);
+    Ehr#(2, Maybe#(dataT)) bypassData <- mkEhr(tagged Invalid);
+
+    Wire#(Maybe#(Tuple2#(Bit#(6), dataT))) writeReqWire <- mkDWire(tagged Invalid);
+
+    method Action writeReq(Bit#(6) a, dataT d);
+
+        sram.writeReq(a, d);
+
+        writeReqWire <= tagged Valid tuple2(a, d);
+    endmethod
+
+    method Action readReq(Bit#(6) a) if (!readPending[1]);
+
+        sram.readReq(a);
+
+        readPending[1] <= True;
+        if (writeReqWire matches tagged Valid {.writeAddr, .writeData} &&& pack(writeAddr) == pack(a)) begin
+            bypassData[1] <= tagged Valid writeData;
+        end
+    endmethod
+    method dataT readData if (readPending[0]);
+        if (bypassData[0] matches tagged Valid .bypassData) begin
+            return bypassData;
+        end else begin
+            return sram.readData;
+        end
+    endmethod
+    method Action readDataDeq;
+        readPending[0] <= False;
+        if (isValid(bypassData[0])) begin
+            bypassData[0] <= tagged Invalid;
+        end
+    endmethod
+endmodule
+`endif
 
 /**
  * True Dual-Port SRAM.

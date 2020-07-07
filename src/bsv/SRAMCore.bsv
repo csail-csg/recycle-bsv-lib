@@ -30,6 +30,32 @@ module mkSRAMCore1RW(SRAMCore1RW#(addrT, dataT)) provisos (Bits#(addrT, addrSz),
     schedule (readData) CF (readData);
 endmodule
 
+import "BVI" SRAM_1RW_64x64 =
+module mkSRAMCore1RW_64x64(SRAMCore1RW#(Bit#(6), dataT)) provisos (Bits#(dataT, 64));
+    default_clock clk(clk);
+    default_reset no_reset;
+
+    method req(write, addr, write_data) enable (en);
+    method read_data readData();
+
+    schedule (readData) SB (req);
+    schedule (req) C (req);
+    schedule (readData) CF (readData);
+endmodule
+
+import "BVI" SRAM_1RW_64x52 =
+module mkSRAMCore1RW_64x52(SRAMCore1RW#(Bit#(6), dataT)) provisos (Bits#(dataT, 52));
+    default_clock clk(clk);
+    default_reset no_reset;
+
+    method req(write, addr, write_data) enable (en);
+    method read_data readData();
+
+    schedule (readData) SB (req);
+    schedule (req) C (req);
+    schedule (readData) CF (readData);
+endmodule
+
 (* synthesize *)
 module mkSRAM_1RW_6_22(SRAMCore1RW#(Bit#(6), Bit#(22)));
     SRAMCore1RW#(Bit#(6), Bit#(22)) sram <- mkSRAMCore1RW;
@@ -50,6 +76,58 @@ module mkSRAMCore1R1W(SRAMCore1R1W#(addrT, dataT)) provisos (Bits#(addrT, addrSz
     parameter ADDR_SZ = valueOf(addrSz);
     parameter DATA_SZ = valueOf(dataSz);
     parameter MEM_SZ = valueOf(TExp#(addrSz));
+
+    default_clock clk(clk);
+    default_reset no_reset;
+
+    method writeReq(write_addr, write_data) enable (write_en);
+    method readReq(read_addr) enable (read_en);
+    method read_data readData();
+
+    schedule (readData) SB (readReq);
+    schedule (readData) CF (writeReq);
+    schedule (readReq) SB (writeReq);
+    schedule (writeReq) C (writeReq);
+    schedule (readReq) C (readReq);
+    schedule (readData) CF (readData);
+endmodule
+
+import "BVI" SRAM_1R1W_64x2 =
+module mkSRAMCore1R1W_64x2(SRAMCore1R1W#(Bit#(6), dataT)) provisos (Bits#(dataT, 2));
+    default_clock clk(clk);
+    default_reset no_reset;
+
+    method writeReq(write_addr, write_data) enable (write_en);
+    method readReq(read_addr) enable (read_en);
+    method read_data readData();
+
+    schedule (readData) SB (readReq);
+    schedule (readData) CF (writeReq);
+    schedule (readReq) SB (writeReq);
+    schedule (writeReq) C (writeReq);
+    schedule (readReq) C (readReq);
+    schedule (readData) CF (readData);
+endmodule
+
+import "BVI" SRAM_1R1W_64x64 =
+module mkSRAMCore1R1W_64x64(SRAMCore1R1W#(Bit#(6), Bit#(64)));
+    default_clock clk(clk);
+    default_reset no_reset;
+
+    method writeReq(write_addr, write_data) enable (write_en);
+    method readReq(read_addr) enable (read_en);
+    method read_data readData();
+
+    schedule (readData) SB (readReq);
+    schedule (readData) CF (writeReq);
+    schedule (readReq) SB (writeReq);
+    schedule (writeReq) C (writeReq);
+    schedule (readReq) C (readReq);
+    schedule (readData) CF (readData);
+endmodule
+
+import "BVI" SRAM_1R1W_64x52 =
+module mkSRAMCore1R1W_64x52(SRAMCore1R1W#(Bit#(6), Bit#(52)));
 
     default_clock clk(clk);
     default_reset no_reset;
